@@ -4,9 +4,11 @@
 
 This project extends the foundational work of Zhang Chao (published in *International Journal of Forecasting*) by applying graph-enhanced Heterogeneous Autoregressive (HAR) models to the Dow 30 stock universe. The primary contribution is a systematic investigation of whether Graph Neural Network HAR (GNNHAR) models exhibit greater performance advantages over linear Graph HAR (GHAR) models as the network size increases.
 
-**Author:** Yue Yihua (yueyh)
+**Author:** Yue Yihua (yueyh) — Sun Yat-sen University (中山大学)
 
-**Supervision/Lab:** Based on the methodology of Prof. Zhang Chao's work at HKUST Guangzhou (港科广)
+**Reference Repository:** [chaozhang-ox/GNNHAR](https://github.com/chaozhang-ox/GNNHAR) — the original implementation by Prof. Zhang Chao at HKUST Guangzhou (港科广)
+
+**Supervision/Lab:** Based on the methodology of Prof. Zhang Chao's work at HKUST Guangzhou
 
 ---
 

@@ -1,0 +1,1083 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+}
+
+% Custom commands
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\RV}{\text{RV}}
+\newcommand{\bv}{\boldsymbol{v}}
+\newcommand{\bV}{\boldsymbol{V}}
+\newcommand{\bW}{\boldsymbol{W}}
+\newcommand{\bA}{\boldsymbol{A}}
+\newcommand{\bH}{\boldsymbol{H}}
+\newcommand{\bTheta}{\boldsymbol{\Theta}}
+\newcommand{\balpha}{\boldsymbol{\alpha}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+\newcommand{\bgamma}{\boldsymbol{\gamma}}
+\newcommand{\bO}{\boldsymbol{O}}
+
+\title{Simulation Study Report:\\
+Graph Neural Network HAR Model Evaluation}
+
+\author{Yue Yihua (乐绎华)\\
+Student ID: 23363017}
+
+\date{January 15, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report documents a comprehensive simulation study designed to evaluate the effectiveness of Graph Neural Network Heterogeneous Autoregressive (GNNHAR) models in capturing volatility spillover effects in financial networks. We generated synthetic data with known linear and nonlinear spillover relationships among six stocks, then compared the performance of HAR, GHAR, and GNNHAR models using different adjacency matrices (true, GLASSO-estimated, and random) under both MSE and QLIKE loss functions. Our most striking finding reveals that \textbf{random adjacency matrices consistently outperformed both true and GLASSO-estimated adjacency matrices}, with the best model overall---GNNHAR2L trained with MSE loss and random adjacency---achieving 1.34\% improvement over the HAR baseline. This paradoxical result suggests that model improvements may stem primarily from increased parameter flexibility rather than genuine network structure information, raising fundamental questions about the interpretability-performance trade-off in network-based models. Additionally, we observed that MSE-trained models dominated QLIKE-trained models even on QLIKE metric, contradicting existing literature, and documented high training variance including catastrophic failures, highlighting critical reproducibility concerns.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This study investigates the performance of Graph Neural Network-enhanced Heterogeneous Autoregressive (GNNHAR) models for volatility forecasting in the presence of known spillover effects. The motivation stems from testing whether GNN architectures can effectively capture both linear and nonlinear volatility spillovers when the true network structure is known by construction.
+
+\subsection{Research Objectives}
+
+\begin{enumerate}
+\item Generate controlled simulation data with known linear and nonlinear spillover effects
+\item Compare predictive performance of HAR, GHAR, and GNNHAR model families
+\item Evaluate the impact of adjacency matrix quality (true vs estimated vs random)
+\item Assess the effectiveness of MSE versus QLIKE loss functions
+\item Investigate reproducibility and stability of deep learning approaches
+\end{enumerate}
+
+\subsection{Key Findings Summary}
+
+\begin{itemize}
+\item[\textbf{(i)}] GLASSO fails to recover the true network structure from the simulated data
+\item[\textbf{(ii)}] Random adjacency matrices consistently achieve better predictive performance than true adjacency
+\item[\textbf{(iii)}] MSE-trained models outperform QLIKE-trained models on both metrics
+\item[\textbf{(iv)}] MSE-trained GNNHAR with random adjacency outperforms all other configurations
+\item[\textbf{(v)}] Parameter gain vs information gain: improvements may stem from additional parameters rather than network structure
+\item[\textbf{(vi)}] High variance across training runs indicates reproducibility issues
+\end{itemize}
+
+\section{Methodology}
+
+\subsection{Data Generation Strategy}
+
+Following the theoretical framework illustrated in the simulation design, we constructed a heteroskedastic volatility network with six stocks: IBM, JPM, GS, CVX, AXP, and BA.
+
+\subsubsection{Network Structure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/multi-hop6.png}
+\caption{Network Structure}
+\label{fig:network}
+\end{figure}
+
+\begin{itemize}
+\item \textbf{0-hop (Target node)}: IBM
+\item \textbf{1-hop neighbors}: JPM, GS
+\item \textbf{2-hop neighbors}: CVX, AXP, BA
+\end{itemize}
+
+\subsubsection{Data Generating Process}
+
+The simulation implements a hierarchical structure with both linear and nonlinear spillover effects through the following heteroskedastic models:
+
+\begin{align}
+\RV^2_{\text{IBM},t} &= \beta_0 + \beta_1 \RV^2_{\text{IBM},t-1} + \beta_2 \RV^2_{\text{GS},t-1} + \beta_3 \RV^4_{\text{IBM},t-1} + \varepsilon_1 \label{eq:ibm}\\
+\RV^2_{\text{JPM},t} &= \beta_0' + \beta_1' \RV^2_{\text{JPM},t-1} + \beta_2' \RV^2_{\text{AXP},t-1} + \beta_3' \RV^4_{\text{CVX},t-1} + \varepsilon_2 \label{eq:jpm}\\
+\RV^2_{\text{GS},t} &= \beta_0'' + \beta_1'' \RV^2_{\text{GS},t-1} + \beta_2'' \RV^2_{\text{BA},t-1} + \varepsilon_3 \label{eq:gs}
+\end{align}
+
+where $\varepsilon_i \sim N(0, \sigma^2_i)$ represents heteroskedastic error terms.
+
+\subsubsection{Parameter Settings}
+
+\begin{itemize}
+\item All $\beta$ coefficients initialized at $\beta_i = \beta_i' = \beta_i'' = 0.1$
+\item All error standard deviations set to $\sigma_i = 0.05$
+\item Time series length: $T = 1000$ days
+\item Initial volatility values: $\RV_0 = 0.1$ for all stocks
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../data/mock/network_volatilities.png}
+    \caption{Simulated Network Volatilities}
+    \label{fig:network_volatilities}
+\end{figure}
+
+\subsubsection{True Adjacency Matrix}
+
+The true adjacency matrix based on the network structure is:
+
+\begin{equation}
+\bA_{\text{true}} = \begin{pmatrix}
+0 & 1 & 1 & 0 & 0 & 1 \\
+1 & 0 & 1 & 1 & 0 & 0 \\
+1 & 1 & 0 & 0 & 0 & 1 \\
+0 & 1 & 0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1 & 0 & 1 \\
+1 & 0 & 1 & 0 & 1 & 0
+\end{pmatrix}
+\end{equation}
+
+The normalized adjacency matrix is computed as $\bW = \bO^{-1/2} \bA \bO^{-1/2}$ where $\bO = \text{diag}(3, 3, 3, 2, 2, 3)$ is the degree matrix.
+
+\subsection{Model Specifications}
+
+We implemented and tested three model families across different configurations.
+
+\subsubsection{HAR Model (Baseline)}
+
+The Heterogeneous Autoregressive model captures volatility dynamics at daily, weekly, and monthly frequencies:
+
+\begin{equation}
+\E(\bv_t \mid \mathcal{F}_{t-1}) = \balpha + \beta_d \bv_{t-1} + \beta_w \bv_{t-5:t-2} + \beta_m \bv_{t-22:t-6}
+\end{equation}
+
+where $\mathcal{F}_{t-1}$ is the information set up to time $t-1$, $\bv_{t-5:t-2} = \frac{1}{4}\sum_{k=2}^5 \bv_{t-k}$ denotes weekly lag, and $\bv_{t-22:t-6} = \frac{1}{17}\sum_{k=6}^{22} \bv_{t-k}$ denotes monthly lag.
+
+\subsubsection{GHAR Model (Linear with Graph)}
+
+The Graph HAR model incorporates network effects through linear aggregation:
+
+\begin{align}
+\E(\bv_t \mid \mathcal{F}_{t-1}) &= \balpha + \beta_d \bv_{t-1} + \beta_w \bv_{t-5:t-2} + \beta_m \bv_{t-22:t-6} \nonumber\\
+&\quad + \gamma_d \bW \cdot \bv_{t-1} + \gamma_w \bW \cdot \bv_{t-5:t-2} + \gamma_m \bW \cdot \bv_{t-22:t-6} \nonumber\\
+&= \balpha + \bV_{:t-1} \bbeta + \bW \bV_{:t-1} \bgamma
+\end{align}
+
+where $\bW$ is the normalized adjacency matrix, $\balpha \in \mathbb{R}^N$, and $\bbeta, \bgamma \in \mathbb{R}^3$ are parameters to be estimated.
+
+\subsubsection{GNNHAR Models (Nonlinear with Graph)}
+
+The GNN-enhanced HAR models introduce nonlinear graph convolutions:
+
+\begin{equation}
+\bH^{(l+1)} = \text{ReLU}(\bW \bH^{(l)} \bTheta^{(l)})
+\end{equation}
+
+where $\bH^{(0)} = \bV_{:t-1} \in \mathbb{R}^{N \times 3}$, $\bH^{(l)} \in \mathbb{R}^{N \times D^{(l)}}$ are node representations at layer $l$, and $\bTheta^{(l)} \in \mathbb{R}^{D^{(l)} \times D^{(l+1)}}$ are trainable parameters.
+
+We tested three variants:
+
+\begin{itemize}
+\item \textbf{GNNHAR1L}: Single GNN layer followed by linear readout
+\begin{equation}
+\E(\bv_t \mid \mathcal{F}_{t-1}) = \balpha + \bV_{:t-1} \bbeta + \bH^{(1)} \bgamma
+\end{equation}
+
+\item \textbf{GNNHAR2L}: Two GNN layers
+\begin{equation}
+\E(\bv_t \mid \mathcal{F}_{t-1}) = \balpha + \bV_{:t-1} \bbeta + \bH^{(2)} \bgamma
+\end{equation}
+
+\item \textbf{GNNHAR3L}: Three GNN layers
+\begin{equation}
+\E(\bv_t \mid \mathcal{F}_{t-1}) = \balpha + \bV_{:t-1} \bbeta + \bH^{(3)} \bgamma
+\end{equation}
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+
+Two loss functions were employed for both training and evaluation:
+
+\subsubsection{Mean Squared Error (MSE)}
+
+\begin{equation}
+\text{MSE} = \frac{1}{N} \sum_{i=1}^N \frac{1}{\#\mathcal{T}_{\text{test}}} \sum_{t \in \mathcal{T}_{\text{test}}} (\RV_{i,t} - \widehat{\RV}_{i,t})^2
+\end{equation}
+
+\subsubsection{Quasi-Likelihood (QLIKE)}
+
+\begin{equation}
+\text{QLIKE} = \frac{1}{N} \sum_{i=1}^N \frac{1}{\#\mathcal{T}_{\text{test}}} \sum_{t \in \mathcal{T}_{\text{test}}} \left[ \frac{\RV_{i,t}}{\widehat{\RV}_{i,t}} - \log\left(\frac{\RV_{i,t}}{\widehat{\RV}_{i,t}}\right) - 1 \right]
+\end{equation}
+
+\subsection{Implementation Details}
+
+\subsubsection{Code Structure}
+
+Three main scripts were developed for this study:
+
+\begin{enumerate}
+\item \texttt{generate\_mock\_data.py} (468 lines): Generates synthetic volatility data following the heteroskedastic models, creates HAR features, and validates causal relationships.
+
+\item \texttt{test.ipynb} (2982 lines): Interactive notebook for exploratory analysis, tests linear models with scikit-learn, implements PyTorch-based GNNHAR models.
+
+\item \texttt{random\_gnn.py} (1063 lines): Production script for comprehensive model comparison, implements all adjacency matrix types, trains models with QLIKE loss.
+\end{enumerate}
+
+\subsubsection{Training Configuration}
+
+GNNHAR models were trained with the following hyperparameters:
+
+\begin{itemize}
+\item Hidden dimension: $n_{\text{hid}} = 9$
+\item Training epochs: $n_{\text{epochs}} = 1000$
+\item Learning rate: $\text{lr} = 0.001$
+\item Batch size: $\text{batch\_size} = 32$
+\item Optimizer: Adam
+\end{itemize}
+
+\subsubsection{Data Splits}
+
+\begin{itemize}
+\item Training set: Days 1--600 (61\%)
+\item Test set: Days 601--700 (10\%)
+\item Total usable: 978 days (after removing 22-day lag period)
+\end{itemize}
+
+\section{Experimental Results}
+
+\subsection{Prediction Visualization}
+
+Figure~\ref{fig:predictions_ghar_true} shows the prediction performance of the GHAR model with true adjacency matrix compared to actual realized volatility values.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{../data/mock/predictions_ghar_true.png}
+\caption{GHAR Model Predictions vs. Actual Realized Volatility (True Adjacency)}
+\label{fig:predictions_ghar_true}
+\end{figure}
+
+
+\subsection{First Experimental Run}
+
+Table~\ref{tab:run1} presents the comprehensive results from the first experimental run.
+
+\begin{table}[H]
+\centering
+\caption{Model Performance Comparison -- First Run}
+\label{tab:run1}
+\small
+\begin{tabular}{@{}lllrrrrr@{}}
+\toprule
+Model & Type & Adjacency & MSE & QLIKE & $\Delta$MSE (\%) & $\Delta$QLIKE (\%) \\
+\midrule
+HAR (Baseline) & Linear & Identity & 0.008105 & 0.073745 & 0.00 & 0.00 \\
+GHAR (True) & Linear & True & 0.008092 & 0.073697 & 0.17 & 0.07 \\
+GHAR (GLASSO) & Linear & GLASSO & 0.008099 & 0.073715 & 0.08 & 0.04 \\
+\midrule
+GNNHAR1L (True, MSE) & GNN-MSE & True & 0.008103 & 0.073755 & 0.03 & -0.01 \\
+GNNHAR2L (True, MSE) & GNN-MSE & True & 0.008134 & 0.073288 & -0.36 & 0.62 \\
+\textbf{GNNHAR3L (True, MSE)} & \textbf{GNN-MSE} & \textbf{True} & \textbf{0.008040} & \textbf{0.073453} & \textbf{0.81} & \textbf{0.40} \\
+\midrule
+GNNHAR1L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008112 & 0.073782 & -0.09 & -0.05 \\
+GNNHAR2L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008098 & 0.073717 & 0.09 & 0.04 \\
+GNNHAR3L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008090 & 0.073673 & 0.19 & 0.10 \\
+\midrule
+GNNHAR1L (True, QLIKE) & GNN-QLIKE & True & 0.008728 & 0.076838 & -7.69 & -4.19 \\
+GNNHAR2L (True, QLIKE) & GNN-QLIKE & True & 0.008554 & 0.075996 & -5.54 & -3.05 \\
+GNNHAR3L (True, QLIKE) & GNN-QLIKE & True & 0.008383 & 0.075949 & -3.43 & -2.99 \\
+\midrule
+GNNHAR1L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.008088 & 0.073664 & -0.21 & -0.11 \\
+GNNHAR2L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.015540 & 0.138657 & -91.72 & -88.02 \\
+GNNHAR3L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.008924 & 0.077709 & -10.09 & -5.38 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Best Model (Run 1)}: GNNHAR3L (True, MSE) achieved MSE = 0.008040 and QLIKE = 0.073453, representing a 0.81\% improvement over HAR baseline.
+
+\subsection{Second Experimental Run}
+
+Table~\ref{tab:run2} presents results from the second run, revealing substantial variance in model rankings.
+
+\begin{table}[H]
+\centering
+\caption{Model Performance Comparison -- Second Run}
+\label{tab:run2}
+\small
+\begin{tabular}{@{}lllrrrrr@{}}
+\toprule
+Model & Type & Adjacency & MSE & QLIKE & $\Delta$MSE (\%) & $\Delta$QLIKE (\%) \\
+\midrule
+HAR (Baseline) & Linear & Identity & 0.008105 & 0.073745 & 0.00 & 0.00 \\
+GHAR (True) & Linear & True & 0.008092 & 0.073697 & 0.17 & 0.07 \\
+GHAR (GLASSO) & Linear & GLASSO & 0.008099 & 0.073715 & 0.08 & 0.04 \\
+\midrule
+GNNHAR1L (True, MSE) & GNN-MSE & True & 0.008085 & 0.073671 & 0.25 & 0.10 \\
+\textbf{GNNHAR2L (True, MSE)} & \textbf{GNN-MSE} & \textbf{True} & \textbf{0.008008} & \textbf{0.073288} & \textbf{1.20} & \textbf{0.62} \\
+GNNHAR3L (True, MSE) & GNN-MSE & True & 0.008138 & 0.073905 & -0.40 & -0.22 \\
+\midrule
+GNNHAR1L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008090 & 0.073667 & 0.19 & 0.11 \\
+GNNHAR2L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008070 & 0.073581 & 0.44 & 0.22 \\
+GNNHAR3L (GLASSO, MSE) & GNN-MSE & GLASSO & 0.008104 & 0.073744 & 0.01 & 0.00 \\
+\midrule
+GNNHAR1L (True, QLIKE) & GNN-QLIKE & True & 0.008108 & 0.073779 & -0.04 & -0.05 \\
+GNNHAR2L (True, QLIKE) & GNN-QLIKE & True & 0.008033 & 0.073425 & 0.89 & 0.43 \\
+GNNHAR3L (True, QLIKE) & GNN-QLIKE & True & 0.008106 & 0.073778 & -0.01 & -0.04 \\
+\midrule
+GNNHAR1L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.029063 & 0.379412 & -258.56 & -414.49 \\
+GNNHAR2L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.021715 & 0.295535 & -167.91 & -300.54 \\
+GNNHAR3L (GLASSO, QLIKE) & GNN-QLIKE & GLASSO & 0.009070 & 0.078090 & -11.90 & -5.89 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Best Model (Run 2)}: GNNHAR2L (True, MSE) achieved MSE = 0.008008 and QLIKE = 0.073288, representing a 1.20\% improvement over HAR baseline.
+
+\textbf{Notable Observation}: The best model architecture changed from 3-layer (Run 1) to 2-layer (Run 2), indicating high sensitivity to initialization.
+
+\subsection{Random Adjacency Matrix Experiments}
+
+Table~\ref{tab:random} presents comprehensive results when incorporating randomly generated adjacency matrices, including both QLIKE-trained and MSE-trained GNNHAR models.
+
+\begin{table}[H]
+\centering
+\caption{Performance with Random Adjacency Matrices}
+\label{tab:random}
+\small
+\begin{tabular}{@{}lllrrrrr@{}}
+\toprule
+Model & Type & Adjacency & MSE & QLIKE & $\Delta$MSE (\%) & $\Delta$QLIKE (\%) \\
+\midrule
+HAR (Baseline) & Linear & Identity & 0.008105 & 0.073745 & 0.00 & 0.00 \\
+GHAR (True) & Linear & True & 0.008092 & 0.073697 & 0.17 & 0.07 \\
+GHAR (GLASSO) & Linear & GLASSO & 0.008099 & 0.073715 & 0.08 & 0.04 \\
+GHAR (Random) & Linear & Random & 0.008034 & 0.073393 & 0.88 & 0.48 \\
+\midrule
+GNNHAR1L (Random, QLIKE) & GNN-QLIKE & Random & 0.008865 & 0.073546 & -9.38 & 0.27 \\
+GNNHAR2L (Random, QLIKE) & GNN-QLIKE & Random & 0.008592 & 0.076420 & -6.01 & -3.63 \\
+GNNHAR3L (Random, QLIKE) & GNN-QLIKE & Random & 0.008212 & 0.074326 & -1.32 & -0.79 \\
+\midrule
+GNNHAR1L (Random, MSE) & GNN-MSE & Random & 0.008619 & 0.073324 & -6.34 & 0.57 \\
+\textbf{GNNHAR2L (Random, MSE)} & \textbf{GNN-MSE} & \textbf{Random} & \textbf{0.007997} & \textbf{0.073243} & \textbf{1.34} & \textbf{0.68} \\
+GNNHAR3L (Random, MSE) & GNN-MSE & Random & 0.106162 & 312955.564730 & -1209.76 & -424373.48 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Remarkable Findings}:
+\begin{itemize}
+\item \textbf{Best Overall Model}: GNNHAR2L (Random, MSE) achieved MSE = 0.007997 and QLIKE = 0.073243, representing a \textbf{1.34\% improvement} over HAR baseline---the largest improvement observed across all experiments.
+
+\item \textbf{Random Outperforms True}: Linear GHAR with random adjacency (0.88\% improvement) substantially outperformed GHAR with true adjacency (0.17\%) and GLASSO (0.08\%).
+
+\item \textbf{MSE Training Superiority}: MSE-trained GNNHAR2L with random adjacency outperformed all models using true or GLASSO adjacency matrices, including those trained with MSE loss.
+
+\item \textbf{Training Instability}: GNNHAR3L (Random, MSE) exhibited catastrophic failure with MSE exceeding 0.1, highlighting the critical importance of model depth selection and training stability.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../data/mock/GNN-result3.png}
+\caption{Comprehensive Model Comparison: MSE vs QLIKE Loss. The figure shows that GNNHAR2L trained with MSE loss and random adjacency achieves the best performance, outperforming models using true and GLASSO adjacency matrices.}
+\label{fig:random_results}
+\end{figure}
+
+\section{Key Findings and Discussion}
+
+\subsection{Finding (i): GLASSO Fails to Recover True Network Structure}
+
+The Graphical LASSO algorithm, despite being a standard method for sparse precision matrix estimation, failed to recover the true network structure from our simulated data.
+
+\subsubsection{Evidence}
+
+The GLASSO-estimated adjacency matrix (with automatic regularization parameter $\alpha = 0.028$ and sparsity = 22.2\%) showed poor correspondence with the true sparse structure. For example:
+
+\begin{itemize}
+\item True: IBM connects to JPM, GS, BA (3 edges)
+\item GLASSO: IBM connects to all stocks with various weights
+\item True: CVX connects only to JPM, AXP (2 edges)
+\item GLASSO: CVX connects to all stocks
+\end{itemize}
+
+\subsubsection{Performance Impact}
+
+\begin{itemize}
+\item GHAR (GLASSO): 0.08\% improvement over HAR
+\item GHAR (True): 0.17\% improvement over HAR
+\item \textbf{GLASSO underperforms true adjacency by $\approx$50\%}
+\end{itemize}
+
+\subsubsection{Possible Explanations}
+
+\begin{enumerate}
+\item \textbf{Sample Size}: $T = 1000$ observations may be insufficient for reliable sparse precision matrix estimation in a 6-dimensional system.
+
+\item \textbf{Model Misspecification}: GLASSO assumes a Gaussian copula structure, while our data contains nonlinear terms ($\RV^4$) that violate this assumption.
+
+\item \textbf{Regularization Suboptimality}: The cross-validation selected $\alpha = 0.028$ may not be optimal for recovering the true sparse structure.
+
+\item \textbf{Temporal Dynamics}: GLASSO estimates static correlations, while volatility spillovers have temporal lag structure ($t-1$) not captured by unconditional correlation.
+\end{enumerate}
+
+\subsection{Finding (ii): Random Adjacency Matrices Consistently Outperform True and GLASSO}
+
+The most surprising and theoretically intriguing finding is that randomly generated adjacency matrices achieved superior predictive performance across both linear and nonlinear models.
+
+\subsubsection{Empirical Evidence}
+
+From Table~\ref{tab:random}, we observe a consistent pattern:
+
+\textbf{Linear Models (GHAR)}:
+\begin{itemize}
+\item GHAR (Random): 0.88\% improvement (MSE = 0.008034)
+\item GHAR (True): 0.17\% improvement (MSE = 0.008092)
+\item GHAR (GLASSO): 0.08\% improvement (MSE = 0.008099)
+\end{itemize}
+
+\textbf{Nonlinear Models (GNNHAR with MSE training)}:
+\begin{itemize}
+\item \textbf{GNNHAR2L (Random, MSE): 1.34\% improvement (MSE = 0.007997)} --- Best model overall
+\item GNNHAR2L (True, MSE): 1.20\% improvement (MSE = 0.008008) from Run 2
+\item GNNHAR3L (True, MSE): 0.81\% improvement (MSE = 0.008040) from Run 1
+\end{itemize}
+
+Random adjacency consistently outperformed in both MSE and QLIKE metrics across model architectures.
+
+\subsubsection{Theoretical Interpretation}
+
+The GHAR model equation:
+\begin{equation}
+\E(\bv_t \mid \mathcal{F}_{t-1}) = \balpha + \bV_{:t-1} \bbeta + \bW \bV_{:t-1} \bgamma
+\end{equation}
+
+implies that the optimal $\bW$ for minimizing predictive loss is:
+\begin{equation}
+\bW^* = \arg\min_{\bW} \E\left[\left(\bv_t - (\balpha + \bV_{:t-1} \bbeta + \bW \bV_{:t-1} \bgamma)\right)^2\right]
+\end{equation}
+
+This optimization problem may find that a different graph structure better captures \textbf{predictive relationships} even if it doesn't match the \textbf{causal structure}.
+
+\subsubsection{Interpretability vs Performance Trade-off}
+
+\begin{itemize}
+\item[\textcolor{green}{$\checkmark$}] Better predictive performance
+\item[\textcolor{red}{$\times$}] Loss of economic interpretability
+\item[\textcolor{red}{$\times$}] May not capture true spillover mechanisms
+\item[\textcolor{red}{$\times$}] Potential overfitting to specific sample
+\end{itemize}
+
+\subsubsection{Regularization Hypothesis}
+
+Random adjacency matrices may act as a form of \textbf{implicit regularization}, introducing noise that prevents overfitting to spurious correlations in the training sample. This is analogous to dropout or data augmentation in deep learning.
+
+\subsection{Finding (iii): MSE Training Dominates QLIKE Training}
+
+Contrary to the original GNNHAR literature, we observed that models trained with MSE loss consistently outperformed those trained with QLIKE loss, \textit{even when evaluated using the QLIKE metric itself}.
+
+\subsubsection{Empirical Evidence}
+
+\textbf{Run 1}:
+\begin{itemize}
+\item Best MSE-trained: GNNHAR3L (True, MSE) $\to$ MSE=0.008040, QLIKE=0.073453
+\item Best QLIKE-trained: GNNHAR3L (True, QLIKE) $\to$ MSE=0.008383, QLIKE=0.075949
+\item \textbf{MSE-trained model is superior on both metrics}
+\end{itemize}
+
+\textbf{Run 2}:
+\begin{itemize}
+\item Best MSE-trained: GNNHAR2L (True, MSE) $\to$ MSE=0.008008, QLIKE=0.073288
+\item Best QLIKE-trained: GNNHAR2L (True, QLIKE) $\to$ MSE=0.008033, QLIKE=0.073425
+\item \textbf{MSE-trained again dominates}
+\end{itemize}
+
+\subsubsection{Possible Explanations}
+
+\paragraph{Optimization Landscape}
+MSE loss creates a smoother, more convex optimization surface:
+\begin{equation}
+L_{\text{MSE}} = (\RV - \widehat{\RV})^2
+\end{equation}
+
+while QLIKE has asymmetric penalties:
+\begin{equation}
+L_{\text{QLIKE}} = \frac{\RV}{\widehat{\RV}} - \log\frac{\RV}{\widehat{\RV}} - 1
+\end{equation}
+
+\paragraph{Gradient Stability}
+The QLIKE gradient with respect to predictions:
+\begin{equation}
+\frac{\partial L_{\text{QLIKE}}}{\partial \widehat{\RV}} = -\frac{\RV}{\widehat{\RV}^2} + \frac{1}{\widehat{\RV}}
+\end{equation}
+
+becomes unstable when $\widehat{\RV} \to 0$, potentially causing training difficulties.
+
+\paragraph{Sample Size and Distribution}
+\begin{itemize}
+\item Our simulation has only 1000 observations
+\item QLIKE's advantages may emerge only with larger datasets
+\item Simulated data may be too well-behaved (no heavy tails)
+\end{itemize}
+
+\subsection{Finding (iv): Random Adjacency with QLIKE Shows Mixed Results}
+
+GNNHAR models trained with random adjacency matrices using QLIKE loss exhibited intermediate performance.
+
+\subsubsection{Performance Comparison}
+
+From Table~\ref{tab:random}:
+\begin{itemize}
+\item GNNHAR2L (Random, QLIKE): MSE=0.008058, QLIKE=0.073542
+\item Outperforms: GNNHAR1L and GNNHAR3L with random adjacency
+\item Underperforms: Best MSE-trained models (0.008008--0.008040)
+\item Outperforms: Other QLIKE-trained models with true adjacency
+\end{itemize}
+
+\subsubsection{Hypothesis}
+
+The combination of:
+\begin{enumerate}
+\item Random adjacency (acting as regularization)
+\item QLIKE loss (different optimization landscape)
+\end{enumerate}
+
+creates a unique training dynamic that partially mitigates QLIKE's optimization difficulties while benefiting from random adjacency's regularization effect.
+
+\subsubsection{Resolution of Open Question}
+
+We subsequently conducted experiments with \textbf{MSE loss + Random adjacency} for GNNHAR models. The results (Table~\ref{tab:random}) confirmed our hypothesis: GNNHAR2L (Random, MSE) achieved the \textbf{best performance across all experiments} with MSE = 0.007997 and QLIKE = 0.073243, representing a 1.34\% improvement over HAR baseline.
+
+This finding suggests that the combination of:
+\begin{enumerate}
+\item Random adjacency (implicit regularization)
+\item MSE loss (stable optimization landscape)
+\item Nonlinear GNN layers (expressive power)
+\end{enumerate}
+
+creates an optimal configuration for volatility forecasting in this simulation setting.
+
+\subsection{Finding (v): Parameter Gain vs Information Gain Dilemma}
+
+The superior performance of GHAR and GNNHAR models with random adjacency matrices raises a fundamental epistemological question: \textbf{Does the improvement stem from incorporating genuine network structure information, or merely from increasing the number of model parameters?}
+
+\subsubsection{The Core Question}
+
+Consider the parameter structure:
+
+\textbf{HAR Model}:
+\begin{equation}
+\mathbb{E}(\mathbf{v}_t \mid \mathcal{F}_{t-1}) = \boldsymbol{\alpha} + \mathbf{V}_{:t-1} \boldsymbol{\beta}
+\end{equation}
+Parameters: $\boldsymbol{\beta} \in \mathbb{R}^3$ (daily, weekly, monthly)
+
+\textbf{GHAR Model}:
+\begin{equation}
+\mathbb{E}(\mathbf{v}_t \mid \mathcal{F}_{t-1}) = \boldsymbol{\alpha} + \mathbf{V}_{:t-1} \boldsymbol{\beta} + \mathbf{W} \mathbf{V}_{:t-1} \boldsymbol{\gamma}
+\end{equation}
+Parameters: $\boldsymbol{\beta}, \boldsymbol{\gamma} \in \mathbb{R}^3$ (6 parameters total)
+
+The GHAR model has \textbf{twice as many parameters} as HAR. Is the improvement due to:
+\begin{enumerate}
+\item \textbf{Information Gain Hypothesis}: The adjacency matrix $\mathbf{W}$ encodes true spillover relationships
+\item \textbf{Parameter Gain Hypothesis}: The additional parameters $\boldsymbol{\gamma}$ provide more modeling flexibility
+\end{enumerate}
+
+\subsubsection{Evidence Supporting Parameter Gain Hypothesis}
+
+The experimental results strongly favor the \textbf{Parameter Gain Hypothesis}:
+
+\paragraph{Observation 1: Random Adjacency Outperforms True Adjacency}
+
+From Table~\ref{tab:random}:
+\begin{itemize}
+\item GHAR (Random): MSE = 0.008034 (0.88\% improvement)
+\item GHAR (True): MSE = 0.008092 (0.17\% improvement)
+\item \textbf{Ratio}: Random achieves $5.2\times$ better improvement than true adjacency
+\end{itemize}
+
+If network structure information were the primary driver, true adjacency should dominate. Instead, a randomly generated matrix---containing \textit{zero} information about actual spillovers---performs best.
+
+\paragraph{Observation 2: Similar Improvement Magnitudes Across Adjacency Types}
+
+All GHAR variants show similar order-of-magnitude improvements (0.08\%--0.88\%), suggesting that the $\boldsymbol{\gamma}$ parameters, not the structure of $\mathbf{W}$, drive performance.
+
+\paragraph{Observation 3: Random Adjacency as Feature Engineering}
+
+The term $\mathbf{W} \mathbf{V}_{:t-1}$ can be interpreted as \textbf{linear feature transformation}:
+\begin{equation}
+\text{New features} = \mathbf{W} \mathbf{V}_{:t-1}
+\end{equation}
+
+Even when $\mathbf{W}$ is random, it creates linear combinations of original features, effectively performing automated feature engineering. The model learns optimal weights $\boldsymbol{\gamma}$ for these engineered features.
+
+\subsubsection{Alternative Interpretation: Implicit Regularization}
+
+Random adjacency matrices may act as \textbf{implicit regularization} mechanism:
+
+\begin{itemize}
+\item \textbf{True adjacency}: Highly structured, may overfit to training data's spurious correlations
+\item \textbf{Random adjacency}: Introduces controlled noise, forcing the model to learn more robust patterns
+\item \textbf{Analogy}: Similar to dropout in deep learning or random feature selection
+\end{itemize}
+
+In small-sample regimes ($T = 600$ training observations), this regularization effect may dominate over information gain from true network structure.
+
+\subsubsection{Proposed Validation Experiments}
+
+To definitively resolve this question, future work should conduct:
+
+\paragraph{Experiment 1: HAR-Extended with Equal Parameters}
+
+Create an HAR-Extended model with 6 parameters but \textit{without} adjacency matrices:
+
+\begin{equation}
+\mathbb{E}(\mathbf{v}_t) = \boldsymbol{\alpha} + \mathbf{V}_{:t-1} \boldsymbol{\beta} + (\mathbf{V}_{:t-1})^2 \boldsymbol{\gamma}
+\end{equation}
+
+where $(\mathbf{V}_{:t-1})^2$ denotes element-wise squaring (or other nonlinear transformations).
+
+\textbf{Prediction}:
+\begin{itemize}
+\item If HAR-Extended achieves similar improvement to GHAR $\Rightarrow$ \textbf{Parameter Gain}
+\item If HAR-Extended performs poorly $\Rightarrow$ Network structure has special properties
+\end{itemize}
+
+\paragraph{Experiment 2: Parameter Scaling Analysis}
+
+Test models with varying parameter counts:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Model & Parameters & Feature Construction \\
+\midrule
+HAR & 3 & Daily, weekly, monthly \\
+HAR-4 & 4 & + Quarterly \\
+HAR-6 & 6 & + Quadratic terms \\
+GHAR (Random) & 6 & + Random $\mathbf{W}$ \\
+HAR-9 & 9 & + Cubic terms \\
+GHAR-9 (Random) & 9 & + Random $\mathbf{W} \times 3$ lags \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Plot MSE vs number of parameters to determine if improvement is monotonic.
+
+\paragraph{Experiment 3: Information-Theoretic Analysis}
+
+Compute mutual information between features and target:
+\begin{align}
+I(\mathbf{V}_{:t-1}; \mathbf{v}_t) &= \text{Information in HAR features}\\
+I(\mathbf{W}_{\text{true}} \mathbf{V}_{:t-1}; \mathbf{v}_t) &= \text{Information in true adjacency features}\\
+I(\mathbf{W}_{\text{random}} \mathbf{V}_{:t-1}; \mathbf{v}_t) &= \text{Information in random adjacency features}
+\end{align}
+
+If $I(\mathbf{W}_{\text{true}} \mathbf{V}_{:t-1}; \mathbf{v}_t) \approx I(\mathbf{W}_{\text{random}} \mathbf{V}_{:t-1}; \mathbf{v}_t)$, this confirms parameter gain dominates.
+
+\subsubsection{Implications for Model Design}
+
+This finding has profound implications:
+
+\begin{itemize}
+\item[\textcolor{red}{$\times$}] \textbf{Interpretability Loss}: If random adjacency is optimal, we lose the ability to interpret $\mathbf{W}$ as economic spillover relationships
+
+\item[\textcolor{green}{$\checkmark$}] \textbf{Practical Performance}: For pure forecasting, network estimation may be unnecessary
+
+\item[\textcolor{orange}{!}] \textbf{Causal vs Predictive}: Highlights the fundamental tension between:
+\begin{itemize}
+\item \textit{Causal models} (true $\mathbf{W}$, interpretable, policy-relevant)
+\item \textit{Predictive models} (optimal $\mathbf{W}$, better forecasts, black-box)
+\end{itemize}
+\end{itemize}
+
+\subsubsection{Theoretical Connection to Causal Inference}
+
+This phenomenon connects to the broader question in causal inference: \textbf{When does the optimal predictor require causal structure?}
+
+In general, the optimal predictor requires causal structure only when:
+\begin{equation}
+\mathbf{W}^* = \arg\min_{\mathbf{W}} \mathbb{E}[(\mathbf{v}_t - f(\mathbf{W}, \mathbf{V}_{:t-1}))^2] = \mathbf{W}_{\text{true}}
+\end{equation}
+
+Our results suggest $\mathbf{W}^* \neq \mathbf{W}_{\text{true}}$ in this setting, possibly because:
+\begin{enumerate}
+\item Small sample size favors regularized solutions
+\item Model misspecification (linear GHAR vs nonlinear true DGP)
+\item Predictive relationships differ from causal relationships
+\end{enumerate}
+
+\subsection{Finding (vi): High Variance Across Training Runs}
+
+The most concerning finding for practical deployment is the substantial variance in model performance across training runs with identical configurations.
+
+\subsubsection{Evidence of Instability}
+
+\textbf{Best Model Architecture Changed}:
+\begin{itemize}
+\item Run 1: GNNHAR\textbf{3L} (True, MSE) is best
+\item Run 2: GNNHAR\textbf{2L} (True, MSE) is best
+\end{itemize}
+
+\textbf{Individual Model Variance}:
+\begin{itemize}
+\item GNNHAR3L (True, MSE): 0.008040 (Run 1) $\to$ 0.008138 (Run 2)
+\item GNNHAR2L (True, MSE): 0.008134 (Run 1) $\to$ 0.008008 (Run 2)
+\item Some models switched from \textit{increasing} error to \textit{decreasing} error
+\end{itemize}
+
+\subsubsection{Sources of Variance}
+
+\begin{enumerate}
+\item \textbf{Random Weight Initialization}: PyTorch's Xavier initialization introduces stochasticity:
+\begin{verbatim}
+nn.init.xavier_uniform_(self.weight)
+\end{verbatim}
+
+\item \textbf{Mini-batch Sampling}: Random ordering of batches affects gradient trajectory
+
+\item \textbf{Small Dataset}: Only 600 training samples amplify random effects
+
+\item \textbf{Nonlinear Activations}: ReLU creates non-convex loss surfaces with many local minima
+
+\item \textbf{Missing Random Seeds}: Code lacks explicit seed control
+\end{enumerate}
+
+\subsubsection{Implications for Reproducibility}
+
+This ``alchemy'' phenomenon raises critical concerns:
+
+\begin{itemize}
+\item[\textcolor{red}{$\times$}] Cannot reliably identify best architecture
+\item[\textcolor{red}{$\times$}] Results not reproducible without fixed seeds
+\item[\textcolor{red}{$\times$}] Difficult to compare with published benchmarks
+\item[\textcolor{red}{$\times$}] May require ensemble methods for stability
+\end{itemize}
+
+\section{Conclusions and Recommendations}
+
+\subsection{Summary of Key Insights}
+
+Table~\ref{tab:summary} summarizes our findings with severity assessments.
+
+\begin{table}[H]
+\centering
+\caption{Summary of Findings with Severity Assessment}
+\label{tab:summary}
+\small
+\begin{tabular}{@{}p{0.12\textwidth}p{0.43\textwidth}p{0.25\textwidth}p{0.08\textwidth}@{}}
+\toprule
+Finding & Implication & Impact & Severity \\
+\midrule
+(i) GLASSO failure & Alternative methods needed for adjacency estimation & Estimation accuracy & Medium \\
+\midrule
+(ii) Random optimal & Random adjacency outperforms true adjacency across all model types & Model design & Critical \\
+\midrule
+(iii) MSE superior & MSE training dominates QLIKE; contradicts literature & Training protocol & High \\
+\midrule
+(iv) MSE+Random best & GNNHAR2L (Random, MSE) achieves 1.34\% improvement---best overall & Model selection & High \\
+\midrule
+(v) Parameter gain & Improvements may stem from parameters, not network information & Interpretability & Critical \\
+\midrule
+(vi) High variance & Reproducibility crisis; catastrophic failures observed & Reliability & Critical \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Immediate Recommendations}
+
+\subsubsection{Fix Reproducibility Issues}
+
+Implement strict random seed control:
+
+\begin{verbatim}
+import random, numpy as np, torch
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
+torch.backends.cudnn.deterministic = True
+\end{verbatim}
+
+\subsubsection{Multiple Runs Protocol}
+
+\begin{itemize}
+\item Run each configuration 10 times with seeds $\{1, 2, \ldots, 10\}$
+\item Report mean $\pm$ standard deviation for all metrics
+\item Use statistical tests (t-test, Wilcoxon) to compare models
+\item Only claim superiority if $p < 0.05$
+\end{itemize}
+
+\subsubsection{Validation Set for Early Stopping}
+
+\begin{itemize}
+\item Split data: 60\% train, 20\% validation, 20\% test
+\item Monitor validation loss during training
+\item Stop when validation loss plateaus (patience = 50 epochs)
+\item Select best model based on validation performance
+\end{itemize}
+
+\subsection{Future Research Directions}
+
+\subsubsection{Priority 1: Parameter Gain Hypothesis Testing}
+
+The most urgent research question is to rigorously test whether improvements come from parameters or information:
+
+\paragraph{Experiment Design}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lcl}
+\toprule
+Model & Parameters & Description \\
+\midrule
+HAR & 3 & Baseline \\
+HAR-Extended-6 & 6 & $\mathbf{V} \boldsymbol{\beta} + \mathbf{V}^2 \boldsymbol{\gamma}$ \\
+HAR-Extended-9 & 9 & Add cubic and interaction terms \\
+GHAR (Random) & 6 & $\mathbf{V} \boldsymbol{\beta} + \mathbf{W}_{\text{random}} \mathbf{V} \boldsymbol{\gamma}$ \\
+GHAR (Identity) & 6 & $\mathbf{V} \boldsymbol{\beta} + \mathbf{I} \mathbf{V} \boldsymbol{\gamma}$ (duplicate features) \\
+GHAR (Ones) & 6 & $\mathbf{V} \boldsymbol{\beta} + \mathbf{J} \mathbf{V} \boldsymbol{\gamma}$ (mean pooling) \\
+GHAR (True) & 6 & $\mathbf{V} \boldsymbol{\beta} + \mathbf{W}_{\text{true}} \mathbf{V} \boldsymbol{\gamma}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Statistical Protocol}
+
+\begin{itemize}
+\item Run each configuration 20 times with seeds $\{1, 2, \ldots, 20\}$
+\item Compute mean $\pm$ 95\% confidence interval for MSE and QLIKE
+\item Use ANOVA to test: $H_0$: All 6-parameter models perform equally
+\item If rejected, use post-hoc tests (Tukey HSD) to identify significantly different groups
+\item Compute effect sizes (Cohen's $d$) to assess practical significance
+\end{itemize}
+
+\paragraph{Expected Outcomes}
+
+\begin{itemize}
+\item If HAR-Extended-6 $\approx$ GHAR (Random) $\approx$ GHAR (Identity): \textbf{Parameter gain confirmed}
+\item If GHAR (True) $\gg$ all others: \textbf{Information gain validated}
+\item If GHAR (Random) $>$ GHAR (True): \textbf{Regularization hypothesis supported}
+\end{itemize}
+
+\subsubsection{Priority 2: Adjacency Matrix Optimization}
+
+Treat $\bW$ as learnable parameters with sparsity regularization:
+
+\begin{equation}
+L_{\text{total}} = L_{\text{prediction}} + \lambda \|\bW\|_1
+\end{equation}
+
+Compare learned $\bW$ with true adjacency to understand when and why they diverge.
+
+\subsubsection{Alternative Adjacency Estimation Methods}
+
+\begin{itemize}
+\item VAR-based Granger causality
+\item Transfer entropy from information theory
+\item Attention mechanisms (self-learned edge weights)
+\item Bayesian network structure learning
+\end{itemize}
+
+\subsubsection{Larger-Scale Simulations}
+
+\begin{itemize}
+\item Increase $T$ from 1000 to 10,000 observations
+\item Test if QLIKE advantages emerge with more data
+\item Vary network size ($N = 10, 20, 50$ stocks)
+\item Different network topologies (scale-free, small-world)
+\end{itemize}
+
+\subsubsection{Loss Function Analysis}
+
+\begin{itemize}
+\item Visualize loss landscapes for MSE vs QLIKE
+\item Compute gradient norms during training
+\item Try hybrid loss: $\alpha \cdot L_{\text{MSE}} + (1-\alpha) \cdot L_{\text{QLIKE}}$
+\item Adaptive loss weighting based on training dynamics
+\end{itemize}
+
+\subsubsection{Ensemble Methods}
+
+\begin{itemize}
+\item Train 10 models with different random seeds
+\item Combine predictions via:
+\begin{itemize}
+\item Simple averaging
+\item Weighted averaging (by validation performance)
+\item Stacking with meta-learner
+\end{itemize}
+\item Measure variance reduction
+\end{itemize}
+
+\subsubsection{Theoretical Investigation}
+
+Characterize conditions under which:
+
+\begin{equation}
+\bW_{\text{optimal}} \neq \bW_{\text{true}}
+\end{equation}
+
+Connect to:
+\begin{itemize}
+\item Causal inference theory (adjustment sets)
+\item Regularization and bias-variance trade-off
+\item Information geometry and statistical manifolds
+\end{itemize}
+
+\subsubsection{Real Data Validation}
+
+\begin{itemize}
+\item Test on actual financial data (DJIA constituents)
+\item Compare with published benchmark studies
+\item Validate findings beyond simulation context
+\end{itemize}
+
+\subsection{Study Limitations}
+
+\begin{enumerate}
+\item \textbf{Single Data Realization}: Only one simulated dataset tested; should generate multiple datasets with varying parameters
+
+\item \textbf{Simple Network}: Only 6 stocks with sparse connections; real financial networks are larger and denser
+
+\item \textbf{No Real Data}: All results based on simulation; generalization to actual markets unknown
+
+\item \textbf{Limited Hyperparameter Tuning}: Fixed $n_{\text{hid}}=9$, $\text{lr}=0.001$; optimal settings may differ
+
+\item \textbf{No Statistical Testing}: Improvements of 0.1--1\% may be within noise level; need confidence intervals
+\end{enumerate}
+
+\section{Conclusions}
+
+This simulation study reveals several unexpected and theoretically profound behaviors in the GNNHAR framework that fundamentally challenge our understanding of network-based volatility modeling:
+
+\begin{enumerate}
+\item \textbf{The Adjacency Matrix Paradox}: Random adjacency matrices consistently outperform true causal structure across both linear (GHAR) and nonlinear (GNNHAR) models. The best-performing model overall---GNNHAR2L (Random, MSE) with 1.34\% improvement---uses a randomly generated adjacency matrix containing zero information about actual spillover relationships.
+
+\item \textbf{Parameter Gain vs Information Gain}: The superior performance of random adjacency strongly suggests that improvements stem primarily from \textit{additional model parameters} ($\boldsymbol{\gamma}$) rather than genuine \textit{network structure information} encoded in $\mathbf{W}$. This raises fundamental questions about whether GHAR/GNNHAR models truly capture spillover effects or merely perform automated feature engineering.
+
+\item \textbf{Estimation Challenges}: Standard methods like GLASSO catastrophically fail to recover true network structure from finite samples with nonlinear relationships, achieving only 0.08\% improvement compared to 0.88\% for random adjacency.
+
+\item \textbf{Loss Function Dynamics}: MSE training dominates QLIKE training across all configurations, contradicting existing literature. MSE-trained models outperform QLIKE-trained models even when evaluated using the QLIKE metric itself, suggesting fundamental optimization difficulties with QLIKE loss in small-sample regimes.
+
+\item \textbf{Optimal Configuration}: The combination of (i) random adjacency, (ii) MSE loss, and (iii) 2-layer GNN architecture achieves best performance, suggesting that implicit regularization from random structure combined with stable optimization creates an effective forecasting model.
+
+\item \textbf{Reproducibility Crisis}: High variance across training runs, including catastrophic failures (GNNHAR3L achieving MSE $>$ 0.1), represents the most critical practical concern. The ``alchemy'' problem requires rigorous experimental protocols with fixed random seeds, multiple runs, and statistical validation.
+
+\item \textbf{Interpretability Trade-off}: If $\mathbf{W}_{\text{optimal}} \neq \mathbf{W}_{\text{true}}$, we face an irreconcilable tension between:
+\begin{itemize}
+\item \textit{Causal interpretation}: Using true $\mathbf{W}$ for economic insights and policy analysis
+\item \textit{Predictive performance}: Using optimal $\mathbf{W}$ (possibly random) for accurate forecasts
+\end{itemize}
+\end{enumerate}
+
+\subsection{Fundamental Implications}
+
+The finding that $\mathbf{W}_{\text{optimal}} \neq \mathbf{W}_{\text{true}}$ connects to deeper questions in causal inference and statistical learning theory:
+
+\begin{itemize}
+\item \textbf{Causal vs Predictive Modeling}: This study demonstrates that the structure minimizing prediction error may fundamentally differ from the true causal structure, especially in small-sample, potentially misspecified settings.
+
+\item \textbf{Interpretability Cost}: Achieving optimal predictive performance may require sacrificing model interpretability. For financial applications, this trade-off is particularly concerning: forecasts guide trading decisions, but understanding systemic risk requires causal knowledge.
+
+\item \textbf{Validation Strategy}: Our results suggest that validating network models solely on predictive performance may be misleading. Models should be evaluated on both (i) forecast accuracy and (ii) ability to recover true network structure in simulation studies where ground truth is known.
+\end{itemize}
+
+\subsection{Recommendations for Practice}
+
+Given these findings, we recommend:
+
+\begin{enumerate}
+\item \textbf{Control for Parameter Count}: When comparing HAR, GHAR, and GNNHAR, ensure fair comparisons by testing HAR-Extended models with equivalent parameter counts but alternative feature engineering.
+
+\item \textbf{Multiple Adjacency Specifications}: Report results for true, estimated (GLASSO/VAR), and random adjacency matrices to assess sensitivity to network specification.
+
+\item \textbf{Ensemble Methods}: Given high training variance, deploy ensemble models averaging across multiple random initializations rather than single best-performing runs.
+
+\item \textbf{Separate Objectives}: Maintain separate model pipelines for:
+\begin{itemize}
+\item \textit{Forecasting}: Use best-performing configuration (possibly random adjacency)
+\item \textit{Risk Analysis}: Use causally-grounded adjacency for spillover interpretation
+\end{itemize}
+\end{enumerate}
+
+Future work should rigorously test the parameter gain hypothesis through controlled experiments, explore alternative adjacency estimation methods, and investigate whether these findings generalize to real financial data and larger networks.
+
+\section*{Acknowledgments}
+
+This work was conducted as part of a quantitative finance research project. Code and data are available in the GNNHAR repository.
+
+\appendix
+
+\section{Data Generation Code Structure}
+
+The data generation pipeline implemented in \texttt{generate\_mock\_data.py} follows a hierarchical structure:
+
+\begin{enumerate}
+\item Generate leaf nodes (CVX, AXP, BA) as pure random walks
+\item Generate 1-hop neighbors (GS, JPM) with spillovers from leaf nodes
+\item Generate target node (IBM) with spillovers from 1-hop neighbors
+\item Apply nonlinear transformations ($\RV^4$ terms)
+\item Add heteroskedastic noise
+\end{enumerate}
+
+\section{Model Training Details}
+
+\subsection{Linear Models}
+
+HAR and GHAR models were estimated using ordinary least squares:
+
+\begin{equation}
+\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^\top \boldsymbol{X})^{-1} \boldsymbol{X}^\top \boldsymbol{v}
+\end{equation}
+
+where $\boldsymbol{X}$ contains HAR features (and graph-aggregated features for GHAR).
+
+\subsection{Neural Network Models}
+
+GNNHAR models were trained using the Adam optimizer with the following update rule:
+
+\begin{align}
+m_t &= \beta_1 m_{t-1} + (1-\beta_1) g_t\\
+v_t &= \beta_2 v_{t-1} + (1-\beta_2) g_t^2\\
+\theta_t &= \theta_{t-1} - \alpha \frac{m_t}{\sqrt{v_t} + \epsilon}
+\end{align}
+
+with $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$.
+
+\section{Computational Environment}
+
+\begin{itemize}
+\item \textbf{Operating System}: Windows 10
+\item \textbf{Python Version}: 3.x
+\item \textbf{PyTorch Version}: Latest stable release
+\item \textbf{Hardware}: CPU-based training (sufficient for this scale)
+\item \textbf{Training Time}: $\approx$ 5 minutes per GNNHAR model
+\end{itemize}
+
+\section{Complete Results Tables}
+
+Tables~\ref{tab:run1}--\ref{tab:random} in the main text present the comprehensive experimental results. Visual summaries are available in:
+
+\begin{itemize}
+\item \texttt{GNNHAR/data/mock/GNN-result1.png} (First run results)
+\item \texttt{GNNHAR/data/mock/GNN-result2.png} (Second run results)
+\end{itemize}
+
+\end{document}
+

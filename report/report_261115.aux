@@ -1,0 +1,115 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Research Objectives}{3}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Key Findings Summary}{3}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Methodology}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Data Generation Strategy}{3}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Network Structure}{3}{subsubsection.2.1.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Network Structure}}{3}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:network}{{1}{3}{Network Structure}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Data Generating Process}{4}{subsubsection.2.1.2}\protected@file@percent }
+\newlabel{eq:ibm}{{1}{4}{Data Generating Process}{equation.1}{}}
+\newlabel{eq:jpm}{{2}{4}{Data Generating Process}{equation.2}{}}
+\newlabel{eq:gs}{{3}{4}{Data Generating Process}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3}Parameter Settings}{4}{subsubsection.2.1.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Simulated Network Volatilities}}{4}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:network_volatilities}{{2}{4}{Simulated Network Volatilities}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.4}True Adjacency Matrix}{4}{subsubsection.2.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Model Specifications}{5}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}HAR Model (Baseline)}{5}{subsubsection.2.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.2}GHAR Model (Linear with Graph)}{5}{subsubsection.2.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.3}GNNHAR Models (Nonlinear with Graph)}{5}{subsubsection.2.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Evaluation Metrics}{5}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Mean Squared Error (MSE)}{6}{subsubsection.2.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.2}Quasi-Likelihood (QLIKE)}{6}{subsubsection.2.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Implementation Details}{6}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Code Structure}{6}{subsubsection.2.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.2}Training Configuration}{6}{subsubsection.2.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.3}Data Splits}{6}{subsubsection.2.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Experimental Results}{6}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Prediction Visualization}{6}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces GHAR Model Predictions vs. Actual Realized Volatility (True Adjacency)}}{7}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:predictions_ghar_true}{{3}{7}{GHAR Model Predictions vs. Actual Realized Volatility (True Adjacency)}{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}First Experimental Run}{7}{subsection.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Model Performance Comparison -- First Run}}{7}{table.caption.5}\protected@file@percent }
+\newlabel{tab:run1}{{1}{7}{Model Performance Comparison -- First Run}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Second Experimental Run}{7}{subsection.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Model Performance Comparison -- Second Run}}{8}{table.caption.6}\protected@file@percent }
+\newlabel{tab:run2}{{2}{8}{Model Performance Comparison -- Second Run}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Random Adjacency Matrix Experiments}{8}{subsection.3.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Performance with Random Adjacency Matrices}}{8}{table.caption.7}\protected@file@percent }
+\newlabel{tab:random}{{3}{8}{Performance with Random Adjacency Matrices}{table.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Comprehensive Model Comparison: MSE vs QLIKE Loss. The figure shows that GNNHAR2L trained with MSE loss and random adjacency achieves the best performance, outperforming models using true and GLASSO adjacency matrices.}}{9}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:random_results}{{4}{9}{Comprehensive Model Comparison: MSE vs QLIKE Loss. The figure shows that GNNHAR2L trained with MSE loss and random adjacency achieves the best performance, outperforming models using true and GLASSO adjacency matrices}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Key Findings and Discussion}{9}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Finding (i): GLASSO Fails to Recover True Network Structure}{9}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.1}Evidence}{9}{subsubsection.4.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.2}Performance Impact}{9}{subsubsection.4.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.3}Possible Explanations}{9}{subsubsection.4.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Finding (ii): Random Adjacency Matrices Consistently Outperform True and GLASSO}{10}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Empirical Evidence}{10}{subsubsection.4.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}Theoretical Interpretation}{10}{subsubsection.4.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.3}Interpretability vs Performance Trade-off}{10}{subsubsection.4.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.4}Regularization Hypothesis}{10}{subsubsection.4.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Finding (iii): MSE Training Dominates QLIKE Training}{11}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.1}Empirical Evidence}{11}{subsubsection.4.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.2}Possible Explanations}{11}{subsubsection.4.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Optimization Landscape}{11}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Gradient Stability}{11}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sample Size and Distribution}{11}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Finding (iv): Random Adjacency with QLIKE Shows Mixed Results}{11}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.1}Performance Comparison}{11}{subsubsection.4.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.2}Hypothesis}{12}{subsubsection.4.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.3}Resolution of Open Question}{12}{subsubsection.4.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Finding (v): Parameter Gain vs Information Gain Dilemma}{12}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.1}The Core Question}{12}{subsubsection.4.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.2}Evidence Supporting Parameter Gain Hypothesis}{12}{subsubsection.4.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Observation 1: Random Adjacency Outperforms True Adjacency}{12}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Observation 2: Similar Improvement Magnitudes Across Adjacency Types}{13}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Observation 3: Random Adjacency as Feature Engineering}{13}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.3}Alternative Interpretation: Implicit Regularization}{13}{subsubsection.4.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.4}Proposed Validation Experiments}{13}{subsubsection.4.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Experiment 1: HAR-Extended with Equal Parameters}{13}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Experiment 2: Parameter Scaling Analysis}{13}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Experiment 3: Information-Theoretic Analysis}{13}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.5}Implications for Model Design}{14}{subsubsection.4.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.6}Theoretical Connection to Causal Inference}{14}{subsubsection.4.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Finding (vi): High Variance Across Training Runs}{14}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.1}Evidence of Instability}{14}{subsubsection.4.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.2}Sources of Variance}{14}{subsubsection.4.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.3}Implications for Reproducibility}{15}{subsubsection.4.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions and Recommendations}{15}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Summary of Key Insights}{15}{subsection.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Summary of Findings with Severity Assessment}}{15}{table.caption.19}\protected@file@percent }
+\newlabel{tab:summary}{{4}{15}{Summary of Findings with Severity Assessment}{table.caption.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Immediate Recommendations}{15}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}Fix Reproducibility Issues}{15}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.2}Multiple Runs Protocol}{15}{subsubsection.5.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.3}Validation Set for Early Stopping}{16}{subsubsection.5.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Future Research Directions}{16}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}Priority 1: Parameter Gain Hypothesis Testing}{16}{subsubsection.5.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Experiment Design}{16}{table.caption.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Statistical Protocol}{16}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Expected Outcomes}{16}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2}Priority 2: Adjacency Matrix Optimization}{16}{subsubsection.5.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.3}Alternative Adjacency Estimation Methods}{16}{subsubsection.5.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.4}Larger-Scale Simulations}{17}{subsubsection.5.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.5}Loss Function Analysis}{17}{subsubsection.5.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.6}Ensemble Methods}{17}{subsubsection.5.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.7}Theoretical Investigation}{17}{subsubsection.5.3.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.8}Real Data Validation}{17}{subsubsection.5.3.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Study Limitations}{17}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusions}{18}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Fundamental Implications}{18}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Recommendations for Practice}{18}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Data Generation Code Structure}{19}{appendix.A}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Model Training Details}{19}{appendix.B}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Linear Models}{19}{subsection.B.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Neural Network Models}{19}{subsection.B.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Computational Environment}{20}{appendix.C}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Complete Results Tables}{20}{appendix.D}\protected@file@percent }
+\gdef \@abspage@last{20}

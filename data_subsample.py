@@ -109,7 +109,7 @@ def data_subsample(path):
 
 
 if __name__ == '__main__':
-    path = 'your local path for storing minutely LOBSTER data and processed data'
+    path = 'data/'
     # under the path, the code will create 3 folders: 
     # 1. LOBSTER: the raw LOBSTER data, 
     # 2. Minute_Data: the sanity checked minutely return data for each stock separately,

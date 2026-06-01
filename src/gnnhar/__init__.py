@@ -1,0 +1,2 @@
+"""GNNHAR volatility forecasting package."""
+

@@ -21,6 +21,7 @@
 \usepackage{placeins}
 
 \pgfplotsset{compat=1.18}
+\graphicspath{{reports/gnnhar_iv/figures/}{figures/}}
 \geometry{margin=1in}
 \onehalfspacing
 
@@ -532,6 +533,49 @@ Values below one indicate stronger out-of-sample QLIKE performance.
 \end{tikzpicture}
 \caption{Out-of-sample QLIKE ratios relative to HAR for the main linear model family.}
 \label{fig:modelbars}
+\end{figure}
+\FloatBarrier
+
+\subsection{Distributional Diagnostics Following Zhang et al.}
+
+Zhang et al. use grouped boxplots of forecast errors and forecast ratios to diagnose whether
+models over-predict or under-predict realized volatility across calm and turbulent regimes. We
+replicate this diagnostic in Figure \ref{fig:zhangbox}. The left column reports
+\(\widehat v_{i,t}-v_{i,t}\), while the right column reports
+\(\widehat v_{i,t}/v_{i,t}\). The dashed vertical lines mark zero forecast error and a unit
+forecast ratio. In the present Dow 30 experiment, the linear HAR/GHAR family remains tightly
+centered around these benchmarks, while the neural GNNHAR variants have much wider boxes.
+This visual evidence is consistent with the MCS result: the IV extension is valuable in the
+linear graph family, but the nonlinear graph models are unstable in this smaller panel.
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\textwidth]{zhang_style_error_ratio_boxplots.png}
+\caption{Grouped forecast error and forecast ratio boxplots following the diagnostic layout of
+Zhang et al. The rows report the full test period, calm days, and volatile days.}
+\label{fig:zhangbox}
+\end{figure}
+
+Figures \ref{fig:qq} and \ref{fig:phase} add two diagnostics that make the same point from
+different angles. The Q-Q plots compare standardized forecast residuals with normal quantiles.
+All four linear models display heavy right tails, which is typical for volatility forecasting
+because large realized-volatility spikes are difficult to predict exactly. The phase plots compare
+realized RV with forecast RV. Points close to the \(45^\circ\) line correspond to well-calibrated
+forecasts; the GHAR-IV panel is the most concentrated around that line among the four
+displayed linear models.
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\textwidth]{residual_qq_plots.png}
+\caption{Q-Q plots of standardized forecast residuals for the main linear models.}
+\label{fig:qq}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\textwidth]{forecast_phase_plots.png}
+\caption{Forecast-realization phase plots for the main linear models.}
+\label{fig:phase}
 \end{figure}
 \FloatBarrier
 

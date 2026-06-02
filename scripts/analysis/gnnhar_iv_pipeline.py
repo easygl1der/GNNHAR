@@ -516,6 +516,14 @@ def save_figures(
     best_names = loss_table.head(min(10, len(loss_table)))["model"].tolist()
     y = panel.target[panel.split["test"]]
     predictions = {run.name: run.prediction[panel.split["test"]] for run in runs}
+    test_dates = panel.dates[panel.split["test"]].astype(str).to_numpy()
+    np.savez_compressed(
+        output_dir / "predictions_test.npz",
+        truth=y.astype(np.float32),
+        dates=test_dates,
+        tickers=np.asarray(panel.tickers),
+        **{f"pred_{run.name.replace('+', 'plus').replace('-', '_')}": predictions[run.name].astype(np.float32) for run in runs},
+    )
 
     plt.figure(figsize=(10, 5))
     plt.boxplot(
@@ -568,6 +576,86 @@ def save_figures(
         plt.tight_layout()
         plt.savefig(fig_dir / "iv_decomposition.png", dpi=200)
         plt.close()
+
+    selected = [name for name in ["HAR", "HAR+IV", "GHAR", "GHAR+IV", "GNNHAR1L", "GNNHAR1L-IV"] if name in predictions]
+    market_rv = y.mean(axis=1)
+    volatile_threshold = float(np.quantile(market_rv, 0.75))
+    regimes = [
+        ("Full test period", np.ones(len(market_rv), dtype=bool)),
+        ("Calm days", market_rv < volatile_threshold),
+        ("Volatile days", market_rv >= volatile_threshold),
+    ]
+
+    def horizontal_boxplot(ax, values: List[np.ndarray], title: str, reference: float, xlabel: str) -> None:
+        ax.boxplot(values, vert=False, tick_labels=selected, showfliers=False, widths=0.65)
+        ax.axvline(reference, color="0.35", linestyle="--", linewidth=1.0)
+        ax.set_title(title, fontsize=10)
+        ax.set_xlabel(xlabel)
+        ax.tick_params(axis="y", labelsize=7)
+        ax.grid(axis="x", alpha=0.25)
+
+    fig, axes = plt.subplots(3, 2, figsize=(11, 10), sharey=False)
+    for row, (title, mask) in enumerate(regimes):
+        errors = [np.ravel(predictions[name][mask] - y[mask]) for name in selected]
+        ratios = [np.ravel(predictions[name][mask] / np.clip(y[mask], EPS, None)) for name in selected]
+        horizontal_boxplot(axes[row, 0], errors, f"{title}: forecast errors", 0.0, "forecast - realized RV")
+        horizontal_boxplot(axes[row, 1], ratios, f"{title}: forecast ratios", 1.0, "forecast / realized RV")
+    fig.suptitle("Grouped forecast error and ratio boxplots", fontsize=13)
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    fig.savefig(fig_dir / "zhang_style_error_ratio_boxplots.png", dpi=220)
+    plt.close(fig)
+
+    qq_models = [name for name in ["HAR", "HAR+IV", "GHAR", "GHAR+IV"] if name in predictions]
+    fig, axes = plt.subplots(2, 2, figsize=(8.5, 8.5))
+    axes_flat = axes.ravel()
+    try:
+        from scipy.stats import norm
+
+        probs = (np.arange(1, 1001) - 0.5) / 1000.0
+        theoretical = norm.ppf(probs)
+    except Exception:
+        probs = (np.arange(1, 1001) - 0.5) / 1000.0
+        theoretical = np.quantile(np.random.default_rng(12345).standard_normal(500000), probs)
+    for ax, name in zip(axes_flat, qq_models):
+        residuals = np.ravel(predictions[name] - y)
+        residuals = (residuals - residuals.mean()) / max(residuals.std(ddof=1), EPS)
+        empirical = np.quantile(residuals, probs)
+        ax.scatter(theoretical, empirical, s=5, alpha=0.55)
+        xlim = [float(theoretical.min()), float(theoretical.max())]
+        ax.plot(xlim, xlim, color="black", linewidth=1)
+        ax.set_xlim(xlim)
+        ax.set_title(name)
+        ax.set_xlabel("Normal quantile")
+        ax.set_ylabel("Residual quantile")
+        ax.grid(alpha=0.25)
+    for ax in axes_flat[len(qq_models):]:
+        ax.axis("off")
+    fig.suptitle("Q-Q plots of standardized forecast residuals", fontsize=13)
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
+    fig.savefig(fig_dir / "residual_qq_plots.png", dpi=220)
+    plt.close(fig)
+
+    phase_models = [name for name in ["HAR", "HAR+IV", "GHAR", "GHAR+IV"] if name in predictions]
+    fig, axes = plt.subplots(2, 2, figsize=(8.5, 8.5))
+    axes_flat = axes.ravel()
+    truth_flat = np.ravel(y)
+    lo, hi = np.quantile(truth_flat, [0.01, 0.99])
+    for ax, name in zip(axes_flat, phase_models):
+        pred_flat = np.ravel(predictions[name])
+        ax.hexbin(truth_flat, pred_flat, gridsize=35, cmap="Blues", mincnt=1)
+        ax.plot([lo, hi], [lo, hi], color="black", linewidth=1, linestyle="--")
+        ax.set_xlim(lo, hi)
+        ax.set_ylim(lo, hi)
+        ax.set_title(name)
+        ax.set_xlabel("Realized RV")
+        ax.set_ylabel("Forecast RV")
+        ax.grid(alpha=0.2)
+    for ax in axes_flat[len(phase_models):]:
+        ax.axis("off")
+    fig.suptitle("Forecast-realization phase plots", fontsize=13)
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
+    fig.savefig(fig_dir / "forecast_phase_plots.png", dpi=220)
+    plt.close(fig)
 
 
 def write_report(

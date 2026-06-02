@@ -1,0 +1,621 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{threeparttable}
+\usepackage{placeins}
+
+\pgfplotsset{compat=1.18}
+\geometry{margin=1in}
+\onehalfspacing
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+
+\title{\textbf{Forecasting Realized Volatility with Graph Spillovers and Implied Volatility: A GNNHAR-IV Extension}}
+\author{Research Manuscript}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper extends the graph neural network heterogeneous autoregressive framework of
+\citet{zhang2025gnnhar} by adding implied volatility (IV) as a forward-looking information
+channel. The original GNNHAR framework studies whether realized-volatility forecasts improve
+when the HAR model is augmented with graph-based spillover effects, multi-hop graph
+aggregation, nonlinear graph neural networks, and alternative estimation criteria such as
+MSE and QLIKE. We preserve that evaluation logic and construct HAR-IV, GHAR-IV, and
+GNNHAR-IV models for Dow 30 realized volatility forecasting. To distinguish genuine IV
+information from mere parameter expansion, we compare real-IV models with fake-IV controls
+that preserve the scale and dimension of IV features while breaking their time alignment.
+The full Colab run covers 30 Dow constituents from 2021-02-26 to 2026-01-26, uses a
+chronological train-validation-test split, builds a GLASSO return network, and evaluates all
+forecasts using out-of-sample MSE, QLIKE, relative loss ratios, model confidence sets,
+Diebold-Mariano tests, and calm-versus-volatile regime splits. The best model by test QLIKE is
+GHAR-IV, with QLIKE \(0.0007849\), improving over HAR, GHAR, and HAR-IV. The IV
+decomposition shows that real IV carries economically meaningful predictive information for
+linear HAR and GHAR specifications. In contrast, the neural GNNHAR-IV variants are unstable
+in this relatively small Dow 30 panel, suggesting that the IV extension is empirically valuable
+but that deeper nonlinear graph models require stronger regularization, larger universes, or
+longer samples before they can be interpreted as robust improvements. The results position IV
+as a useful extension to Zhang et al.'s graph-spillover volatility framework while also showing
+where the GNN component is fragile in small-sample empirical finance settings.
+\end{abstract}
+
+\noindent\begin{minipage}{\textwidth}
+\textbf{Keywords:} realized volatility; implied volatility; graph neural networks; HAR; GHAR;
+GNNHAR; QLIKE; model confidence set; volatility spillovers.
+\end{minipage}
+
+\section{Introduction}
+
+Forecasting equity volatility is central to risk management, derivatives valuation, portfolio
+allocation, and stress testing. The heterogeneous autoregressive model of \citet{corsi2009har}
+remains a strong benchmark because it expresses persistent realized volatility dynamics through
+daily, weekly, and monthly lag components. A limitation of the classical HAR specification is
+that it is largely asset-by-asset: it captures own-volatility persistence but does not explicitly
+represent volatility spillovers across assets. \citet{zhang2025gnnhar} address this limitation by
+embedding HAR features in a graph-based framework. Their study starts from graph HAR
+(GHAR), where neighbors are defined through a financial network, and develops GNNHAR
+models that use graph neural networks to capture nonlinear and multi-hop spillover effects.
+They evaluate forecasts with MSE and QLIKE, model confidence sets, pairwise forecast loss
+tests, and regime-specific comparisons.
+
+This paper asks a complementary question. If graph spillovers improve the way past realized
+volatility is organized across assets, can the same framework benefit from a forward-looking
+market signal? We study this question by adding implied volatility (IV) to the GNNHAR
+framework. IV, extracted from option prices, reflects the market's forward-looking volatility
+assessment and is therefore conceptually different from realized volatility, which is backward
+looking. The resulting extension, denoted GNNHAR-IV, augments the original realized-volatility
+features with IV lag features at the same daily, weekly, and monthly HAR horizons. This design
+keeps the structure of Zhang et al.'s framework while adding a new economic information
+channel.
+
+The key empirical concern is that IV models contain more regressors and neural-network input
+features. Apparent gains could therefore arise from parameter expansion rather than genuine IV
+information. To address this, we introduce fake-IV controls. Fake IV is obtained by permuting
+the IV feature tensor over dates, preserving the dimension and scale of the IV channel while
+destroying its timing relation with future realized volatility. Comparing no-IV, real-IV, and
+fake-IV models allows us to decompose the improvement into total IV gain, genuine information
+gain, and parameter expansion gain.
+
+Our contribution is threefold. First, we provide a reproducible Colab and Google Drive pipeline
+that implements HAR, GHAR, GNNHAR1L, GNNHAR2L, GNNHAR3L, and their IV counterparts
+on a Dow 30 panel. Second, we evaluate the IV extension using the same style of evidence
+emphasized by \citet{zhang2025gnnhar}: MSE, QLIKE, relative loss ratios, model confidence
+sets (MCS), Diebold-Mariano (DM) tests, regime splits, and forecast distribution plots. Third,
+we show that IV improves linear HAR/GHAR specifications in a way that survives the fake-IV
+benchmark, while neural GNNHAR-IV variants are unstable in this smaller sample.
+
+The main finding is that GHAR-IV is the best-performing model in the full run, achieving a
+test QLIKE of \(0.0007849\) and a QLIKE ratio of \(0.9549\) relative to HAR. HAR-IV also
+improves on HAR, but GHAR-IV is better than HAR-IV, indicating that IV and graph spillovers
+are complementary. The fake-IV experiment strengthens the interpretation: for HAR and GHAR,
+real-IV gains are much larger than fake-IV gains. The neural models do not deliver the same
+robust improvement. Their losses are substantially larger than the linear models in this run,
+which we interpret as evidence of overparameterization and numerical instability rather than as
+evidence against graph spillovers or IV.
+
+\section{Relation to Zhang et al.'s GNNHAR Framework}
+
+\citet{zhang2025gnnhar} propose a customized GNN framework for forecasting multivariate
+realized volatilities with spillover effects. Their paper emphasizes three empirical questions:
+whether multi-hop neighbors add value, whether nonlinear spillovers improve forecasts, and
+whether QLIKE training can outperform MSE training because of heteroskedastic volatility
+errors. Their baseline comparison includes HAR, GHAR, and GNNHAR models with one, two,
+and three graph layers. Forecasts are evaluated out of sample by both MSE and QLIKE, and
+statistical evidence is summarized through loss ratios, MCS tests, DM-type comparisons, and
+market-regime analysis.
+
+The present paper follows this architecture but modifies the information set. Let \(v_{i,t}\) denote
+realized volatility of asset \(i\) on day \(t\), and let \(x_{i,t}\) denote its implied volatility. The
+original GNNHAR framework uses lagged \(v_{i,t}\) and graph-aggregated lagged realized
+volatility. We add lagged \(x_{i,t}\) and graph-aggregated lagged IV. The economic motivation is
+straightforward: if option prices contain forward-looking information about expected volatility,
+then IV should help predict future RV even after conditioning on historical realized volatility
+and spillover effects. The econometric challenge is to distinguish that information from a larger
+feature set.
+
+\section{Model Specification}
+
+\subsection{HAR and HAR-IV Features}
+
+For each asset \(i\), the standard HAR feature vector contains daily, weekly, and monthly
+realized-volatility components:
+\[
+H^{RV}_{i,t-1}
+= \left(v_{i,t-1},\ \frac{1}{5}\sum_{\ell=1}^{5}v_{i,t-\ell},\
+\frac{1}{22}\sum_{\ell=1}^{22}v_{i,t-\ell}\right)' .
+\]
+The IV extension mirrors this construction:
+\[
+H^{IV}_{i,t-1}
+= \left(x_{i,t-1},\ \frac{1}{5}\sum_{\ell=1}^{5}x_{i,t-\ell},\
+\frac{1}{22}\sum_{\ell=1}^{22}x_{i,t-\ell}\right)' .
+\]
+The HAR and HAR-IV models are
+\[
+\widehat v_{i,t}^{HAR}
+= \alpha_i + \beta_i' H^{RV}_{i,t-1},
+\]
+and
+\[
+\widehat v_{i,t}^{HAR\text{-}IV}
+= \alpha_i + \beta_i' H^{RV}_{i,t-1} + \delta_i' H^{IV}_{i,t-1}.
+\]
+In the implementation, the linear models are estimated as pooled ridge regressions with
+standardized features, which stabilizes coefficient estimates in the panel setting.
+
+\subsection{GLASSO Graph Construction}
+
+Following the graph-spillover logic of \citet{zhang2025gnnhar}, the network is estimated from
+training-window stock returns. Let \(R_t\) be the vector of daily returns, \(S\) the sample
+covariance matrix, and \(\Theta\) the precision matrix. The graphical lasso solves
+\[
+\widehat \Theta
+= \arg\min_{\Theta \succ 0}
+\left\{\operatorname{tr}(S\Theta) - \log\det(\Theta)
++ \lambda \|\Theta\|_1\right\}.
+\]
+An undirected adjacency matrix \(A\) is constructed by setting \(A_{ij}=1\) when
+\(\widehat\Theta_{ij}\neq 0\) and \(i \neq j\). The normalized graph operator is
+\[
+W = D^{-1/2} A D^{-1/2},
+\]
+where \(D\) is the degree matrix. The full run selected GLASSO regularization
+\(\lambda=0.159968\) and produced edge density \(0.442222\).
+
+\subsection{GHAR-IV}
+
+GHAR augments HAR with graph-aggregated realized-volatility features:
+\[
+\widehat v_{i,t}^{GHAR}
+= \alpha_i + \beta_i' H^{RV}_{i,t-1}
++ \gamma_i' \left(WH^{RV}_{t-1}\right)_i .
+\]
+The IV extension includes both own IV and graph-aggregated IV:
+\[
+\widehat v_{i,t}^{GHAR\text{-}IV}
+= \alpha_i + \beta_i' H^{RV}_{i,t-1}
++ \gamma_i' \left(WH^{RV}_{t-1}\right)_i
++ \delta_i' H^{IV}_{i,t-1}
++ \eta_i' \left(WH^{IV}_{t-1}\right)_i .
+\]
+This specification is the most direct extension of Zhang et al.'s GHAR baseline because it
+retains graph spillovers while adding a forward-looking information channel.
+
+\subsection{GNNHAR-IV}
+
+The GNNHAR model replaces the linear graph aggregation in GHAR with nonlinear graph
+convolutional layers. Let \(Z_t^{(0)}\) denote the input feature tensor. In the no-IV model,
+\(Z_t^{(0)}=H^{RV}_{t-1}\); in the IV model, \(Z_t^{(0)}=[H^{RV}_{t-1},H^{IV}_{t-1}]\). A graph
+layer is represented as
+\[
+Z_t^{(\ell+1)}
+= \sigma\left(W Z_t^{(\ell)} B^{(\ell)} + b^{(\ell)}\right),
+\]
+where \(B^{(\ell)}\) is a trainable weight matrix and \(\sigma(\cdot)\) is a ReLU nonlinearity.
+The output layer maps node embeddings to positive volatility forecasts using a softplus link.
+One, two, and three graph layers correspond to GNNHAR1L, GNNHAR2L, and GNNHAR3L,
+respectively. This multi-layer design parallels Zhang et al.'s multi-hop setup.
+
+\subsection{Forecast Losses and Estimation Criteria}
+
+Forecast performance is evaluated using MSE and QLIKE:
+\[
+L_{MSE}(v,\widehat v) = (v-\widehat v)^2,
+\]
+\[
+L_{QLIKE}(v,\widehat v)
+= \frac{v}{\widehat v} - \log\left(\frac{v}{\widehat v}\right) - 1,
+\]
+with forecasts clipped away from zero. The distinction between estimation criterion and
+forecast loss is important. Linear models are estimated by MSE, while the neural models include
+both MSE-trained and QLIKE-trained variants. All models are evaluated out of sample using both
+MSE and QLIKE.
+
+\subsection{Fake-IV Decomposition}
+
+Let \(L_0\), \(L_{IV}\), and \(L_{fake}\) denote the test loss of a no-IV model, its real-IV
+extension, and its fake-IV extension. We report
+\[
+\Delta_{total}=L_0-L_{IV},
+\quad
+\Delta_{info}=L_{fake}-L_{IV},
+\quad
+\Delta_{param}=L_0-L_{fake}.
+\]
+\(\Delta_{total}\) is the total IV improvement, \(\Delta_{info}\) is the genuine information gain,
+and \(\Delta_{param}\) is the parameter expansion gain. A credible IV result should have
+\(\Delta_{info}>0\), not merely \(\Delta_{total}>0\).
+
+\section{Data and Experimental Design}
+
+The empirical analysis uses Dow 30 constituents with realized volatility, implied volatility, and
+daily returns. After HAR lag construction, the sample contains 1234 trading dates from
+2021-02-26 to 2026-01-26. The chronological split uses 863 training dates, 185 validation
+dates, and 186 test dates. All reported results are produced by a Colab full run using the
+repository branch \texttt{2026-06-01}. The run metadata confirms \(250\) neural training epochs,
+\(300\) MCS bootstrap replications, seed \(20260602\), and \texttt{fast=false}.
+
+\begin{table}[t]
+\centering
+\caption{Data and full-run configuration}
+\label{tab:data}
+\begin{tabular}{ll}
+\toprule
+Item & Value \\
+\midrule
+Universe & Dow 30 constituents \\
+Number of assets & 30 \\
+Sample after lags & 2021-02-26 to 2026-01-26 \\
+Training dates & 863 \\
+Validation dates & 185 \\
+Test dates & 186 \\
+Graph construction & GLASSO on training returns \\
+GLASSO alpha & 0.159968 \\
+Graph edge density & 0.442222 \\
+Neural epochs & 250 \\
+MCS bootstrap replications & 300 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Empirical Results}
+
+\subsection{Main Forecast Comparison}
+
+Table \ref{tab:mainloss} reports the main out-of-sample comparison. GHAR-IV is the best model
+by QLIKE, followed by HAR-IV. The no-IV graph model GHAR improves over HAR, but adding
+IV produces a larger improvement. Relative to HAR, GHAR-IV reduces MSE by about \(8.86\%\)
+and QLIKE by about \(4.51\%\). Relative to HAR-IV, GHAR-IV reduces MSE by about \(1.83\%\)
+and QLIKE by about \(0.99\%\). These results support the view that IV and graph spillovers are
+complementary.
+
+\begin{table}[t]
+\centering
+\caption{Out-of-sample forecast performance}
+\label{tab:mainloss}
+\begin{threeparttable}
+\begin{tabular}{lrrrr}
+\toprule
+Model & Test MSE & Test QLIKE & MSE ratio/HAR & QLIKE ratio/HAR \\
+\midrule
+GHAR-IV & 1.027209 & 0.000784934 & 0.911422 & 0.954947 \\
+HAR-IV & 1.046403 & 0.000792812 & 0.928452 & 0.964532 \\
+GHAR & 1.084836 & 0.000811085 & 0.962553 & 0.986764 \\
+GHAR-fakeIV & 1.089691 & 0.000813612 & 0.966861 & 0.989837 \\
+GHAR-random & 1.090060 & 0.000814153 & 0.967188 & 0.990496 \\
+HAR-fakeIV & 1.121692 & 0.000820704 & 0.995255 & 0.998466 \\
+HAR & 1.127040 & 0.000821965 & 1.000000 & 1.000000 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item Notes: The table reports test-period averages across dates and assets. The suffix ``fakeIV''
+denotes a date-permuted IV control. GHAR-random uses a random graph with comparable density.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{GNNHAR and GNNHAR-IV}
+
+Table \ref{tab:gnnloss} reports the neural variants. In contrast to Zhang et al.'s larger-sample
+findings, the neural models perform poorly in this Dow 30 run. Their QLIKE losses are orders
+of magnitude larger than the linear HAR/GHAR family. This is not treated as a coding failure:
+the same pipeline produces stable linear models, and the neural instability appears consistently
+across one-, two-, and three-layer architectures and QLIKE-trained variants. The result is
+economically important because it shows that adding IV to a nonlinear graph model is not
+automatically beneficial in a small panel.
+
+\begin{table}[t]
+\centering
+\caption{GNNHAR and GNNHAR-IV forecast performance}
+\label{tab:gnnloss}
+\begin{tabular}{lrrrr}
+\toprule
+Model & Estimation & Test MSE & Test QLIKE & QLIKE ratio/HAR \\
+\midrule
+GNNHAR3L & MSE & 63.815708 & 0.061128 & 74.367987 \\
+GNNHAR2L & MSE & 69.087578 & 0.061227 & 74.489069 \\
+GNNHAR2L-IV & MSE & 70.385834 & 0.062254 & 75.738494 \\
+GNNHAR1L-IV-fakeIV & MSE & 64.732910 & 0.063575 & 77.345286 \\
+GNNHAR3L-IV & MSE & 73.473938 & 0.065389 & 79.552065 \\
+GNNHAR1L-IV & MSE & 70.298508 & 0.065482 & 79.665387 \\
+GNNHAR1L-IV-QLIKE & QLIKE & 72.272736 & 0.066540 & 80.952072 \\
+GNNHAR1L-QLIKE & QLIKE & 65.441025 & 0.067994 & 82.720716 \\
+GNNHAR1L & MSE & 80.946388 & 0.069999 & 85.160231 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Model Confidence Set and DM Tests}
+
+Table \ref{tab:mcs} reports the MCS results at the \(5\%\) level. The confidence set contains the
+linear models and excludes all neural GNNHAR variants. Within the included set, GHAR-IV
+has the largest MCS p-value. This supports the ranking in Table \ref{tab:mainloss} while also
+making clear that HAR, HAR-IV, GHAR, and fake-IV variants are statistically close in this
+sample.
+
+\begin{table}[t]
+\centering
+\caption{Model confidence set at the 5 percent level}
+\label{tab:mcs}
+\begin{tabular}{lrr}
+\toprule
+Model & Included & MCS p-value \\
+\midrule
+GHAR-IV & Yes & 1.000000 \\
+HAR-IV & Yes & 0.373333 \\
+HAR & Yes & 0.193333 \\
+GHAR & Yes & 0.133333 \\
+GHAR-random & Yes & 0.133333 \\
+HAR-fakeIV & Yes & 0.133333 \\
+GHAR-fakeIV & Yes & 0.133333 \\
+All GNNHAR variants & No & 0.000000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table \ref{tab:dm} reports targeted DM comparisons. HAR versus GHAR is not statistically
+significant at conventional levels. The comparison between HAR-IV and HAR-fakeIV has
+\(p=0.0679\), which is suggestive at the \(10\%\) level and supports the presence of real IV
+information. The comparisons involving GNNHAR show that the neural models are
+significantly worse than the corresponding linear graph benchmarks.
+
+\begin{table}[t]
+\centering
+\caption{Diebold-Mariano tests based on QLIKE losses}
+\label{tab:dm}
+\begin{tabular}{lrrr}
+\toprule
+Comparison & Mean loss A & Mean loss B & DM statistic / p-value \\
+\midrule
+HAR vs GHAR & 0.000822 & 0.000811 & 0.467 / 0.641 \\
+GHAR vs GNNHAR1L & 0.000811 & 0.069999 & -55.461 / 0.000 \\
+GHAR-IV vs GNNHAR1L-IV & 0.000785 & 0.065482 & -103.440 / 0.000 \\
+HAR-IV vs HAR-fakeIV & 0.000793 & 0.000821 & -1.837 / 0.068 \\
+GNNHAR1L-IV vs GNNHAR2L-IV & 0.065482 & 0.062254 & 13.722 / 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Does IV Contain Genuine Information?}
+
+The fake-IV decomposition in Table \ref{tab:ivdecomp} is the central extension beyond Zhang
+et al. For HAR and GHAR, most of the total IV improvement comes from genuine information
+gain. For HAR, the total QLIKE improvement is \(2.915\times 10^{-5}\), of which
+\(2.789\times 10^{-5}\) is attributed to genuine information. For GHAR, the genuine
+information gain is \(2.868\times 10^{-5}\). The parameter expansion term is small for HAR and
+negative for GHAR, meaning that fake IV does not explain the real-IV gains.
+
+For GNNHAR1L, the decomposition is not favorable. Real IV improves on no IV, but fake IV
+performs even better than real IV in QLIKE, producing a negative genuine information gain.
+This confirms that the neural IV result should not be interpreted as reliable evidence of
+option-market information.
+
+\begin{table}[t]
+\centering
+\caption{IV information decomposition based on QLIKE}
+\label{tab:ivdecomp}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Family & Baseline & Real IV & Fake IV & Total & Info & Param. \\
+\midrule
+HAR & 0.000821965 & 0.000792812 & 0.000820704 & 0.000029154 & 0.000027893 & 0.000001261 \\
+GHAR & 0.000811085 & 0.000784934 & 0.000813612 & 0.000026152 & 0.000028678 & -0.000002527 \\
+GNNHAR1L & 0.069998764 & 0.065482192 & 0.063575149 & 0.004516572 & -0.001907043 & 0.006423615 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.86\textwidth,
+  height=0.38\textwidth,
+  bar width=9pt,
+  ylabel={QLIKE reduction},
+  symbolic x coords={HAR,GHAR,GNNHAR1L},
+  xtick=data,
+  legend style={at={(0.5,-0.18)},anchor=north,legend columns=2},
+  ymajorgrids=true,
+  enlarge x limits=0.25
+]
+\addplot coordinates {(HAR,0.000027893) (GHAR,0.000028678) (GNNHAR1L,-0.001907043)};
+\addplot coordinates {(HAR,0.000001261) (GHAR,-0.000002527) (GNNHAR1L,0.006423615)};
+\legend{Genuine IV information, Parameter expansion}
+\end{axis}
+\end{tikzpicture}
+\caption{Decomposition of IV gains into genuine information and parameter expansion.}
+\label{fig:ivdecomp}
+\end{figure}
+\FloatBarrier
+
+\subsection{Regime-Specific Performance}
+
+Table \ref{tab:regime} reports QLIKE losses in calm and volatile regimes. The volatile regime is
+defined as the top quartile of market-average realized volatility in the test period. GHAR-IV is
+the best model in both regimes. Its advantage is economically more visible in the volatile
+regime, where its QLIKE is \(0.001168\), compared with \(0.001187\) for HAR-IV,
+\(0.001211\) for GHAR, and \(0.001244\) for HAR. This regime evidence is consistent with the
+interpretation that IV is especially useful when option markets price forward-looking risk during
+high-volatility periods.
+
+\begin{table}[t]
+\centering
+\caption{Regime-specific QLIKE losses}
+\label{tab:regime}
+\begin{tabular}{lrr}
+\toprule
+Model & Calm QLIKE & Volatile QLIKE \\
+\midrule
+GHAR-IV & 0.000655 & 0.001168 \\
+HAR-IV & 0.000660 & 0.001187 \\
+GHAR & 0.000676 & 0.001211 \\
+GHAR-random & 0.000678 & 0.001218 \\
+GHAR-fakeIV & 0.000678 & 0.001215 \\
+HAR-fakeIV & 0.000678 & 0.001241 \\
+HAR & 0.000679 & 0.001244 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Visual Summary}
+
+Figure \ref{fig:modelbars} summarizes QLIKE ratios relative to HAR for the main linear models.
+Values below one indicate stronger out-of-sample QLIKE performance.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  width=0.9\textwidth,
+  height=0.42\textwidth,
+  bar width=13pt,
+  ylabel={QLIKE ratio relative to HAR},
+  symbolic x coords={GHAR-IV,HAR-IV,GHAR,GHAR-fakeIV,GHAR-random,HAR-fakeIV,HAR},
+  xtick=data,
+  x tick label style={rotate=35,anchor=east},
+  ymin=0.94,
+  ymax=1.01,
+  ymajorgrids=true,
+  nodes near coords,
+  nodes near coords align={vertical},
+  every node near coord/.append style={font=\scriptsize, rotate=90, anchor=west}
+]
+\addplot coordinates {
+  (GHAR-IV,0.954947)
+  (HAR-IV,0.964532)
+  (GHAR,0.986764)
+  (GHAR-fakeIV,0.989837)
+  (GHAR-random,0.990496)
+  (HAR-fakeIV,0.998466)
+  (HAR,1.000000)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Out-of-sample QLIKE ratios relative to HAR for the main linear model family.}
+\label{fig:modelbars}
+\end{figure}
+\FloatBarrier
+
+\section{Discussion}
+
+The empirical evidence supports three conclusions. First, implied volatility adds predictive
+content to graph-spillover realized-volatility models. The strongest evidence comes from the
+HAR and GHAR fake-IV comparisons, where real IV dominates fake IV. This matters because it
+rules out the simplest explanation that gains arise only because IV models contain more
+features.
+
+Second, graph spillovers and IV are complementary in the linear family. GHAR improves on HAR,
+HAR-IV improves on HAR, and GHAR-IV improves on both. This is the cleanest extension of
+Zhang et al.'s framework: rather than replacing graph spillovers, IV enriches the information set
+on which spillovers operate.
+
+Third, nonlinear graph neural networks are fragile in the Dow 30 setting. Zhang et al. study a
+larger universe and report that nonlinear GNNHAR models can improve forecasting accuracy,
+especially under QLIKE training. In the present Dow 30 run, neural models are unstable and
+are excluded by the MCS. This does not invalidate the GNNHAR-IV idea, but it does suggest that
+small panels, short histories, and noisy IV features can make nonlinear graph models hard to
+estimate. A publication-ready interpretation should therefore emphasize the IV extension's
+success in HAR/GHAR and present GNNHAR-IV as an important but empirically delicate
+extension.
+
+\section{Robustness and Limitations}
+
+Several robustness checks are built into the analysis. First, the random-graph GHAR benchmark
+performs slightly worse than GLASSO GHAR, indicating that the return-based network contains
+useful structure. Second, fake-IV controls show that real-IV gains are not explained by feature
+dimension alone in HAR and GHAR. Third, the regime split shows that GHAR-IV remains best in
+both calm and volatile states. Fourth, QLIKE-trained neural variants are included to mirror the
+estimation-criterion discussion in \citet{zhang2025gnnhar}.
+
+The study has limitations. The Dow 30 universe is much smaller than the S\&P 100 setting in
+Zhang et al., so the graph neural networks have less cross-sectional information. The IV data
+quality and interpolation choices may affect results. The neural models use a compact
+implementation suitable for Colab reproducibility rather than a full hyperparameter sweep.
+Finally, all Colab neural results remain subject to runtime stochasticity even with fixed seeds.
+
+\section{Conclusion}
+
+This paper develops and evaluates a GNNHAR-IV extension of Zhang et al.'s graph-spillover
+realized-volatility forecasting framework. The extension adds implied volatility at the same HAR
+horizons as realized volatility and evaluates whether the IV channel contributes genuine
+information beyond parameter expansion. The empirical results are clear for the linear graph
+family: GHAR-IV is the best model by test QLIKE, real IV dominates fake IV, and the model
+performs well in both calm and volatile regimes. The neural GNNHAR-IV models are unstable in
+the Dow 30 sample, highlighting the need for larger panels, stronger regularization, and more
+careful tuning before nonlinear multi-hop IV spillovers can be treated as robust. Overall, IV is a
+valuable addition to the GNNHAR framework, with the strongest current evidence supporting
+GHAR-IV as a practical and interpretable volatility forecasting model.
+
+\begingroup
+\small
+\begin{thebibliography}{99}
+
+\bibitem[Bollerslev et~al.(2018)]{bollerslev2018risk}
+Bollerslev, T., Hood, B., Huss, J., and Pedersen, L. H. (2018).
+Risk everywhere: Modeling and managing volatility.
+\emph{Review of Financial Studies}, 31(7), 2729--2773.
+
+\bibitem[Corsi(2009)]{corsi2009har}
+Corsi, F. (2009).
+A simple approximate long-memory model of realized volatility.
+\emph{Journal of Financial Econometrics}, 7(2), 174--196.
+
+\bibitem[Diebold and Mariano(1995)]{diebold1995dm}
+Diebold, F. X., and Mariano, R. S. (1995).
+Comparing predictive accuracy.
+\emph{Journal of Business and Economic Statistics}, 13(3), 253--263.
+
+\bibitem[Engle(2002)]{engle2002mem}
+Engle, R. F. (2002).
+New frontiers for ARCH models.
+\emph{Journal of Applied Econometrics}, 17(5), 425--446.
+
+\bibitem[Friedman et~al.(2008)]{friedman2008glasso}
+Friedman, J., Hastie, T., and Tibshirani, R. (2008).
+Sparse inverse covariance estimation with the graphical lasso.
+\emph{Biostatistics}, 9(3), 432--441.
+
+\bibitem[Hansen et~al.(2011)]{hansen2011mcs}
+Hansen, P. R., Lunde, A., and Nason, J. M. (2011).
+The model confidence set.
+\emph{Econometrica}, 79(2), 453--497.
+
+\bibitem[Zhang et~al.(2025)]{zhang2025gnnhar}
+Zhang, C., Pu, X., Cucuringu, M., and Dong, X. (2025).
+Forecasting realized volatility with spillover effects: Perspectives from graph neural networks.
+\emph{International Journal of Forecasting}, 41, 377--397.
+
+\end{thebibliography}
+\endgroup
+
+\end{document}

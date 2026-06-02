@@ -48,10 +48,12 @@ MSE and QLIKE. We preserve that evaluation logic and construct HAR-IV, GHAR-IV, 
 GNNHAR-IV models for Dow 30 realized volatility forecasting. To distinguish genuine IV
 information from mere parameter expansion, we compare real-IV models with fake-IV controls
 that preserve the scale and dimension of IV features while breaking their time alignment.
-The full Colab run covers 30 Dow constituents from 2021-02-26 to 2026-01-26, uses a
-chronological train-validation-test split, builds a GLASSO return network, and evaluates all
-forecasts using out-of-sample MSE, QLIKE, relative loss ratios, model confidence sets,
-Diebold-Mariano tests, and calm-versus-volatile regime splits. The best model by test QLIKE is
+The IV source is AlphaQuery's stock-level implied-volatility data product, using the
+30-day implied-volatility mean as the forward-looking option-market signal. The full Colab run
+covers 30 Dow constituents from 2021-02-26 to 2026-01-26, uses a chronological
+train-validation-test split, builds a GLASSO return network, and evaluates all forecasts using
+out-of-sample MSE, QLIKE, relative loss ratios, model confidence sets, Diebold-Mariano tests,
+and calm-versus-volatile regime splits. The best model by test QLIKE is
 GHAR-IV, with QLIKE \(0.0007849\), improving over HAR, GHAR, and HAR-IV. The IV
 decomposition shows that real IV carries economically meaningful predictive information for
 linear HAR and GHAR specifications. In contrast, the neural GNNHAR-IV variants are unstable
@@ -252,11 +254,17 @@ and \(\Delta_{param}\) is the parameter expansion gain. A credible IV result sho
 \section{Data and Experimental Design}
 
 The empirical analysis uses Dow 30 constituents with realized volatility, implied volatility, and
-daily returns. After HAR lag construction, the sample contains 1234 trading dates from
-2021-02-26 to 2026-01-26. The chronological split uses 863 training dates, 185 validation
-dates, and 186 test dates. All reported results are produced by a Colab full run using the
-repository branch \texttt{2026-06-01}. The run metadata confirms \(250\) neural training epochs,
-\(300\) MCS bootstrap replications, seed \(20260602\), and \texttt{fast=false}.
+daily returns. The implied-volatility input is sourced from AlphaQuery's volatility and option
+statistics pages \citep{alphaquery2026}. Specifically, the IV channel uses the 30-day
+``Implied Volatility (Mean)'' field, which AlphaQuery reports as the average of put and call
+implied volatilities for options with the relevant expiration date. AlphaQuery also reports
+the corresponding 30-day call IV, put IV, put-call IV ratio, skew, and historical-volatility
+measures; this study uses the mean IV series as the primary forward-looking option-market
+signal. After HAR lag construction, the sample contains 1234 trading dates from 2021-02-26 to
+2026-01-26. The chronological split uses 863 training dates, 185 validation dates, and 186 test
+dates. All reported results are produced by a Colab full run using the repository branch
+\texttt{2026-06-01}. The run metadata confirms \(250\) neural training epochs, \(300\) MCS
+bootstrap replications, seed \(20260602\), and \texttt{fast=false}.
 
 \begin{table}[t]
 \centering
@@ -269,6 +277,7 @@ Item & Value \\
 Universe & Dow 30 constituents \\
 Number of assets & 30 \\
 Sample after lags & 2021-02-26 to 2026-01-26 \\
+IV data source & AlphaQuery 30-day IV Mean \\
 Training dates & 863 \\
 Validation dates & 185 \\
 Test dates & 186 \\
@@ -559,9 +568,11 @@ estimation-criterion discussion in \citet{zhang2025gnnhar}.
 
 The study has limitations. The Dow 30 universe is much smaller than the S\&P 100 setting in
 Zhang et al., so the graph neural networks have less cross-sectional information. The IV data
-quality and interpolation choices may affect results. The neural models use a compact
-implementation suitable for Colab reproducibility rather than a full hyperparameter sweep.
-Finally, all Colab neural results remain subject to runtime stochasticity even with fixed seeds.
+are taken from AlphaQuery's summarized option-statistics fields rather than reconstructed from
+raw option chains; therefore, vendor definitions, data availability, and interpolation choices
+may affect results. The neural models use a compact implementation suitable for Colab
+reproducibility rather than a full hyperparameter sweep. Finally, all Colab neural results remain
+subject to runtime stochasticity even with fixed seeds.
 
 \section{Conclusion}
 
@@ -577,8 +588,16 @@ valuable addition to the GNNHAR framework, with the strongest current evidence s
 GHAR-IV as a practical and interpretable volatility forecasting model.
 
 \begingroup
-\small
+\footnotesize
 \begin{thebibliography}{99}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+
+\bibitem[AlphaQuery(2026)]{alphaquery2026}
+AlphaQuery. (2026).
+Volatility and option statistics data variables.
+\url{https://www.alphaquery.com/}.
+Accessed June 2, 2026.
 
 \bibitem[Bollerslev et~al.(2018)]{bollerslev2018risk}
 Bollerslev, T., Hood, B., Huss, J., and Pedersen, L. H. (2018).

@@ -220,7 +220,15 @@ Z_t^{(\ell+1)}
 where \(B^{(\ell)}\) is a trainable weight matrix and \(\sigma(\cdot)\) is a ReLU nonlinearity.
 The output layer maps node embeddings to positive volatility forecasts using a softplus link.
 One, two, and three graph layers correspond to GNNHAR1L, GNNHAR2L, and GNNHAR3L,
-respectively. This multi-layer design parallels Zhang et al.'s multi-hop setup.
+respectively. This multi-layer design parallels Zhang et al.'s multi-hop setup. The empirical
+implementation therefore includes both no-IV neural graph models and their IV-augmented
+counterparts:
+\[
+\text{GNNHAR}k\text{L-IV}: \quad Z_t^{(0)}=[H^{RV}_{t-1},H^{IV}_{t-1}], \qquad k\in\{1,2,3\}.
+\]
+These models are not linear GHAR-IV regressions. They are nonlinear graph neural networks
+whose first-layer inputs contain both realized-volatility HAR features and AlphaQuery IV HAR
+features, and whose graph propagation matrix is the same GLASSO network used in GHAR.
 
 \subsection{Forecast Losses and Estimation Criteria}
 
@@ -265,7 +273,12 @@ signal. After HAR lag construction, the sample contains 1234 trading dates from 
 2026-01-26. The chronological split uses 863 training dates, 185 validation dates, and 186 test
 dates. All reported results are produced by a Colab full run using the repository branch
 \texttt{2026-06-01}. The run metadata confirms \(250\) neural training epochs, \(300\) MCS
-bootstrap replications, seed \(20260602\), and \texttt{fast=false}.
+bootstrap replications, seed \(20260602\), \texttt{fast=false}, and
+\texttt{skip\_qlike\_training=false}. The Colab output directory is
+\texttt{/content/drive/MyDrive/GNNHAR-colab-runs/outputs}; its exported tables contain
+HAR, GHAR, GNNHAR1L, GNNHAR2L, GNNHAR3L, GNNHAR1L-IV, GNNHAR2L-IV,
+GNNHAR3L-IV, and QLIKE-trained neural variants. Thus the reported neural results are from a
+full Colab run rather than from a local smoke test.
 
 \begin{table}[t]
 \centering
@@ -279,6 +292,7 @@ Universe & Dow 30 constituents \\
 Number of assets & 30 \\
 Sample after lags & 2021-02-26 to 2026-01-26 \\
 IV data source & AlphaQuery 30-day IV Mean \\
+Neural model family & GNNHAR1L/2L/3L with and without IV \\
 Training dates & 863 \\
 Validation dates & 185 \\
 Test dates & 186 \\
@@ -330,13 +344,20 @@ denotes a date-permuted IV control. GHAR-random uses a random graph with compara
 
 \subsection{GNNHAR and GNNHAR-IV}
 
-Table \ref{tab:gnnloss} reports the neural variants. In contrast to Zhang et al.'s larger-sample
-findings, the neural models perform poorly in this Dow 30 run. Their QLIKE losses are orders
-of magnitude larger than the linear HAR/GHAR family. This is not treated as a coding failure:
-the same pipeline produces stable linear models, and the neural instability appears consistently
-across one-, two-, and three-layer architectures and QLIKE-trained variants. The result is
-economically important because it shows that adding IV to a nonlinear graph model is not
-automatically beneficial in a small panel.
+Table \ref{tab:gnnloss} reports the neural variants from the Colab full run. The key point is
+that GNNHAR-IV is explicitly estimated: the table includes one-, two-, and three-layer
+IV-augmented graph neural networks, plus a QLIKE-trained GNNHAR1L-IV variant. Among
+the neural IV models, GNNHAR2L-IV is the best by QLIKE, with test QLIKE \(0.062254\);
+GNNHAR3L-IV and GNNHAR1L-IV have QLIKE \(0.065389\) and \(0.065482\), respectively.
+These values are far above the linear GHAR-IV QLIKE of \(0.000785\).
+
+This is not treated as evidence that the GNNHAR-IV model was not run. Rather, it is the main
+negative empirical finding for the neural extension in this Dow 30 sample. The same Colab
+pipeline produces stable HAR, GHAR, HAR-IV, and GHAR-IV results, while the neural
+GNNHAR and GNNHAR-IV variants remain unstable across layer depth, IV inclusion, and
+QLIKE training. The interpretation is therefore that GNNHAR-IV is implemented and tested,
+but that the current Dow 30 panel is too small and short for the nonlinear graph network to
+outperform the linear graph-IV benchmark without stronger regularization or a larger universe.
 
 \begin{table}[t]
 \centering

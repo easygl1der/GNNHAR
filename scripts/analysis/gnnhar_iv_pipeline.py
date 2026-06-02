@@ -159,12 +159,17 @@ def glasso_adjacency(returns: pd.DataFrame, train_dates: Iterable[pd.Timestamp])
 
     train_returns = returns.loc[returns.index.intersection(pd.DatetimeIndex(train_dates))]
     train_returns = train_returns.replace([np.inf, -np.inf], np.nan).dropna()
+    train_values = train_returns.to_numpy(dtype=float)
+    train_values = np.nan_to_num(train_values, nan=0.0, posinf=0.0, neginf=0.0)
+    train_values = train_values - train_values.mean(axis=0, keepdims=True)
+    train_scale = train_values.std(axis=0, keepdims=True)
+    train_values = train_values / np.where(train_scale < EPS, 1.0, train_scale)
     try:
-        cov = GraphicalLassoCV(cv=5, max_iter=1000).fit(train_returns)
+        cov = GraphicalLassoCV(cv=5, max_iter=1000).fit(train_values)
         precision = cov.precision_
         alpha = float(cov.alpha_)
     except Exception:
-        cov = GraphicalLasso(alpha=0.01, max_iter=1000).fit(train_returns)
+        cov = GraphicalLasso(alpha=0.01, max_iter=1000).fit(train_values)
         precision = cov.precision_
         alpha = 0.01
 
@@ -515,7 +520,7 @@ def save_figures(
     plt.figure(figsize=(10, 5))
     plt.boxplot(
         [np.ravel(np.abs(y - predictions[name])) for name in best_names],
-        labels=best_names,
+        tick_labels=best_names,
         showfliers=False,
     )
     plt.xticks(rotation=45, ha="right")
@@ -528,7 +533,7 @@ def save_figures(
     plt.figure(figsize=(10, 5))
     plt.boxplot(
         [np.ravel(predictions[name] / np.clip(y, EPS, None)) for name in best_names],
-        labels=best_names,
+        tick_labels=best_names,
         showfliers=False,
     )
     plt.axhline(1.0, color="black", linewidth=1)

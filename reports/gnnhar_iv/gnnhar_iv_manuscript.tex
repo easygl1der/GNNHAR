@@ -684,11 +684,12 @@ interactive Google Drive mount prompt.
 \setlength{\itemsep}{0pt}
 \item Colab GitHub secret: \texttt{GITHUB\_TOKEN}.
 \item Colab Drive secret: \texttt{GDRIVE\_SERVICE\_ACCOUNT\_JSON}.
-\item Colab output-folder secret: \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}.
+\item Colab output-folder secret: \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}; the configured
+folder ID is reproduced below.
 \item Private-repository access: \texttt{GITHUB\_TOKEN} gives Colab read access to the
 private GitHub repository containing the code and input data.
-\item Drive upload access: the service-account email must be shared on the destination
-Drive folder identified by \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}.
+\item Drive upload access: the destination folder is shared with the configured service
+account, whose email is reproduced below.
 \item Full run flags: \texttt{fast=false}, \texttt{epochs=250}, and
 \texttt{mcs\_bootstrap=300}. QLIKE training was enabled.
 \item Sample and split: seed \(20260602\), 1234 usable dates, and a \(863/185/186\)
@@ -696,6 +697,13 @@ train-validation-test split.
 \item Neural tables: \path{tables/model_losses.csv} reports one-, two-, and three-layer
 GNNHAR models, their IV extensions, and QLIKE-trained neural variants.
 \end{itemize}
+
+\begin{lstlisting}[caption={Configured service-account destination.}]
+GDRIVE_OUTPUT_FOLDER_ID = '1jdw1_WlULw7SmUbA3r7PK7zzUBI15O5x'
+SERVICE_ACCOUNT_EMAIL = (
+    'onyx-gemini-vertex@gen-lang-client-0171977595.iam.gserviceaccount.com'
+)
+\end{lstlisting}
 
 \subsection{Notebook Cells}
 
@@ -725,7 +733,12 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 if REPO_DIR.exists():
     shutil.rmtree(REPO_DIR)
 
-repo_url = f'https://{GITHUB_TOKEN}@github.com/{REPO_OWNER}/{REPO_NAME}.git'
+netrc_path = pathlib.Path.home() / '.netrc'
+netrc_path.write_text(
+    f'machine github.com login x-access-token password {GITHUB_TOKEN}\n'
+)
+netrc_path.chmod(0o600)
+repo_url = f'https://github.com/{REPO_OWNER}/{REPO_NAME}.git'
 subprocess.run([
     'git', 'clone', '--depth', '1', '--branch', BRANCH, repo_url, str(REPO_DIR),
 ], check=True)

@@ -1,0 +1,22 @@
+\begin{tabular}{lllllrrrrrr}
+\toprule
+model & family & iv_channel & adjacency & estimation & test_mse & test_qlike & mse_ratio_vs_har & qlike_ratio_vs_har & mse_ratio_vs_har_iv & qlike_ratio_vs_har_iv \\
+\midrule
+GHAR+IV & GHAR & real & GLASSO & MSE & 1.02721 & 0.000784934 & 0.911422 & 0.954947 & 0.981657 & 0.990063 \\
+HAR+IV & HAR & real & Identity & MSE & 1.0464 & 0.000792812 & 0.928452 & 0.964532 & 1 & 1 \\
+GHAR & GHAR & none & GLASSO & MSE & 1.08484 & 0.000811085 & 0.962553 & 0.986764 & 1.03673 & 1.02305 \\
+GHAR+fakeIV & GHAR & fake & GLASSO & MSE & 1.08969 & 0.000813612 & 0.966861 & 0.989837 & 1.04137 & 1.02624 \\
+GHAR_RANDOM & GHAR & none & Random & MSE & 1.09006 & 0.000814153 & 0.967188 & 0.990496 & 1.04172 & 1.02692 \\
+HAR+fakeIV & HAR & fake & Identity & MSE & 1.12169 & 0.000820704 & 0.995255 & 0.998466 & 1.07195 & 1.03518 \\
+HAR & HAR & none & Identity & MSE & 1.12704 & 0.000821965 & 1 & 1 & 1.07706 & 1.03677 \\
+GNNHAR3L & GNNHAR & none & GLASSO & MSE & 63.8157 & 0.0611279 & 56.6224 & 74.368 & 60.9858 & 77.1027 \\
+GNNHAR2L & GNNHAR & none & GLASSO & MSE & 69.0876 & 0.0612274 & 61.3 & 74.4891 & 66.0239 & 77.2282 \\
+GNNHAR2L-IV & GNNHAR & real & GLASSO & MSE & 70.3858 & 0.0622544 & 62.4519 & 75.7385 & 67.2646 & 78.5236 \\
+GNNHAR1L-IV+fakeIV & GNNHAR & fake & GLASSO & MSE & 64.7329 & 0.0635751 & 57.4362 & 77.3453 & 61.8623 & 80.1895 \\
+GNNHAR3L-IV & GNNHAR & real & GLASSO & MSE & 73.4739 & 0.065389 & 65.1919 & 79.5521 & 70.2157 & 82.4774 \\
+GNNHAR1L-IV & GNNHAR & real & GLASSO & MSE & 70.2985 & 0.0654822 & 62.3744 & 79.6654 & 67.1811 & 82.5949 \\
+GNNHAR1L-IV-QLIKE & GNNHAR & real & GLASSO & QLIKE & 72.2727 & 0.0665398 & 64.1261 & 80.9521 & 69.0678 & 83.9289 \\
+GNNHAR1L-QLIKE & GNNHAR & none & GLASSO & QLIKE & 65.441 & 0.0679936 & 58.0645 & 82.7207 & 62.539 & 85.7626 \\
+GNNHAR1L & GNNHAR & none & GLASSO & MSE & 80.9464 & 0.0699988 & 71.8221 & 85.1602 & 77.3568 & 88.2918 \\
+\bottomrule
+\end{tabular}

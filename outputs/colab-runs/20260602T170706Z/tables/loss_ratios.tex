@@ -1,0 +1,22 @@
+\begin{tabular}{llrrrr}
+\toprule
+model & estimation & mse_ratio_vs_har & qlike_ratio_vs_har & mse_ratio_vs_har_iv & qlike_ratio_vs_har_iv \\
+\midrule
+GHAR+IV & MSE & 0.911422 & 0.954947 & 0.981657 & 0.990063 \\
+HAR+IV & MSE & 0.928452 & 0.964532 & 1 & 1 \\
+GHAR & MSE & 0.962553 & 0.986764 & 1.03673 & 1.02305 \\
+GHAR+fakeIV & MSE & 0.966861 & 0.989837 & 1.04137 & 1.02624 \\
+GHAR_RANDOM & MSE & 0.967188 & 0.990496 & 1.04172 & 1.02692 \\
+HAR+fakeIV & MSE & 0.995255 & 0.998466 & 1.07195 & 1.03518 \\
+HAR & MSE & 1 & 1 & 1.07706 & 1.03677 \\
+GNNHAR3L & MSE & 56.6224 & 74.368 & 60.9858 & 77.1027 \\
+GNNHAR2L & MSE & 61.3 & 74.4891 & 66.0239 & 77.2282 \\
+GNNHAR2L-IV & MSE & 62.4519 & 75.7385 & 67.2646 & 78.5236 \\
+GNNHAR1L-IV+fakeIV & MSE & 57.4362 & 77.3453 & 61.8623 & 80.1895 \\
+GNNHAR3L-IV & MSE & 65.1919 & 79.5521 & 70.2157 & 82.4774 \\
+GNNHAR1L-IV & MSE & 62.3744 & 79.6654 & 67.1811 & 82.5949 \\
+GNNHAR1L-IV-QLIKE & QLIKE & 64.1261 & 80.9521 & 69.0678 & 83.9289 \\
+GNNHAR1L-QLIKE & QLIKE & 58.0645 & 82.7207 & 62.539 & 85.7626 \\
+GNNHAR1L & MSE & 71.8221 & 85.1602 & 77.3568 & 88.2918 \\
+\bottomrule
+\end{tabular}

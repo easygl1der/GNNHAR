@@ -674,12 +674,21 @@ opened directly in Colab:
 \noindent\href{https://colab.research.google.com/github/easygl1der/GNNHAR/blob/2026-06-01/notebooks/gnnhar_iv_colab_full_run.ipynb}{Open the GNNHAR-IV Colab full-run notebook}.
 The repository path is \path{notebooks/gnnhar_iv_colab_full_run.ipynb}.
 
-The notebook clones the repository branch \texttt{2026-06-01}, mounts Google Drive, runs the
-full GNNHAR-IV pipeline, and writes tables, figures, metadata, and a report draft to the
-Drive folder \path{/content/drive/MyDrive/GNNHAR-colab-runs/outputs}.
+The notebook clones the repository branch \texttt{2026-06-01} from GitHub, runs the
+full GNNHAR-IV pipeline with the repository's tracked Dow 30 input data, writes outputs to
+\path{/content/gnnhar_outputs}, and uploads those outputs to Google Drive through the Drive
+API with a service account. This avoids \texttt{drive.mount} and therefore avoids the repeated
+interactive Google Drive mount prompt.
 
 \begin{itemize}
 \setlength{\itemsep}{0pt}
+\item Colab GitHub secret: \texttt{GITHUB\_TOKEN}.
+\item Colab Drive secret: \texttt{GDRIVE\_SERVICE\_ACCOUNT\_JSON}.
+\item Colab output-folder secret: \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}.
+\item Private-repository access: \texttt{GITHUB\_TOKEN} gives Colab read access to the
+private GitHub repository containing the code and input data.
+\item Drive upload access: the service-account email must be shared on the destination
+Drive folder identified by \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}.
 \item Full run flags: \texttt{fast=false}, \texttt{epochs=250}, and
 \texttt{mcs\_bootstrap=300}. QLIKE training was enabled.
 \item Sample and split: seed \(20260602\), 1234 usable dates, and a \(863/185/186\)
@@ -693,27 +702,32 @@ GNNHAR models, their IV extensions, and QLIKE-trained neural variants.
 The core notebook cells are reproduced below so that the empirical run is checkable even
 without relying on screenshots.
 
-\begin{lstlisting}[language=Python,caption={Mount Google Drive in Colab.}]
-from google.colab import drive
-drive.mount('/content/drive')
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Clone the exact GitHub branch used in the full run.}]
+\begin{lstlisting}[language=Python,caption={Clone the private GitHub branch and set local output directory.}]
+import json
 import pathlib
 import shutil
 import subprocess
+import sys
 
-REPO_URL = 'https://github.com/easygl1der/GNNHAR.git'
+from google.colab import userdata
+
+REPO_OWNER = 'easygl1der'
+REPO_NAME = 'GNNHAR'
 BRANCH = '2026-06-01'
 REPO_DIR = pathlib.Path('/content/GNNHAR')
-OUTPUT_DIR = pathlib.Path('/content/drive/MyDrive/GNNHAR-colab-runs/outputs')
+OUTPUT_DIR = pathlib.Path('/content/gnnhar_outputs')
+
+GITHUB_TOKEN = userdata.get('GITHUB_TOKEN')
+if not GITHUB_TOKEN:
+    raise RuntimeError('Missing Colab Secret: GITHUB_TOKEN')
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 if REPO_DIR.exists():
     shutil.rmtree(REPO_DIR)
 
+repo_url = f'https://{GITHUB_TOKEN}@github.com/{REPO_OWNER}/{REPO_NAME}.git'
 subprocess.run([
-    'git', 'clone', '--depth', '1', '--branch', BRANCH, REPO_URL, str(REPO_DIR),
+    'git', 'clone', '--depth', '1', '--branch', BRANCH, repo_url, str(REPO_DIR),
 ], check=True)
 \end{lstlisting}
 
@@ -721,8 +735,15 @@ subprocess.run([
 import subprocess
 import sys
 
-mods = ['numpy', 'pandas', 'sklearn', 'matplotlib', 'torch', 'scipy']
-packages = {'sklearn': 'scikit-learn'}
+mods = [
+    'numpy', 'pandas', 'sklearn', 'matplotlib', 'torch', 'scipy',
+    'googleapiclient', 'google.oauth2',
+]
+packages = {
+    'sklearn': 'scikit-learn',
+    'googleapiclient': 'google-api-python-client',
+    'google.oauth2': 'google-auth',
+}
 missing = []
 for mod in mods:
     try:
@@ -739,9 +760,9 @@ if missing:
 
 \begin{lstlisting}[language=Python,caption={Run the full GNNHAR-IV empirical pipeline.}]
 subprocess.run([
-    'python', '/content/GNNHAR/scripts/analysis/gnnhar_iv_pipeline.py',
-    '--data-dir', '/content/GNNHAR/experiments/dow30/data',
-    '--output-dir', '/content/drive/MyDrive/GNNHAR-colab-runs/outputs',
+    'python', str(REPO_DIR / 'scripts/analysis/gnnhar_iv_pipeline.py'),
+    '--data-dir', str(REPO_DIR / 'experiments/dow30/data'),
+    '--output-dir', str(OUTPUT_DIR),
     '--epochs', '250',
 ], check=True)
 \end{lstlisting}
@@ -750,21 +771,53 @@ subprocess.run([
 import json
 import pathlib
 
-output_dir = pathlib.Path('/content/drive/MyDrive/GNNHAR-colab-runs/outputs')
-for path in sorted(output_dir.glob('**/*')):
+for path in sorted(OUTPUT_DIR.glob('**/*')):
     if path.is_file():
         print(path)
 
 print('\nmetadata:')
-print(json.dumps(json.loads((output_dir / 'run_metadata.json').read_text()), indent=2))
+print(json.dumps(json.loads((OUTPUT_DIR / 'run_metadata.json').read_text()), indent=2))
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python,caption={Inspect the GNNHAR and GNNHAR-IV loss table.}]
 import pandas as pd
 
-pd.read_csv(
-    '/content/drive/MyDrive/GNNHAR-colab-runs/outputs/tables/model_losses.csv'
-).head(20)
+pd.read_csv(OUTPUT_DIR / 'tables/model_losses.csv').head(20)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Upload local outputs to Google Drive through the Drive API.}]
+import json
+import mimetypes
+
+from google.colab import userdata
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
+service_account_json = userdata.get('GDRIVE_SERVICE_ACCOUNT_JSON')
+folder_id = userdata.get('GDRIVE_OUTPUT_FOLDER_ID')
+if not service_account_json:
+    raise RuntimeError('Missing Colab Secret: GDRIVE_SERVICE_ACCOUNT_JSON')
+if not folder_id:
+    raise RuntimeError('Missing Colab Secret: GDRIVE_OUTPUT_FOLDER_ID')
+
+info = json.loads(service_account_json)
+creds = service_account.Credentials.from_service_account_info(
+    info, scopes=['https://www.googleapis.com/auth/drive']
+)
+drive = build('drive', 'v3', credentials=creds)
+
+def upload_file(path, parent_id):
+    mime_type = mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
+    meta = {'name': path.name, 'parents': [parent_id]}
+    media = MediaFileUpload(str(path), mimetype=mime_type, resumable=True)
+    return drive.files().create(
+        body=meta, media_body=media, fields='id, name'
+    ).execute()
+
+for path in sorted(OUTPUT_DIR.rglob('*')):
+    if path.is_file():
+        print('uploaded:', upload_file(path, folder_id))
 \end{lstlisting}
 
 \begingroup

@@ -674,22 +674,19 @@ opened directly in Colab:
 \noindent\href{https://colab.research.google.com/github/easygl1der/GNNHAR/blob/2026-06-01/notebooks/gnnhar_iv_colab_full_run.ipynb}{Open the GNNHAR-IV Colab full-run notebook}.
 The repository path is \path{notebooks/gnnhar_iv_colab_full_run.ipynb}.
 
-The notebook clones the repository branch \texttt{2026-06-01} from GitHub, runs the
-full GNNHAR-IV pipeline with the repository's tracked Dow 30 input data, writes outputs to
-\path{/content/gnnhar_outputs}, and uploads those outputs to Google Drive through the Drive
-API with a service account. This avoids \texttt{drive.mount} and therefore avoids the repeated
-interactive Google Drive mount prompt.
+The notebook clones the repository branch \texttt{2026-06-01} from the private GitHub
+repository, runs the full GNNHAR-IV pipeline with the repository's tracked Dow 30 input data,
+writes outputs to \path{/content/gnnhar_outputs}, and commits those outputs back to the same
+private repository under \path{outputs/colab-runs/<run_id>/}. This avoids both
+\texttt{drive.mount} and the Google Drive API service-account storage-quota problem.
 
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \item Colab GitHub secret: \texttt{GITHUB\_TOKEN}.
-\item Colab Drive secret: \texttt{GDRIVE\_SERVICE\_ACCOUNT\_JSON}.
-\item Colab output-folder secret: \texttt{GDRIVE\_OUTPUT\_FOLDER\_ID}; the configured
-folder ID is reproduced below.
 \item Private-repository access: \texttt{GITHUB\_TOKEN} gives Colab read access to the
 private GitHub repository containing the code and input data.
-\item Drive upload access: the destination folder is shared with the configured service
-account, whose email is reproduced below.
+\item GitHub output access: the same token gives Colab write access to push the generated
+tables, figures, metadata, and report draft back to the private repository.
 \item Full run flags: \texttt{fast=false}, \texttt{epochs=250}, and
 \texttt{mcs\_bootstrap=300}. QLIKE training was enabled.
 \item Sample and split: seed \(20260602\), 1234 usable dates, and a \(863/185/186\)
@@ -697,13 +694,6 @@ train-validation-test split.
 \item Neural tables: \path{tables/model_losses.csv} reports one-, two-, and three-layer
 GNNHAR models, their IV extensions, and QLIKE-trained neural variants.
 \end{itemize}
-
-\begin{lstlisting}[caption={Configured service-account destination.}]
-GDRIVE_OUTPUT_FOLDER_ID = '1jdw1_WlULw7SmUbA3r7PK7zzUBI15O5x'
-SERVICE_ACCOUNT_EMAIL = (
-    'onyx-gemini-vertex@gen-lang-client-0171977595.iam.gserviceaccount.com'
-)
-\end{lstlisting}
 
 \subsection{Notebook Cells}
 
@@ -716,6 +706,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 
 from google.colab import userdata
 
@@ -724,6 +715,8 @@ REPO_NAME = 'GNNHAR'
 BRANCH = '2026-06-01'
 REPO_DIR = pathlib.Path('/content/GNNHAR')
 OUTPUT_DIR = pathlib.Path('/content/gnnhar_outputs')
+RUN_ID = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+REPO_OUTPUT_DIR = REPO_DIR / 'outputs' / 'colab-runs' / RUN_ID
 
 GITHUB_TOKEN = userdata.get('GITHUB_TOKEN')
 if not GITHUB_TOKEN:
@@ -750,12 +743,9 @@ import sys
 
 mods = [
     'numpy', 'pandas', 'sklearn', 'matplotlib', 'torch', 'scipy',
-    'googleapiclient', 'google.oauth2',
 ]
 packages = {
     'sklearn': 'scikit-learn',
-    'googleapiclient': 'google-api-python-client',
-    'google.oauth2': 'google-auth',
 }
 missing = []
 for mod in mods:
@@ -798,39 +788,39 @@ import pandas as pd
 pd.read_csv(OUTPUT_DIR / 'tables/model_losses.csv').head(20)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python,caption={Upload local outputs to Google Drive through the Drive API.}]
-import json
-import mimetypes
+\begin{lstlisting}[language=Python,caption={Commit and push Colab outputs back to private GitHub.}]
+import shutil
+import subprocess
 
-from google.colab import userdata
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+if REPO_OUTPUT_DIR.exists():
+    shutil.rmtree(REPO_OUTPUT_DIR)
+REPO_OUTPUT_DIR.parent.mkdir(parents=True, exist_ok=True)
+shutil.copytree(OUTPUT_DIR, REPO_OUTPUT_DIR)
 
-service_account_json = userdata.get('GDRIVE_SERVICE_ACCOUNT_JSON')
-folder_id = userdata.get('GDRIVE_OUTPUT_FOLDER_ID')
-if not service_account_json:
-    raise RuntimeError('Missing Colab Secret: GDRIVE_SERVICE_ACCOUNT_JSON')
-if not folder_id:
-    raise RuntimeError('Missing Colab Secret: GDRIVE_OUTPUT_FOLDER_ID')
-
-info = json.loads(service_account_json)
-creds = service_account.Credentials.from_service_account_info(
-    info, scopes=['https://www.googleapis.com/auth/drive']
-)
-drive = build('drive', 'v3', credentials=creds)
-
-def upload_file(path, parent_id):
-    mime_type = mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
-    meta = {'name': path.name, 'parents': [parent_id]}
-    media = MediaFileUpload(str(path), mimetype=mime_type, resumable=True)
-    return drive.files().create(
-        body=meta, media_body=media, fields='id, name'
-    ).execute()
-
-for path in sorted(OUTPUT_DIR.rglob('*')):
-    if path.is_file():
-        print('uploaded:', upload_file(path, folder_id))
+relative_output = REPO_OUTPUT_DIR.relative_to(REPO_DIR)
+subprocess.run([
+    'git', '-C', str(REPO_DIR), 'config', 'user.email',
+    'colab-runner@users.noreply.github.com',
+], check=True)
+subprocess.run([
+    'git', '-C', str(REPO_DIR), 'config', 'user.name', 'Colab Runner',
+], check=True)
+subprocess.run(['git', '-C', str(REPO_DIR), 'add', str(relative_output)], check=True)
+subprocess.run([
+    'git', '-C', str(REPO_DIR), 'commit', '-m',
+    f'Add Colab GNNHAR-IV outputs {RUN_ID}',
+], check=True)
+try:
+    subprocess.run([
+        'git', '-C', str(REPO_DIR), 'push', 'origin', f'HEAD:{BRANCH}',
+    ], check=True)
+except subprocess.CalledProcessError:
+    subprocess.run([
+        'git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', BRANCH,
+    ], check=True)
+    subprocess.run([
+        'git', '-C', str(REPO_DIR), 'push', 'origin', f'HEAD:{BRANCH}',
+    ], check=True)
 \end{lstlisting}
 
 \begingroup

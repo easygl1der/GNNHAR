@@ -19,6 +19,7 @@
 \usepackage{longtable}
 \usepackage{threeparttable}
 \usepackage{placeins}
+\usepackage{listings}
 
 \pgfplotsset{compat=1.18}
 \graphicspath{{reports/gnnhar_iv/figures/}{figures/}}
@@ -30,6 +31,16 @@
   linkcolor=blue!55!black,
   citecolor=blue!55!black,
   urlcolor=blue!55!black
+}
+\urlstyle{same}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
 }
 
 \title{\textbf{Forecasting Realized Volatility with Graph Spillovers and Implied Volatility: A GNNHAR-IV Extension}}
@@ -651,6 +662,110 @@ the Dow 30 sample, highlighting the need for larger panels, stronger regularizat
 careful tuning before nonlinear multi-hop IV spillovers can be treated as robust. Overall, IV is a
 valuable addition to the GNNHAR framework, with the strongest current evidence supporting
 GHAR-IV as a practical and interpretable volatility forecasting model.
+
+\appendix
+\section{Colab Reproducibility Appendix}
+\label{app:colab}
+
+The GNNHAR and GNNHAR-IV results in this paper were run on Google Colab, not only on a
+local machine. The reproducibility notebook is stored in the GitHub repository and can be
+opened directly in Colab:
+
+\noindent\href{https://colab.research.google.com/github/easygl1der/GNNHAR/blob/2026-06-01/notebooks/gnnhar_iv_colab_full_run.ipynb}{Open the GNNHAR-IV Colab full-run notebook}.
+The repository path is \path{notebooks/gnnhar_iv_colab_full_run.ipynb}.
+
+The notebook clones the repository branch \texttt{2026-06-01}, mounts Google Drive, runs the
+full GNNHAR-IV pipeline, and writes tables, figures, metadata, and a report draft to the
+Drive folder \path{/content/drive/MyDrive/GNNHAR-colab-runs/outputs}.
+
+\begin{itemize}
+\setlength{\itemsep}{0pt}
+\item Full run flags: \texttt{fast=false}, \texttt{epochs=250}, and
+\texttt{mcs\_bootstrap=300}. QLIKE training was enabled.
+\item Sample and split: seed \(20260602\), 1234 usable dates, and a \(863/185/186\)
+train-validation-test split.
+\item Neural tables: \path{tables/model_losses.csv} reports one-, two-, and three-layer
+GNNHAR models, their IV extensions, and QLIKE-trained neural variants.
+\end{itemize}
+
+\subsection{Notebook Cells}
+
+The core notebook cells are reproduced below so that the empirical run is checkable even
+without relying on screenshots.
+
+\begin{lstlisting}[language=Python,caption={Mount Google Drive in Colab.}]
+from google.colab import drive
+drive.mount('/content/drive')
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Clone the exact GitHub branch used in the full run.}]
+import pathlib
+import shutil
+import subprocess
+
+REPO_URL = 'https://github.com/easygl1der/GNNHAR.git'
+BRANCH = '2026-06-01'
+REPO_DIR = pathlib.Path('/content/GNNHAR')
+OUTPUT_DIR = pathlib.Path('/content/drive/MyDrive/GNNHAR-colab-runs/outputs')
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+if REPO_DIR.exists():
+    shutil.rmtree(REPO_DIR)
+
+subprocess.run([
+    'git', 'clone', '--depth', '1', '--branch', BRANCH, REPO_URL, str(REPO_DIR),
+], check=True)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Install missing Colab dependencies if needed.}]
+import subprocess
+import sys
+
+mods = ['numpy', 'pandas', 'sklearn', 'matplotlib', 'torch', 'scipy']
+packages = {'sklearn': 'scikit-learn'}
+missing = []
+for mod in mods:
+    try:
+        __import__(mod)
+    except Exception:
+        missing.append(mod)
+print('missing:', missing)
+if missing:
+    subprocess.check_call([
+        sys.executable, '-m', 'pip', 'install',
+        *[packages.get(m, m) for m in missing],
+    ])
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Run the full GNNHAR-IV empirical pipeline.}]
+subprocess.run([
+    'python', '/content/GNNHAR/scripts/analysis/gnnhar_iv_pipeline.py',
+    '--data-dir', '/content/GNNHAR/experiments/dow30/data',
+    '--output-dir', '/content/drive/MyDrive/GNNHAR-colab-runs/outputs',
+    '--epochs', '250',
+], check=True)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={List outputs and inspect run metadata.}]
+import json
+import pathlib
+
+output_dir = pathlib.Path('/content/drive/MyDrive/GNNHAR-colab-runs/outputs')
+for path in sorted(output_dir.glob('**/*')):
+    if path.is_file():
+        print(path)
+
+print('\nmetadata:')
+print(json.dumps(json.loads((output_dir / 'run_metadata.json').read_text()), indent=2))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Inspect the GNNHAR and GNNHAR-IV loss table.}]
+import pandas as pd
+
+pd.read_csv(
+    '/content/drive/MyDrive/GNNHAR-colab-runs/outputs/tables/model_losses.csv'
+).head(20)
+\end{lstlisting}
 
 \begingroup
 \footnotesize

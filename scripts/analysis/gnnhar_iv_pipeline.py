@@ -263,22 +263,48 @@ def fit_gnn(
             super().__init__()
             dims = [in_features] + [hidden_features] * max(n_layers - 1, 0)
             self.weights = nn.ModuleList(
-                [nn.Linear(dims[i], hidden_features) for i in range(n_layers)]
+                [nn.Linear(dims[i] * 2, hidden_features) for i in range(n_layers)]
             )
-            self.out = nn.Linear(hidden_features, 1)
+            self.out = nn.Linear(hidden_features + in_features, 1)
 
         def forward(self, values: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
             h = values
             for layer in self.weights:
-                h = torch.matmul(adj, h)
-                h = functional.relu(layer(h))
-            return functional.softplus(self.out(h).squeeze(-1)) + EPS
+                neighbor_h = torch.matmul(adj, h)
+                h = functional.relu(layer(torch.cat([h, neighbor_h], dim=-1)))
+            return self.out(torch.cat([h, values], dim=-1)).squeeze(-1)
+
+    train_x = x[split["train"]].reshape(-1, x.shape[-1])
+    x_mean = train_x.mean(axis=0, keepdims=True)
+    x_std = train_x.std(axis=0, keepdims=True)
+    x_std = np.where(x_std < EPS, 1.0, x_std)
+    x_scaled = (x - x_mean.reshape(1, 1, -1)) / x_std.reshape(1, 1, -1)
+
+    use_qlike = estimation.upper() == "QLIKE"
+    y_work = np.log(np.clip(y, EPS, None)) if use_qlike else y
+    train_y_work = y_work[split["train"]]
+    y_mean = float(train_y_work.mean())
+    y_std = float(train_y_work.std())
+    if y_std < EPS:
+        y_std = 1.0
+    y_scaled = (y_work - y_mean) / y_std
+
+    # Preserve own-asset HAR information during graph propagation. The GLASSO
+    # adjacency is intentionally zero-diagonal for spillover features, but a
+    # neural message-passing layer needs self-loops to avoid discarding the
+    # node's own lagged volatility at every layer.
+    graph = np.asarray(adjacency, dtype=np.float32).copy()
+    graph = graph + np.eye(graph.shape[0], dtype=np.float32)
+    degree = graph.sum(axis=1)
+    graph = np.diag(1.0 / np.sqrt(degree + EPS)).astype(np.float32) @ graph @ np.diag(
+        1.0 / np.sqrt(degree + EPS)
+    ).astype(np.float32)
 
     torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    x_t = torch.tensor(x, dtype=torch.float32, device=device)
-    y_t = torch.tensor(y, dtype=torch.float32, device=device)
-    adj_t = torch.tensor(adjacency, dtype=torch.float32, device=device)
+    x_t = torch.tensor(x_scaled, dtype=torch.float32, device=device)
+    y_t = torch.tensor(y_scaled, dtype=torch.float32, device=device)
+    adj_t = torch.tensor(graph, dtype=torch.float32, device=device)
     train_idx = torch.tensor(split["train"], dtype=torch.long, device=device)
     valid_idx = torch.tensor(split["valid"], dtype=torch.long, device=device)
     model = GNNHARNet(x.shape[-1], hidden, layers).to(device)
@@ -289,8 +315,10 @@ def fit_gnn(
     stale = 0
 
     def criterion(pred: torch.Tensor, truth: torch.Tensor) -> torch.Tensor:
-        if estimation.upper() == "QLIKE":
-            ratio = truth.clamp_min(EPS) / pred.clamp_min(EPS)
+        if use_qlike:
+            pred_orig = torch.exp(pred * y_std + y_mean).clamp_min(EPS)
+            truth_orig = torch.exp(truth * y_std + y_mean).clamp_min(EPS)
+            ratio = truth_orig / pred_orig
             return (ratio - torch.log(ratio) - 1.0).mean()
         return ((truth - pred) ** 2).mean()
 
@@ -320,7 +348,12 @@ def fit_gnn(
         model.load_state_dict(best_state)
     model.eval()
     with torch.no_grad():
-        pred = model(x_t, adj_t).detach().cpu().numpy()
+        pred_scaled = model(x_t, adj_t).detach().cpu().numpy()
+    if use_qlike:
+        pred = np.exp(pred_scaled * y_std + y_mean)
+    else:
+        pred = pred_scaled * y_std + y_mean
+    pred = np.clip(pred, EPS, None)
     return ModelRun(name, "GNNHAR", iv_channel, "GLASSO", estimation.upper(), pred.astype(np.float32))
 
 

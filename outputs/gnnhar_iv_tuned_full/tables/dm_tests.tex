@@ -1,0 +1,11 @@
+\begin{tabular}{lllrrrr}
+\toprule
+comparison & loss_a & loss_b & mean_loss_a & mean_loss_b & dm_stat_positive_favors_b & pvalue \\
+\midrule
+HAR vs GHAR & HAR & GHAR & 0.000821965 & 0.000811085 & 0.466972 & 0.641069 \\
+GHAR vs GNNHAR1L & GHAR & GNNHAR1L & 0.000811085 & 0.000847611 & -1.52514 & 0.128932 \\
+GHAR+IV vs GNNHAR1L-IV & GHAR+IV & GNNHAR1L-IV & 0.000784934 & 0.00083482 & -2.17544 & 0.0308656 \\
+HAR+IV vs HAR+fakeIV & HAR+IV & HAR+fakeIV & 0.000792812 & 0.000820704 & -1.83655 & 0.0678809 \\
+GNNHAR1L-IV vs GNNHAR2L-IV & GNNHAR1L-IV & GNNHAR2L-IV & 0.00083482 & 0.000811977 & 1.53133 & 0.127397 \\
+\bottomrule
+\end{tabular}

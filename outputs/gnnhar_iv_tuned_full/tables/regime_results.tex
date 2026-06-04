@@ -1,0 +1,34 @@
+\begin{tabular}{llrrr}
+\toprule
+regime & model & n_dates & mse & qlike \\
+\midrule
+calm & GHAR+IV & 139 & 0.606351 & 0.000655424 \\
+calm & HAR+IV & 139 & 0.606794 & 0.000659629 \\
+calm & GHAR & 139 & 0.634989 & 0.000675903 \\
+calm & GHAR_RANDOM & 139 & 0.636478 & 0.000677593 \\
+calm & GHAR+fakeIV & 139 & 0.639589 & 0.000677824 \\
+calm & HAR+fakeIV & 139 & 0.63585 & 0.000678464 \\
+calm & HAR & 139 & 0.636472 & 0.000679169 \\
+calm & GNNHAR2L-IV & 139 & 0.626741 & 0.00068885 \\
+calm & GNNHAR1L & 139 & 0.660128 & 0.000700475 \\
+calm & GNNHAR3L-IV & 139 & 0.628536 & 0.00071121 \\
+calm & GNNHAR2L & 139 & 0.682407 & 0.00072096 \\
+calm & GNNHAR1L-IV & 139 & 0.660937 & 0.000732754 \\
+calm & GNNHAR1L-IV+fakeIV & 139 & 0.732344 & 0.000745097 \\
+calm & GNNHAR3L & 139 & 0.712246 & 0.000749969 \\
+volatile_top_quartile & GNNHAR3L-IV & 47 & 1.93691 & 0.00104847 \\
+volatile_top_quartile & GNNHAR1L-IV & 47 & 2.14878 & 0.00113668 \\
+volatile_top_quartile & GHAR+IV & 47 & 2.27188 & 0.00116795 \\
+volatile_top_quartile & GNNHAR2L-IV & 47 & 2.17508 & 0.00117612 \\
+volatile_top_quartile & HAR+IV & 47 & 2.34652 & 0.00118669 \\
+volatile_top_quartile & GHAR & 47 & 2.41524 & 0.00121088 \\
+volatile_top_quartile & GHAR+fakeIV & 47 & 2.42084 & 0.0012152 \\
+volatile_top_quartile & GHAR_RANDOM & 47 & 2.4315 & 0.00121802 \\
+volatile_top_quartile & GNNHAR1L-IV+fakeIV & 47 & 2.49833 & 0.00124029 \\
+volatile_top_quartile & HAR+fakeIV & 47 & 2.55854 & 0.00124137 \\
+volatile_top_quartile & HAR & 47 & 2.57787 & 0.00124428 \\
+volatile_top_quartile & GNNHAR2L & 47 & 2.46414 & 0.00127767 \\
+volatile_top_quartile & GNNHAR1L & 47 & 2.59265 & 0.00128275 \\
+volatile_top_quartile & GNNHAR3L & 47 & 2.60482 & 0.00132869 \\
+\bottomrule
+\end{tabular}

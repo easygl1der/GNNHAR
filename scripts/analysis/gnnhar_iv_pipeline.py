@@ -69,6 +69,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--mcs-bootstrap", type=int, default=300)
     parser.add_argument("--skip-qlike-training", action="store_true")
+    parser.add_argument("--tune-gnn", action="store_true", help="select GNN hyperparameters on the validation split")
     return parser.parse_args()
 
 
@@ -355,6 +356,98 @@ def fit_gnn(
         pred = pred_scaled * y_std + y_mean
     pred = np.clip(pred, EPS, None)
     return ModelRun(name, "GNNHAR", iv_channel, "GLASSO", estimation.upper(), pred.astype(np.float32))
+
+
+def score_on_split(run: ModelRun, panel: PanelData, split_name: str) -> Tuple[float, float]:
+    idx = panel.split[split_name]
+    y = panel.target[idx]
+    pred = run.prediction[idx]
+    return float(mse_loss(y, pred).mean()), float(qlike_loss(y, pred).mean())
+
+
+def tune_gnn_run(
+    name: str,
+    iv_channel: str,
+    x: np.ndarray,
+    y: np.ndarray,
+    adjacency: np.ndarray,
+    panel: PanelData,
+    layers: int,
+    estimation: str,
+    base_epochs: int,
+    base_hidden: int,
+    base_lr: float,
+    seed: int,
+    fast: bool,
+) -> Tuple[ModelRun, pd.DataFrame]:
+    if fast:
+        hidden_grid = sorted(set([base_hidden, 16, 32]))
+        lr_grid = sorted(set([base_lr, 1e-3]))
+        epoch_grid = [base_epochs]
+    else:
+        hidden_grid = sorted(set([base_hidden, 8, 16, 32, 64]))
+        lr_grid = sorted(set([base_lr, 3e-4, 1e-3, 3e-3]))
+        epoch_grid = sorted(set([base_epochs, max(300, base_epochs), max(500, base_epochs)]))
+    records = []
+    best_run = None
+    best_score = float("inf")
+    best_key = None
+
+    for hidden in hidden_grid:
+        for lr in lr_grid:
+            for epochs in epoch_grid:
+                candidate = fit_gnn(
+                    name=name,
+                    iv_channel=iv_channel,
+                    x=x,
+                    y=y,
+                    adjacency=adjacency,
+                    split=panel.split,
+                    layers=layers,
+                    estimation=estimation,
+                    epochs=epochs,
+                    hidden=hidden,
+                    lr=lr,
+                    seed=seed,
+                )
+                valid_mse, valid_qlike = score_on_split(candidate, panel, "valid")
+                test_mse, test_qlike = score_on_split(candidate, panel, "test")
+                score = valid_qlike if estimation.upper() == "QLIKE" else valid_mse
+                records.append(
+                    {
+                        "model": name,
+                        "layers": layers,
+                        "estimation": estimation.upper(),
+                        "hidden": hidden,
+                        "lr": lr,
+                        "epochs": epochs,
+                        "seed": seed,
+                        "valid_mse": valid_mse,
+                        "valid_qlike": valid_qlike,
+                        "test_mse_diagnostic": test_mse,
+                        "test_qlike_diagnostic": test_qlike,
+                        "selected": False,
+                    }
+                )
+                key = (score, hidden, lr, epochs)
+                if key < (best_score, *(best_key or (float("inf"), float("inf"), float("inf")))):
+                    best_score = score
+                    best_key = (hidden, lr, epochs)
+                    best_run = candidate
+
+    table = pd.DataFrame(records)
+    if best_key is not None:
+        hidden, lr, epochs = best_key
+        mask = (
+            (table["hidden"] == hidden)
+            & (table["lr"] == lr)
+            & (table["epochs"] == epochs)
+            & (table["model"] == name)
+        )
+        table.loc[mask, "selected"] = True
+    if best_run is None:
+        raise RuntimeError(f"GNN tuning failed for {name}")
+    return best_run, table
 
 
 def evaluate_runs(runs: List[ModelRun], panel: PanelData) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -845,23 +938,43 @@ def main() -> None:
             ]
         )
 
+    tuning_tables = []
     for offset, (name, iv_channel, design, layers, estimation) in enumerate(gnn_specs):
-        runs.append(
-            fit_gnn(
+        if args.tune_gnn:
+            run, tuning_table = tune_gnn_run(
                 name=name,
                 iv_channel=iv_channel,
                 x=design,
                 y=panel.target,
                 adjacency=glasso_np,
-                split=panel.split,
+                panel=panel,
                 layers=layers,
                 estimation=estimation,
-                epochs=args.epochs,
-                hidden=args.hidden,
-                lr=args.lr,
+                base_epochs=args.epochs,
+                base_hidden=args.hidden,
+                base_lr=args.lr,
                 seed=args.seed + offset,
+                fast=args.fast,
             )
-        )
+            runs.append(run)
+            tuning_tables.append(tuning_table)
+        else:
+            runs.append(
+                fit_gnn(
+                    name=name,
+                    iv_channel=iv_channel,
+                    x=design,
+                    y=panel.target,
+                    adjacency=glasso_np,
+                    split=panel.split,
+                    layers=layers,
+                    estimation=estimation,
+                    epochs=args.epochs,
+                    hidden=args.hidden,
+                    lr=args.lr,
+                    seed=args.seed + offset,
+                )
+            )
 
     loss_table, losses = evaluate_runs(runs, panel)
     ratio_table = loss_table[
@@ -879,17 +992,17 @@ def main() -> None:
     iv_decomposition = build_iv_decomposition(loss_table)
     regime_table = build_regime_table(runs, panel)
 
-    save_tables(
-        {
-            "model_losses": loss_table,
-            "loss_ratios": ratio_table,
-            "mcs_results": mcs_table,
-            "dm_tests": dm_table,
-            "iv_decomposition": iv_decomposition,
-            "regime_results": regime_table,
-        },
-        output_dir,
-    )
+    tables = {
+        "model_losses": loss_table,
+        "loss_ratios": ratio_table,
+        "mcs_results": mcs_table,
+        "dm_tests": dm_table,
+        "iv_decomposition": iv_decomposition,
+        "regime_results": regime_table,
+    }
+    if tuning_tables:
+        tables["gnn_tuning"] = pd.concat(tuning_tables, ignore_index=True)
+    save_tables(tables, output_dir)
     save_figures(panel, glasso, runs, loss_table, iv_decomposition, output_dir)
     write_report(output_dir, args, panel, glasso, loss_table, iv_decomposition, dm_table)
     save_metadata(output_dir, args, panel)

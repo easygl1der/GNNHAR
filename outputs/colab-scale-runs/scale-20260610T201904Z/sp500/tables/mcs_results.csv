@@ -1,0 +1,17 @@
+model,included_at_5pct,mcs_pvalue
+GHAR+IV,True,1.0
+HAR+IV,True,0.75
+GHAR+IV-random,True,0.5
+HAR,False,0.0
+GHAR,False,0.0
+GHAR_RANDOM,False,0.0
+HAR+fakeIV,False,0.0
+GHAR+fakeIV,False,0.0
+GNNHAR1L,False,0.0
+GNNHAR1L-IV,False,0.0
+GNNHAR2L,False,0.0
+GNNHAR2L-IV,False,0.0
+GNNHAR3L,False,0.0
+GNNHAR3L-IV,False,0.0
+GNNHAR3L-IV-random,False,0.0
+GNNHAR1L-IV+fakeIV,False,0.0

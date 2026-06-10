@@ -1,0 +1,22 @@
+\begin{tabular}{llrrrr}
+\toprule
+model & estimation & mse_ratio_vs_har & qlike_ratio_vs_har & mse_ratio_vs_har_iv & qlike_ratio_vs_har_iv \\
+\midrule
+GHAR+IV & MSE & 0.963544 & 0.972742 & 0.999653 & 0.999793 \\
+HAR+IV & MSE & 0.963879 & 0.972944 & 1 & 1 \\
+GHAR+IV-random & MSE & 0.96385 & 0.973278 & 0.99997 & 1.00034 \\
+GHAR+fakeIV & MSE & 0.990351 & 0.994674 & 1.02746 & 1.02233 \\
+HAR+fakeIV & MSE & 0.993508 & 0.99596 & 1.03074 & 1.02366 \\
+GHAR_RANDOM & MSE & 0.998213 & 0.997752 & 1.03562 & 1.0255 \\
+GHAR & MSE & 0.998497 & 0.99928 & 1.03592 & 1.02707 \\
+HAR & MSE & 1 & 1 & 1.03747 & 1.02781 \\
+GNNHAR1L & MSE & 1.00847 & 1.03311 & 1.04626 & 1.06183 \\
+GNNHAR3L-IV & MSE & 1.08204 & 1.11437 & 1.12259 & 1.14536 \\
+GNNHAR1L-IV & MSE & 1.0654 & 1.11471 & 1.10532 & 1.14571 \\
+GNNHAR2L & MSE & 1.10215 & 1.13736 & 1.14345 & 1.16899 \\
+GNNHAR2L-IV & MSE & 1.17602 & 1.26858 & 1.22009 & 1.30385 \\
+GNNHAR3L-IV-random & MSE & 1.21922 & 1.30494 & 1.26491 & 1.34123 \\
+GNNHAR3L & MSE & 1.29134 & 1.39725 & 1.33973 & 1.43611 \\
+GNNHAR1L-IV+fakeIV & MSE & 1.3553 & 1.47751 & 1.40609 & 1.5186 \\
+\bottomrule
+\end{tabular}

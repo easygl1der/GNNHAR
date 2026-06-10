@@ -1,0 +1,14 @@
+\begin{tabular}{lrlrrrrrrrr}
+\toprule
+model & layers & estimation & hidden & lr & epochs & batch_size & valid_mse & valid_qlike & test_mse_diagnostic & test_qlike_diagnostic \\
+\midrule
+GNNHAR1L & 1 & MSE & 16 & 0.001 & 80 & 64 & 8.82669 & 0.00440762 & 7.02679 & 0.00342472 \\
+GNNHAR1L-IV & 1 & MSE & 16 & 0.001 & 80 & 64 & 8.96334 & 0.00467101 & 7.14232 & 0.00359578 \\
+GNNHAR2L & 2 & MSE & 16 & 0.001 & 80 & 64 & 8.7115 & 0.00444315 & 7.04151 & 0.00346297 \\
+GNNHAR2L-IV & 2 & MSE & 16 & 0.001 & 80 & 64 & 8.47088 & 0.00431836 & 6.85079 & 0.00339638 \\
+GNNHAR3L & 3 & MSE & 16 & 0.001 & 80 & 64 & 8.77064 & 0.00444498 & 7.23365 & 0.00350502 \\
+GNNHAR3L-IV & 3 & MSE & 16 & 0.001 & 80 & 64 & 8.38272 & 0.0043126 & 6.80703 & 0.0033635 \\
+GNNHAR3L-IV-random & 3 & MSE & 16 & 0.001 & 80 & 64 & 8.38297 & 0.00423166 & 6.73758 & 0.00332111 \\
+GNNHAR1L-IV+fakeIV & 1 & MSE & 16 & 0.001 & 80 & 64 & 9.63715 & 0.00501598 & 7.73108 & 0.00381846 \\
+\bottomrule
+\end{tabular}

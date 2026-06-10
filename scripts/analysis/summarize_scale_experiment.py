@@ -284,7 +284,7 @@ def write_latex_report(summary: pd.DataFrame, gains: pd.DataFrame, output_dir: P
                 r"whether nonlinear message passing improves on the linear graph benchmark."
             ),
             r"\section{Artifacts}",
-            r"The machine-readable tables are \texttt{scale_summary.csv} and \texttt{scale_gains.csv}. "
+            r"The machine-readable tables are \texttt{scale\_summary.csv} and \texttt{scale\_gains.csv}. "
             r"The main figures are saved under \texttt{figures/}.",
             r"\end{document}",
         ]

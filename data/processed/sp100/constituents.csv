@@ -1,0 +1,102 @@
+Symbol,Name,Sector,YahooSymbol
+AAPL,Apple Inc.,Information Technology,AAPL
+ABBV,AbbVie,Health Care,ABBV
+ABT,Abbott Laboratories,Health Care,ABT
+ACN,Accenture,Information Technology,ACN
+ADBE,Adobe Inc.,Information Technology,ADBE
+AMAT,Applied Materials,Information Technology,AMAT
+AMD,Advanced Micro Devices,Information Technology,AMD
+AMGN,Amgen,Health Care,AMGN
+AMT,American Tower,Real Estate,AMT
+AMZN,Amazon,Consumer Discretionary,AMZN
+AVGO,Broadcom,Information Technology,AVGO
+AXP,American Express,Financials,AXP
+BA,Boeing,Industrials,BA
+BAC,Bank of America,Financials,BAC
+BKNG,Booking Holdings,Consumer Discretionary,BKNG
+BLK,BlackRock,Financials,BLK
+BMY,Bristol Myers Squibb,Health Care,BMY
+BNY,BNY Mellon,Financials,BNY
+BRK.B,Berkshire Hathaway (Class B),Financials,BRK-B
+C,Citigroup,Financials,C
+CAT,Caterpillar Inc.,Industrials,CAT
+CL,Colgate-Palmolive,Consumer Staples,CL
+CMCSA,Comcast,Communication Services,CMCSA
+COF,Capital One,Financials,COF
+COP,ConocoPhillips,Energy,COP
+COST,Costco,Consumer Staples,COST
+CRM,Salesforce,Information Technology,CRM
+CSCO,Cisco,Information Technology,CSCO
+CVS,CVS Health,Health Care,CVS
+CVX,Chevron Corporation,Energy,CVX
+DE,Deere & Company,Industrials,DE
+DHR,Danaher Corporation,Health Care,DHR
+DIS,Walt Disney Company (The),Communication Services,DIS
+DUK,Duke Energy,Utilities,DUK
+EMR,Emerson Electric,Industrials,EMR
+FDX,FedEx,Industrials,FDX
+GD,General Dynamics,Industrials,GD
+GE,GE Aerospace,Industrials,GE
+GEV,GE Vernova,Industrials,GEV
+GILD,Gilead Sciences,Health Care,GILD
+GM,General Motors,Consumer Discretionary,GM
+GOOG,Alphabet Inc. (Class C),Communication Services,GOOG
+GOOGL,Alphabet Inc. (Class A),Communication Services,GOOGL
+GS,Goldman Sachs,Financials,GS
+HD,Home Depot,Consumer Discretionary,HD
+HON,Honeywell,Industrials,HON
+IBM,IBM,Information Technology,IBM
+INTC,Intel,Information Technology,INTC
+INTU,Intuit,Information Technology,INTU
+ISRG,Intuitive Surgical,Health Care,ISRG
+JNJ,Johnson & Johnson,Health Care,JNJ
+JPM,JPMorgan Chase,Financials,JPM
+KO,Coca-Cola Company (The),Consumer Staples,KO
+LIN,Linde plc,Materials,LIN
+LLY,Eli Lilly and Company,Health Care,LLY
+LMT,Lockheed Martin,Industrials,LMT
+LOW,Lowe's,Consumer Discretionary,LOW
+LRCX,Lam Research,Information Technology,LRCX
+MA,Mastercard,Financials,MA
+MCD,McDonald's,Consumer Discretionary,MCD
+MDLZ,Mondelēz International,Consumer Staples,MDLZ
+MDT,Medtronic,Health Care,MDT
+META,Meta Platforms,Communication Services,META
+MMM,3M,Industrials,MMM
+MO,Altria,Consumer Staples,MO
+MRK,Merck & Co.,Health Care,MRK
+MS,Morgan Stanley,Financials,MS
+MSFT,Microsoft,Information Technology,MSFT
+MU,Micron Technology,Information Technology,MU
+NEE,NextEra Energy,Utilities,NEE
+NFLX,"Netflix, Inc.",Communication Services,NFLX
+NKE,"Nike, Inc.",Consumer Discretionary,NKE
+NOW,ServiceNow,Information Technology,NOW
+NVDA,Nvidia,Information Technology,NVDA
+ORCL,Oracle Corporation,Information Technology,ORCL
+PEP,PepsiCo,Consumer Staples,PEP
+PFE,Pfizer,Health Care,PFE
+PG,Procter & Gamble,Consumer Staples,PG
+PLTR,Palantir Technologies,Information Technology,PLTR
+PM,Philip Morris International,Consumer Staples,PM
+QCOM,Qualcomm,Information Technology,QCOM
+RTX,RTX Corporation,Industrials,RTX
+SBUX,Starbucks,Consumer Discretionary,SBUX
+SCHW,Charles Schwab Corporation,Financials,SCHW
+SO,Southern Company,Utilities,SO
+SPG,Simon Property Group,Real Estate,SPG
+T,AT&T,Communication Services,T
+TMO,Thermo Fisher Scientific,Health Care,TMO
+TMUS,T-Mobile US,Communication Services,TMUS
+TSLA,"Tesla, Inc.",Consumer Discretionary,TSLA
+TXN,Texas Instruments,Information Technology,TXN
+UBER,Uber,Industrials,UBER
+UNH,UnitedHealth Group,Health Care,UNH
+UNP,Union Pacific Corporation,Industrials,UNP
+UPS,United Parcel Service,Industrials,UPS
+USB,U.S. Bancorp,Financials,USB
+V,Visa Inc.,Financials,V
+VZ,Verizon,Communication Services,VZ
+WFC,Wells Fargo,Financials,WFC
+WMT,Walmart,Consumer Staples,WMT
+XOM,ExxonMobil,Energy,XOM

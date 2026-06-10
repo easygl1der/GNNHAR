@@ -1,0 +1,8 @@
+{
+  "constituents_csv": "/Users/yitwah/Projects/Volatility/data/processed/sp500/constituents.csv",
+  "output": "/Users/yitwah/Projects/Volatility/data/scale_experiment/sp500/daily_returns.csv",
+  "start": "2021-06-09",
+  "end": "2026-06-09",
+  "tickers_succeeded": 503,
+  "failures": []
+}

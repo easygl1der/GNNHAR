@@ -244,6 +244,7 @@ def mse_loss(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
 def fit_gnn(
     name: str,
     iv_channel: str,
+    adjacency_name: str,
     x: np.ndarray,
     y: np.ndarray,
     adjacency: np.ndarray,
@@ -355,7 +356,7 @@ def fit_gnn(
     else:
         pred = pred_scaled * y_std + y_mean
     pred = np.clip(pred, EPS, None)
-    return ModelRun(name, "GNNHAR", iv_channel, "GLASSO", estimation.upper(), pred.astype(np.float32))
+    return ModelRun(name, "GNNHAR", iv_channel, adjacency_name, estimation.upper(), pred.astype(np.float32))
 
 
 def score_on_split(run: ModelRun, panel: PanelData, split_name: str) -> Tuple[float, float]:
@@ -368,6 +369,7 @@ def score_on_split(run: ModelRun, panel: PanelData, split_name: str) -> Tuple[fl
 def tune_gnn_run(
     name: str,
     iv_channel: str,
+    adjacency_name: str,
     x: np.ndarray,
     y: np.ndarray,
     adjacency: np.ndarray,
@@ -399,6 +401,7 @@ def tune_gnn_run(
                 candidate = fit_gnn(
                     name=name,
                     iv_channel=iv_channel,
+                    adjacency_name=adjacency_name,
                     x=x,
                     y=y,
                     adjacency=adjacency,
@@ -416,6 +419,7 @@ def tune_gnn_run(
                 records.append(
                     {
                         "model": name,
+                        "adjacency": adjacency_name,
                         "layers": layers,
                         "estimation": estimation.upper(),
                         "hidden": hidden,
@@ -906,6 +910,7 @@ def main() -> None:
         "GHAR_RANDOM": make_design(panel, random_np, None),
         "HAR_IV": make_design(panel, None, panel.iv_features),
         "GHAR_IV": make_design(panel, glasso_np, panel.iv_features),
+        "GHAR_IV_RANDOM": make_design(panel, random_np, panel.iv_features),
         "HAR_FAKE": make_design(panel, None, panel.fake_iv_features),
         "GHAR_FAKE": make_design(panel, glasso_np, panel.fake_iv_features),
         "GNN_IV_FAKE": make_design(panel, glasso_np, panel.fake_iv_features),
@@ -917,36 +922,39 @@ def main() -> None:
         fit_linear("GHAR_RANDOM", "GHAR", "none", "Random", designs["GHAR_RANDOM"], panel),
         fit_linear("HAR+IV", "HAR", "real", "Identity", designs["HAR_IV"], panel),
         fit_linear("GHAR+IV", "GHAR", "real", "GLASSO", designs["GHAR_IV"], panel),
+        fit_linear("GHAR+IV-random", "GHAR", "real", "Random", designs["GHAR_IV_RANDOM"], panel),
         fit_linear("HAR+fakeIV", "HAR", "fake", "Identity", designs["HAR_FAKE"], panel),
         fit_linear("GHAR+fakeIV", "GHAR", "fake", "GLASSO", designs["GHAR_FAKE"], panel),
     ]
 
     gnn_specs = [
-        ("GNNHAR1L", "none", designs["HAR"], 1, "MSE"),
-        ("GNNHAR2L", "none", designs["HAR"], 2, "MSE"),
-        ("GNNHAR3L", "none", designs["HAR"], 3, "MSE"),
-        ("GNNHAR1L-IV", "real", designs["HAR_IV"], 1, "MSE"),
-        ("GNNHAR2L-IV", "real", designs["HAR_IV"], 2, "MSE"),
-        ("GNNHAR3L-IV", "real", designs["HAR_IV"], 3, "MSE"),
-        ("GNNHAR1L-IV+fakeIV", "fake", designs["HAR_FAKE"], 1, "MSE"),
+        ("GNNHAR1L", "none", "GLASSO", designs["HAR"], glasso_np, 1, "MSE"),
+        ("GNNHAR2L", "none", "GLASSO", designs["HAR"], glasso_np, 2, "MSE"),
+        ("GNNHAR3L", "none", "GLASSO", designs["HAR"], glasso_np, 3, "MSE"),
+        ("GNNHAR1L-IV", "real", "GLASSO", designs["HAR_IV"], glasso_np, 1, "MSE"),
+        ("GNNHAR2L-IV", "real", "GLASSO", designs["HAR_IV"], glasso_np, 2, "MSE"),
+        ("GNNHAR3L-IV", "real", "GLASSO", designs["HAR_IV"], glasso_np, 3, "MSE"),
+        ("GNNHAR3L-IV-random", "real", "Random", designs["HAR_IV"], random_np, 3, "MSE"),
+        ("GNNHAR1L-IV+fakeIV", "fake", "GLASSO", designs["HAR_FAKE"], glasso_np, 1, "MSE"),
     ]
     if not args.skip_qlike_training:
         gnn_specs.extend(
             [
-                ("GNNHAR1L-QLIKE", "none", designs["HAR"], 1, "QLIKE"),
-                ("GNNHAR1L-IV-QLIKE", "real", designs["HAR_IV"], 1, "QLIKE"),
+                ("GNNHAR1L-QLIKE", "none", "GLASSO", designs["HAR"], glasso_np, 1, "QLIKE"),
+                ("GNNHAR1L-IV-QLIKE", "real", "GLASSO", designs["HAR_IV"], glasso_np, 1, "QLIKE"),
             ]
         )
 
     tuning_tables = []
-    for offset, (name, iv_channel, design, layers, estimation) in enumerate(gnn_specs):
+    for offset, (name, iv_channel, adjacency_name, design, adjacency_matrix, layers, estimation) in enumerate(gnn_specs):
         if args.tune_gnn:
             run, tuning_table = tune_gnn_run(
                 name=name,
                 iv_channel=iv_channel,
+                adjacency_name=adjacency_name,
                 x=design,
                 y=panel.target,
-                adjacency=glasso_np,
+                adjacency=adjacency_matrix,
                 panel=panel,
                 layers=layers,
                 estimation=estimation,
@@ -963,9 +971,10 @@ def main() -> None:
                 fit_gnn(
                     name=name,
                     iv_channel=iv_channel,
+                    adjacency_name=adjacency_name,
                     x=design,
                     y=panel.target,
-                    adjacency=glasso_np,
+                    adjacency=adjacency_matrix,
                     split=panel.split,
                     layers=layers,
                     estimation=estimation,

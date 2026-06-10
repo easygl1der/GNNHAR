@@ -1,0 +1,8 @@
+{
+  "constituents_csv": "/Users/yitwah/Projects/Volatility/data/processed/sp100/constituents.csv",
+  "output": "/Users/yitwah/Projects/Volatility/data/scale_experiment/sp100/daily_returns.csv",
+  "start": "2021-06-09",
+  "end": "2026-06-09",
+  "tickers_succeeded": 101,
+  "failures": []
+}

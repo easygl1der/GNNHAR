@@ -30,7 +30,6 @@ from scripts.analysis.gnnhar_iv_pipeline import (  # noqa: E402
     build_regime_table,
     chronological_split,
     evaluate_runs,
-    fit_linear,
     lag_average,
     make_design,
     mse_loss,
@@ -77,6 +76,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=20260611)
     parser.add_argument("--mcs-bootstrap", type=int, default=100)
     parser.add_argument("--gnn-depths", default="1,2,3", help="Comma-separated GNN layer counts")
+    parser.add_argument(
+        "--prediction-floor-quantile",
+        type=float,
+        default=0.001,
+        help="Lower-bound forecasts at this positive in-sample target quantile for stable QLIKE evaluation.",
+    )
+    parser.add_argument("--prediction-floor-value", type=float, default=0.0)
     parser.add_argument("--skip-qlike-training", action="store_true", default=True)
     parser.add_argument("--include-qlike-training", dest="skip_qlike_training", action="store_false")
     parser.add_argument("--no-fake-iv", action="store_true")
@@ -349,6 +355,38 @@ def random_adjacency_like(n_nodes: int, n_edges: int, seed: int) -> np.ndarray:
     return d_inv @ mat @ d_inv
 
 
+def forecast_floor(panel: PanelData, args: argparse.Namespace) -> float:
+    train_y = panel.target[panel.split["train"]]
+    positive = train_y[np.isfinite(train_y) & (train_y > 0)]
+    if len(positive) == 0:
+        return EPS
+    quantile_floor = float(np.quantile(positive, args.prediction_floor_quantile))
+    explicit_floor = float(args.prediction_floor_value)
+    return max(EPS, quantile_floor, explicit_floor)
+
+
+def fit_linear_positive(
+    name: str,
+    family: str,
+    iv_channel: str,
+    adjacency_name: str,
+    x: np.ndarray,
+    panel: PanelData,
+    pred_floor: float,
+) -> ModelRun:
+    from sklearn.linear_model import RidgeCV
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    train_x = x[panel.split["train"]].reshape(-1, x.shape[-1])
+    train_y = panel.target[panel.split["train"]].reshape(-1)
+    model = make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-4, 4, 25)))
+    model.fit(train_x, train_y)
+    pred = model.predict(x.reshape(-1, x.shape[-1])).reshape(panel.target.shape)
+    pred = np.clip(pred, pred_floor, None)
+    return ModelRun(name, family, iv_channel, adjacency_name, "MSE", pred.astype(np.float32))
+
+
 def fit_gnn_sparse(
     name: str,
     iv_channel: str,
@@ -364,6 +402,7 @@ def fit_gnn_sparse(
     lr: float,
     batch_size: int,
     seed: int,
+    pred_floor: float,
 ) -> ModelRun:
     import torch
     import torch.nn as nn
@@ -483,7 +522,7 @@ def fit_gnn_sparse(
         pred = np.exp(pred_scaled * y_std + y_mean)
     else:
         pred = pred_scaled * y_std + y_mean
-    pred = np.clip(pred, EPS, None)
+    pred = np.clip(pred, pred_floor, None)
     return ModelRun(name, "GNNHAR", iv_channel, adjacency_name, estimation.upper(), pred.astype(np.float32))
 
 
@@ -618,6 +657,7 @@ def write_scale_report(
         f"- Date range after HAR lags: {panel.dates.min().date()} to {panel.dates.max().date()}",
         f"- Split: {len(panel.split['train'])} train, {len(panel.split['valid'])} validation, {len(panel.split['test'])} test dates",
         f"- Coverage threshold: {args.coverage_threshold:.3f}",
+        f"- Forecast positivity floor: {float(panel_info.get('prediction_floor', EPS)):.6g}",
         f"- Graph method: {graph_info.method}, alpha={graph_info.alpha:.6g}, edges={graph_info.n_edges}, density={graph_info.density:.6g}",
         "",
         "## Main Result",
@@ -695,6 +735,7 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     panel, panel_info, coverage = load_scale_panel(args)
+    pred_floor = forecast_floor(panel, args)
     adjacency, graph_info = build_adjacency(panel.returns, panel.dates[panel.split["train"]], args)
     glasso_np = adjacency.to_numpy(dtype=np.float32)
     random_np = random_adjacency_like(len(panel.tickers), graph_info.n_edges, args.seed + 1)
@@ -713,23 +754,23 @@ def main() -> None:
         designs["GHAR_FAKE"] = make_design(panel, glasso_np, panel.fake_iv_features)
 
     runs: List[ModelRun] = [
-        fit_linear("HAR", "HAR", "none", "Identity", designs["HAR"], panel),
-        fit_linear("GHAR", "GHAR", "none", "GLASSO", designs["GHAR"], panel),
-        fit_linear("HAR+IV", "HAR", "real", "Identity", designs["HAR_IV"], panel),
-        fit_linear("GHAR+IV", "GHAR", "real", "GLASSO", designs["GHAR_IV"], panel),
+        fit_linear_positive("HAR", "HAR", "none", "Identity", designs["HAR"], panel, pred_floor),
+        fit_linear_positive("GHAR", "GHAR", "none", "GLASSO", designs["GHAR"], panel, pred_floor),
+        fit_linear_positive("HAR+IV", "HAR", "real", "Identity", designs["HAR_IV"], panel, pred_floor),
+        fit_linear_positive("GHAR+IV", "GHAR", "real", "GLASSO", designs["GHAR_IV"], panel, pred_floor),
     ]
     if not args.no_random_graph:
         runs.extend(
             [
-                fit_linear("GHAR_RANDOM", "GHAR", "none", "Random", designs["GHAR_RANDOM"], panel),
-                fit_linear("GHAR+IV-random", "GHAR", "real", "Random", designs["GHAR_IV_RANDOM"], panel),
+                fit_linear_positive("GHAR_RANDOM", "GHAR", "none", "Random", designs["GHAR_RANDOM"], panel, pred_floor),
+                fit_linear_positive("GHAR+IV-random", "GHAR", "real", "Random", designs["GHAR_IV_RANDOM"], panel, pred_floor),
             ]
         )
     if not args.no_fake_iv:
         runs.extend(
             [
-                fit_linear("HAR+fakeIV", "HAR", "fake", "Identity", designs["HAR_FAKE"], panel),
-                fit_linear("GHAR+fakeIV", "GHAR", "fake", "GLASSO", designs["GHAR_FAKE"], panel),
+                fit_linear_positive("HAR+fakeIV", "HAR", "fake", "Identity", designs["HAR_FAKE"], panel, pred_floor),
+                fit_linear_positive("GHAR+fakeIV", "GHAR", "fake", "GLASSO", designs["GHAR_FAKE"], panel, pred_floor),
             ]
         )
 
@@ -766,6 +807,7 @@ def main() -> None:
             lr=args.lr,
             batch_size=args.batch_size,
             seed=args.seed + 100 + offset,
+            pred_floor=pred_floor,
         )
         runs.append(run)
         valid_mse, valid_qlike = score_on_split(run, panel, "valid")
@@ -814,6 +856,7 @@ def main() -> None:
     save_tables(tables, output_dir)
     if not args.skip_figures:
         save_scale_figures(panel, adjacency, runs, loss_table, iv_decomposition, output_dir)
+    panel_info["prediction_floor"] = float(pred_floor)
     write_scale_report(output_dir, args, panel, graph_info, panel_info, loss_table, iv_decomposition, dm_table)
     save_metadata(output_dir, args, panel, panel_info, coverage, graph_info)
     print(
@@ -826,6 +869,7 @@ def main() -> None:
                 "best_model": str(loss_table.iloc[0]["model"]),
                 "best_test_qlike": float(loss_table.iloc[0]["test_qlike"]),
                 "graph_density": graph_info.density,
+                "prediction_floor": float(pred_floor),
             },
             indent=2,
         )

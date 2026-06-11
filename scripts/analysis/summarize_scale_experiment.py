@@ -88,6 +88,21 @@ def best_model(losses: pd.DataFrame, prefix: str, metric: str, contains_iv: Opti
     return str(table.sort_values(metric).iloc[0]["model"])
 
 
+def best_linear_ghar(losses: pd.DataFrame, metric: str, contains_iv: Optional[bool]) -> Optional[str]:
+    table = losses.copy()
+    table = table[table["family"].astype(str).eq("GHAR")]
+    table = table[table["adjacency"].astype(str).str.startswith("GLASSO")]
+    if contains_iv is True:
+        table = table[table["model"].astype(str).str.contains("IV")]
+    elif contains_iv is False:
+        table = table[~table["model"].astype(str).str.contains("IV")]
+    table = table[~table["model"].astype(str).str.contains("fake", case=False, regex=False)]
+    table = table[~table["model"].astype(str).str.contains("random", case=False, regex=False)]
+    if table.empty:
+        return None
+    return str(table.sort_values(metric).iloc[0]["model"])
+
+
 def add_gain_row(rows: List[Dict[str, object]], run: Dict[str, object], name: str, base: str, improved: str) -> None:
     losses = run["losses"]
     rows.append(
@@ -110,6 +125,8 @@ def build_summary(runs: Iterable[Dict[str, object]]) -> tuple[pd.DataFrame, pd.D
         losses = run["losses"]
         best_qlike = losses.sort_values("test_qlike").iloc[0]
         best_mse = losses.sort_values("test_mse").iloc[0]
+        best_ghar = best_linear_ghar(losses, "test_qlike", contains_iv=False)
+        best_ghar_iv = best_linear_ghar(losses, "test_qlike", contains_iv=True)
         best_gnn = best_model(losses, "GNNHAR", "test_qlike", contains_iv=False)
         best_gnn_iv = best_model(losses, "GNNHAR", "test_qlike", contains_iv=True)
         summary_rows.append(
@@ -123,6 +140,8 @@ def build_summary(runs: Iterable[Dict[str, object]]) -> tuple[pd.DataFrame, pd.D
                 "best_test_qlike": float(best_qlike["test_qlike"]),
                 "best_mse_model": best_mse["model"],
                 "best_test_mse": float(best_mse["test_mse"]),
+                "best_linear_ghar_model": best_ghar,
+                "best_linear_ghar_iv_model": best_ghar_iv,
                 "best_gnn_qlike_model": best_gnn,
                 "best_gnn_iv_qlike_model": best_gnn_iv,
                 "har_qlike": get_loss(losses, "HAR", "test_qlike"),
@@ -135,6 +154,10 @@ def build_summary(runs: Iterable[Dict[str, object]]) -> tuple[pd.DataFrame, pd.D
         add_gain_row(gain_rows, run, "Graph gain with IV: GHAR+IV vs HAR+IV", "HAR+IV", "GHAR+IV")
         add_gain_row(gain_rows, run, "IV gain in HAR: HAR+IV vs HAR", "HAR", "HAR+IV")
         add_gain_row(gain_rows, run, "IV gain in GHAR: GHAR+IV vs GHAR", "GHAR", "GHAR+IV")
+        if best_ghar and best_ghar != "GHAR":
+            add_gain_row(gain_rows, run, f"Best multihop GHAR vs GHAR: {best_ghar}", "GHAR", best_ghar)
+        if best_ghar_iv and best_ghar_iv != "GHAR+IV":
+            add_gain_row(gain_rows, run, f"Best multihop GHAR-IV vs GHAR+IV: {best_ghar_iv}", "GHAR+IV", best_ghar_iv)
         if best_gnn:
             add_gain_row(gain_rows, run, f"Best non-IV GNN vs GHAR: {best_gnn}", "GHAR", best_gnn)
         if best_gnn_iv:
@@ -246,10 +269,10 @@ def write_latex_report(summary: pd.DataFrame, gains: pd.DataFrame, output_dir: P
             r"\bottomrule",
             r"\end{tabular}",
             r"\end{table}",
-            r"\section{Scale Gains}",
-            r"\begin{table}[h]",
-            r"\centering",
-            r"\caption{Selected QLIKE gains by universe}",
+        r"\section{Scale Gains}",
+        r"\begin{table}[h]",
+        r"\centering",
+        r"\caption{Selected QLIKE gains by universe}",
             r"\begin{tabular}{lrrr}",
             r"\toprule",
             r"Universe & Assets & GHAR over HAR & GHAR+IV over GHAR \\",
@@ -276,12 +299,35 @@ def write_latex_report(summary: pd.DataFrame, gains: pd.DataFrame, output_dir: P
             r"\bottomrule",
             r"\end{tabular}",
             r"\end{table}",
+            r"\section{Linear Multi-Hop GHAR}",
+            r"\begin{table}[h]",
+            r"\centering",
+            r"\caption{Best linear GHAR specifications by universe}",
+            r"\begin{tabular}{lrrll}",
+            r"\toprule",
+            r"Universe & Assets & Dates & Best GHAR & Best GHAR-IV \\",
+            r"\midrule",
+        ]
+    )
+    for _, row in summary.sort_values("n_assets").iterrows():
+        lines.append(
+            f"{latex_escape(row['universe'])} & {int(row['n_assets'])} & {int(row['n_dates'])} & "
+            f"{latex_escape(row['best_linear_ghar_model'])} & "
+            f"{latex_escape(row['best_linear_ghar_iv_model'])} \\\\"
+        )
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
             r"\section{Interpretation}",
             (
                 r"A positive GHAR-over-HAR gain means the estimated asset graph adds forecasting information "
-                r"beyond own-asset HAR lags. A positive GHAR+IV-over-GHAR gain means the implied-volatility "
-                r"channel contributes information beyond the graph. The GNN rows in the CSV output evaluate "
-                r"whether nonlinear message passing improves on the linear graph benchmark."
+                r"beyond own-asset HAR lags. The GHAR2H and GHAR3H specifications add second- and third-hop "
+                r"graph aggregates as linear predictors, while GNNHAR2L and GNNHAR3L test whether learned "
+                r"multi-layer message passing improves on those linear graph benchmarks. A positive "
+                r"GHAR+IV-over-GHAR gain means the implied-volatility channel contributes information "
+                r"beyond the graph."
             ),
             r"\section{Artifacts}",
             r"The machine-readable tables are \texttt{scale\_summary.csv} and \texttt{scale\_gains.csv}. "

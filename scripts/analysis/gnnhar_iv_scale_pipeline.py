@@ -77,6 +77,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mcs-bootstrap", type=int, default=100)
     parser.add_argument("--gnn-depths", default="1,2,3", help="Comma-separated GNN layer counts")
     parser.add_argument(
+        "--linear-hop-depths",
+        default="1,2,3",
+        help="Comma-separated GHAR graph-hop depths. Depth 1 is the Zhang-style GHAR baseline.",
+    )
+    parser.add_argument(
         "--prediction-floor-quantile",
         type=float,
         default=0.001,
@@ -87,6 +92,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--include-qlike-training", dest="skip_qlike_training", action="store_false")
     parser.add_argument("--no-fake-iv", action="store_true")
     parser.add_argument("--no-random-graph", action="store_true")
+    parser.add_argument("--skip-gnn", action="store_true", help="Run only HAR/GHAR linear models")
     parser.add_argument("--skip-figures", action="store_true")
     parser.add_argument("--fast", action="store_true", help="Short smoke run")
     return parser.parse_args()
@@ -353,6 +359,37 @@ def random_adjacency_like(n_nodes: int, n_edges: int, seed: int) -> np.ndarray:
     degrees = mat.sum(axis=1)
     d_inv = np.diag(1.0 / np.sqrt(degrees + EPS)).astype(np.float32)
     return d_inv @ mat @ d_inv
+
+
+def adjacency_powers(adjacency: np.ndarray, max_depth: int) -> List[np.ndarray]:
+    powers: List[np.ndarray] = []
+    base = np.asarray(adjacency, dtype=np.float32)
+    current = base.copy()
+    for depth in range(1, max_depth + 1):
+        if depth > 1:
+            current = current @ base
+            np.fill_diagonal(current, 0.0)
+            max_abs = float(np.max(np.abs(current))) if current.size else 0.0
+            if max_abs > 1.0:
+                current = current / max_abs
+        powers.append(current.astype(np.float32).copy())
+    return powers
+
+
+def make_multihop_design(
+    panel: PanelData,
+    adjacency: np.ndarray,
+    hop_depth: int,
+    iv: Optional[np.ndarray],
+) -> np.ndarray:
+    blocks = [panel.rv_features]
+    if iv is not None:
+        blocks.append(iv)
+    for graph in adjacency_powers(adjacency, hop_depth):
+        blocks.append(apply_graph(panel.rv_features, graph))
+        if iv is not None:
+            blocks.append(apply_graph(iv, graph))
+    return np.concatenate(blocks, axis=2)
 
 
 def forecast_floor(panel: PanelData, args: argparse.Namespace) -> float:
@@ -730,6 +767,7 @@ def main() -> None:
         args.epochs = min(args.epochs, 20)
         args.mcs_bootstrap = min(args.mcs_bootstrap, 40)
         args.gnn_depths = "1"
+        args.linear_hop_depths = "1,2"
     set_seed(args.seed)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -739,13 +777,18 @@ def main() -> None:
     adjacency, graph_info = build_adjacency(panel.returns, panel.dates[panel.split["train"]], args)
     glasso_np = adjacency.to_numpy(dtype=np.float32)
     random_np = random_adjacency_like(len(panel.tickers), graph_info.n_edges, args.seed + 1)
+    linear_depths = parse_depths(args.linear_hop_depths)
+    if not linear_depths or min(linear_depths) < 1:
+        raise ValueError("--linear-hop-depths must contain positive integers")
 
     designs: Dict[str, np.ndarray] = {
         "HAR": make_design(panel, None, None),
-        "GHAR": make_design(panel, glasso_np, None),
         "HAR_IV": make_design(panel, None, panel.iv_features),
-        "GHAR_IV": make_design(panel, glasso_np, panel.iv_features),
     }
+    for hop_depth in linear_depths:
+        suffix = "" if hop_depth == 1 else f"{hop_depth}H"
+        designs[f"GHAR{suffix}"] = make_multihop_design(panel, glasso_np, hop_depth, None)
+        designs[f"GHAR{suffix}_IV"] = make_multihop_design(panel, glasso_np, hop_depth, panel.iv_features)
     if not args.no_random_graph:
         designs["GHAR_RANDOM"] = make_design(panel, random_np, None)
         designs["GHAR_IV_RANDOM"] = make_design(panel, random_np, panel.iv_features)
@@ -755,10 +798,34 @@ def main() -> None:
 
     runs: List[ModelRun] = [
         fit_linear_positive("HAR", "HAR", "none", "Identity", designs["HAR"], panel, pred_floor),
-        fit_linear_positive("GHAR", "GHAR", "none", "GLASSO", designs["GHAR"], panel, pred_floor),
         fit_linear_positive("HAR+IV", "HAR", "real", "Identity", designs["HAR_IV"], panel, pred_floor),
-        fit_linear_positive("GHAR+IV", "GHAR", "real", "GLASSO", designs["GHAR_IV"], panel, pred_floor),
     ]
+    for hop_depth in linear_depths:
+        suffix = "" if hop_depth == 1 else f"{hop_depth}H"
+        model_name = "GHAR" if hop_depth == 1 else f"GHAR{hop_depth}H"
+        adjacency_name = f"GLASSO-{hop_depth}hop"
+        runs.extend(
+            [
+                fit_linear_positive(
+                    model_name,
+                    "GHAR",
+                    "none",
+                    adjacency_name,
+                    designs[f"GHAR{suffix}"],
+                    panel,
+                    pred_floor,
+                ),
+                fit_linear_positive(
+                    f"{model_name}+IV",
+                    "GHAR",
+                    "real",
+                    adjacency_name,
+                    designs[f"GHAR{suffix}_IV"],
+                    panel,
+                    pred_floor,
+                ),
+            ]
+        )
     if not args.no_random_graph:
         runs.extend(
             [
@@ -775,20 +842,21 @@ def main() -> None:
         )
 
     gnn_specs: List[Tuple[str, str, str, np.ndarray, np.ndarray, int, str]] = []
-    for depth in parse_depths(args.gnn_depths):
-        gnn_specs.append((f"GNNHAR{depth}L", "none", "GLASSO", designs["HAR"], glasso_np, depth, "MSE"))
-        gnn_specs.append((f"GNNHAR{depth}L-IV", "real", "GLASSO", designs["HAR_IV"], glasso_np, depth, "MSE"))
-    if not args.no_random_graph and 3 in parse_depths(args.gnn_depths):
-        gnn_specs.append(("GNNHAR3L-IV-random", "real", "Random", designs["HAR_IV"], random_np, 3, "MSE"))
-    if not args.no_fake_iv:
-        gnn_specs.append(("GNNHAR1L-IV+fakeIV", "fake", "GLASSO", designs["HAR_FAKE"], glasso_np, 1, "MSE"))
-    if not args.skip_qlike_training:
-        gnn_specs.extend(
-            [
-                ("GNNHAR1L-QLIKE", "none", "GLASSO", designs["HAR"], glasso_np, 1, "QLIKE"),
-                ("GNNHAR1L-IV-QLIKE", "real", "GLASSO", designs["HAR_IV"], glasso_np, 1, "QLIKE"),
-            ]
-        )
+    if not args.skip_gnn:
+        for depth in parse_depths(args.gnn_depths):
+            gnn_specs.append((f"GNNHAR{depth}L", "none", "GLASSO", designs["HAR"], glasso_np, depth, "MSE"))
+            gnn_specs.append((f"GNNHAR{depth}L-IV", "real", "GLASSO", designs["HAR_IV"], glasso_np, depth, "MSE"))
+        if not args.no_random_graph and 3 in parse_depths(args.gnn_depths):
+            gnn_specs.append(("GNNHAR3L-IV-random", "real", "Random", designs["HAR_IV"], random_np, 3, "MSE"))
+        if not args.no_fake_iv:
+            gnn_specs.append(("GNNHAR1L-IV+fakeIV", "fake", "GLASSO", designs["HAR_FAKE"], glasso_np, 1, "MSE"))
+        if not args.skip_qlike_training:
+            gnn_specs.extend(
+                [
+                    ("GNNHAR1L-QLIKE", "none", "GLASSO", designs["HAR"], glasso_np, 1, "QLIKE"),
+                    ("GNNHAR1L-IV-QLIKE", "real", "GLASSO", designs["HAR_IV"], glasso_np, 1, "QLIKE"),
+                ]
+            )
 
     tuning_records = []
     for offset, (name, iv_channel, adjacency_name, design, graph, layers, estimation) in enumerate(gnn_specs):

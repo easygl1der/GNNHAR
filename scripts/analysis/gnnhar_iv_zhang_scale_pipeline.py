@@ -441,6 +441,29 @@ def apply_graph(features: np.ndarray, adjacency: np.ndarray) -> np.ndarray:
     return np.einsum("ij,tjf->tif", adjacency, features)
 
 
+def linear_hop_depth(model: str) -> int:
+    if model.startswith("GHAR2H"):
+        return 2
+    if model.startswith("GHAR3H"):
+        return 3
+    return 1
+
+
+def adjacency_powers(adjacency: np.ndarray, hop_depth: int) -> List[np.ndarray]:
+    powers: List[np.ndarray] = []
+    base = np.asarray(adjacency, dtype=np.float32)
+    current = base.copy()
+    for depth in range(1, hop_depth + 1):
+        if depth > 1:
+            current = current @ base
+            np.fill_diagonal(current, 0.0)
+            max_abs = float(np.max(np.abs(current))) if current.size else 0.0
+            if max_abs > 1.0:
+                current = current / max_abs
+        powers.append(current.astype(np.float32).copy())
+    return powers
+
+
 def make_linear_design(panel: RollingPanel, model: str, adjacency: Optional[np.ndarray]) -> np.ndarray:
     blocks = [panel.rv_features]
     use_iv = "+IV" in model
@@ -451,9 +474,10 @@ def make_linear_design(panel: RollingPanel, model: str, adjacency: Optional[np.n
     if model.startswith("GHAR"):
         if adjacency is None:
             raise ValueError("GHAR design requires adjacency")
-        blocks.append(apply_graph(panel.rv_features, adjacency))
-        if use_iv or use_fake:
-            blocks.append(apply_graph(iv, adjacency))
+        for graph in adjacency_powers(adjacency, linear_hop_depth(model)):
+            blocks.append(apply_graph(panel.rv_features, graph))
+            if use_iv or use_fake:
+                blocks.append(apply_graph(iv, graph))
     return np.concatenate(blocks, axis=2)
 
 
@@ -757,7 +781,9 @@ def model_iv_channel(name: str) -> str:
 
 
 def model_adjacency(name: str) -> str:
-    if name.startswith("GHAR") or name.startswith("GNNHAR"):
+    if name.startswith("GHAR"):
+        return f"Rolling GLASSO-{linear_hop_depth(name)}hop"
+    if name.startswith("GNNHAR"):
         return "Rolling GLASSO"
     return "Identity"
 

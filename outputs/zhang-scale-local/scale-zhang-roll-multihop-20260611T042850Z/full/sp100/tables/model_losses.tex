@@ -1,0 +1,20 @@
+\begin{tabular}{lllllrrrrrr}
+\toprule
+model & family & iv_channel & adjacency & estimation & test_mse & test_qlike & mse_ratio_vs_har & qlike_ratio_vs_har & mse_ratio_vs_har_iv & qlike_ratio_vs_har_iv \\
+\midrule
+GHAR+IV & GHAR & real & Rolling GLASSO-1hop & MSE & 6.10924 & 0.00272525 & 0.96712 & 0.983357 & 1.00025 & 0.999673 \\
+HAR+IV & HAR & real & Identity & MSE & 6.10773 & 0.00272614 & 0.966881 & 0.983679 & 1 & 1 \\
+GHAR2H+IV & GHAR & real & Rolling GLASSO-2hop & MSE & 6.11961 & 0.00272798 & 0.968762 & 0.984344 & 1.00194 & 1.00068 \\
+GHAR3H+IV & GHAR & real & Rolling GLASSO-3hop & MSE & 6.11973 & 0.00273196 & 0.968781 & 0.985781 & 1.00196 & 1.00214 \\
+HAR & HAR & none & Identity & MSE & 6.31694 & 0.00277137 & 1 & 1 & 1.03425 & 1.01659 \\
+GHAR & GHAR & none & Rolling GLASSO-1hop & MSE & 6.32539 & 0.00277747 & 1.00134 & 1.0022 & 1.03564 & 1.01883 \\
+GHAR2H & GHAR & none & Rolling GLASSO-2hop & MSE & 6.33722 & 0.00278154 & 1.00321 & 1.00367 & 1.03757 & 1.02032 \\
+GHAR3H & GHAR & none & Rolling GLASSO-3hop & MSE & 6.31748 & 0.00278165 & 1.00009 & 1.00371 & 1.03434 & 1.02036 \\
+GNNHAR2L-IV & GNNHAR & real & Rolling GLASSO & MSE & 35.3003 & 0.0237427 & 5.58819 & 8.56715 & 5.7796 & 8.7093 \\
+GNNHAR3L-IV & GNNHAR & real & Rolling GLASSO & MSE & 36.2552 & 0.0239231 & 5.73937 & 8.63224 & 5.93596 & 8.77546 \\
+GNNHAR3L & GNNHAR & none & Rolling GLASSO & MSE & 36.3961 & 0.0240133 & 5.76166 & 8.66478 & 5.95902 & 8.80854 \\
+GNNHAR1L-IV & GNNHAR & real & Rolling GLASSO & MSE & 37.4149 & 0.0241337 & 5.92296 & 8.70821 & 6.12584 & 8.8527 \\
+GNNHAR1L & GNNHAR & none & Rolling GLASSO & MSE & 39.373 & 0.0250395 & 6.23293 & 9.03507 & 6.44643 & 9.18498 \\
+GNNHAR2L & GNNHAR & none & Rolling GLASSO & MSE & 130.804 & 0.061135 & 20.7069 & 22.0595 & 21.4162 & 22.4255 \\
+\bottomrule
+\end{tabular}

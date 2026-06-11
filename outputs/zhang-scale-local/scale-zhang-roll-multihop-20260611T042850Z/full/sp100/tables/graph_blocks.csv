@@ -1,0 +1,3 @@
+block_id,origin_index,origin_date,train_start_date,valid_start_date,test_end_date,train_size,valid_size,test_size,graph_method,graph_alpha,graph_edges,graph_density,graph_train_rows,graph_fallback
+0,1000,2026-02-17,2021-07-12,2026-01-14,2026-03-18,978,22,22,glasso_cv,0.2952121869382362,816,0.16821273964131106,1000,
+1,1022,2026-03-19,2021-08-11,2026-02-17,2026-04-20,978,22,22,glasso_cv,0.21757224278024678,947,0.19521748093176663,1000,

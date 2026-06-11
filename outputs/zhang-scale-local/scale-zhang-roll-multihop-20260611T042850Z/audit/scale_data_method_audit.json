@@ -1,0 +1,348 @@
+[
+  {
+    "universe": "sp100",
+    "rv_shape": [
+      1256,
+      101
+    ],
+    "iv_shape": [
+      1256,
+      101
+    ],
+    "returns_shape": [
+      1256,
+      101
+    ],
+    "date_start": "2021-06-09",
+    "date_end": "2026-06-09",
+    "common_dates": 1256,
+    "common_tickers": 101,
+    "rv_only_tickers": [],
+    "returns_only_tickers": [],
+    "iv_only_tickers": [],
+    "rv_missing_fraction": 0.006274831304786529,
+    "iv_missing_fraction": 0.016696096361228478,
+    "returns_missing_fraction": 0.005557482499842341,
+    "rv_nonpositive_count": 0,
+    "iv_nonpositive_count": 0,
+    "returns_tickers_succeeded": 101,
+    "returns_failures": [],
+    "old_selected_tickers": 99,
+    "old_excluded_tickers": [
+      "BNY",
+      "GEV"
+    ],
+    "old_coverage_threshold": 0.95,
+    "old_graph_method": "glasso",
+    "old_graph_fallback": null,
+    "old_graph_edges": 1083,
+    "old_graph_density": 0.22325293753865183,
+    "old_graph_train_rows": 751,
+    "lowest_coverage_tickers": [
+      {
+        "ticker": "BNY",
+        "min_coverage": 0.0,
+        "rv_coverage": 0.946656050955414,
+        "iv_coverage": 0.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "GEV",
+        "min_coverage": 0.4195859872611465,
+        "rv_coverage": 0.4195859872611465,
+        "iv_coverage": 0.43471337579617836,
+        "returns_coverage": 0.43869426751592355
+      },
+      {
+        "ticker": "GE",
+        "min_coverage": 0.9697452229299363,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9697452229299363,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "MMM",
+        "min_coverage": 0.9713375796178344,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9713375796178344,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "IBM",
+        "min_coverage": 0.98328025477707,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.98328025477707,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "T",
+        "min_coverage": 0.9840764331210191,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9840764331210191,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "COST",
+        "min_coverage": 0.9864649681528662,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9864649681528662,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "BRK.B",
+        "min_coverage": 0.9928343949044586,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9928343949044586,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "FDX",
+        "min_coverage": 0.9944267515923567,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9944267515923567,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "MO",
+        "min_coverage": 0.9968152866242038,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.9968152866242038,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "NOW",
+        "min_coverage": 1.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "NKE",
+        "min_coverage": 1.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "NFLX",
+        "min_coverage": 1.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "NEE",
+        "min_coverage": 1.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "MU",
+        "min_coverage": 1.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      }
+    ]
+  },
+  {
+    "universe": "sp500",
+    "rv_shape": [
+      1256,
+      503
+    ],
+    "iv_shape": [
+      1256,
+      503
+    ],
+    "returns_shape": [
+      1256,
+      503
+    ],
+    "date_start": "2021-06-09",
+    "date_end": "2026-06-09",
+    "common_dates": 1256,
+    "common_tickers": 503,
+    "rv_only_tickers": [],
+    "returns_only_tickers": [],
+    "iv_only_tickers": [],
+    "rv_missing_fraction": 0.020529688113358067,
+    "iv_missing_fraction": 0.032329905914829496,
+    "returns_missing_fraction": 0.010016335110356966,
+    "rv_nonpositive_count": 0,
+    "iv_nonpositive_count": 0,
+    "returns_tickers_succeeded": 503,
+    "returns_failures": [],
+    "old_selected_tickers": 449,
+    "old_excluded_tickers": [
+      "ACGL",
+      "AMCR",
+      "BALL",
+      "BNY",
+      "CBOE",
+      "CEG",
+      "COHR",
+      "COR",
+      "COST",
+      "CPAY",
+      "DELL",
+      "DOC",
+      "EG",
+      "ELV",
+      "EXE",
+      "F",
+      "FANG",
+      "FAST",
+      "FDXF",
+      "FISV",
+      "FOX",
+      "GE",
+      "GEHC",
+      "GEN",
+      "GEV",
+      "HOOD",
+      "HST",
+      "IBM",
+      "KIM",
+      "KVUE",
+      "LYB",
+      "MMM",
+      "MRSH",
+      "NI",
+      "NVR",
+      "NWS",
+      "PCAR",
+      "PSA",
+      "PSKY",
+      "Q",
+      "RVTY",
+      "SNDK",
+      "SOLV",
+      "SW",
+      "T",
+      "TDG",
+      "TKO",
+      "TPL",
+      "UDR",
+      "VLTO",
+      "WBD",
+      "WRB",
+      "WTW",
+      "XYZ"
+    ],
+    "old_coverage_threshold": 0.99,
+    "old_graph_method": "glasso_fallback_corr",
+    "old_graph_fallback": "FloatingPointError: Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver; used absolute correlation graph",
+    "old_graph_edges": 6928,
+    "old_graph_density": 0.06888323258033725,
+    "old_graph_train_rows": 856,
+    "lowest_coverage_tickers": [
+      {
+        "ticker": "BNY",
+        "min_coverage": 0.0,
+        "rv_coverage": 0.946656050955414,
+        "iv_coverage": 0.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "FDXF",
+        "min_coverage": 0.0,
+        "rv_coverage": 0.0,
+        "iv_coverage": 0.0,
+        "returns_coverage": 0.007165605095541401
+      },
+      {
+        "ticker": "NVR",
+        "min_coverage": 0.0,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "MRSH",
+        "min_coverage": 0.07882165605095541,
+        "rv_coverage": 0.07882165605095541,
+        "iv_coverage": 0.07961783439490445,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "Q",
+        "min_coverage": 0.10270700636942676,
+        "rv_coverage": 0.10270700636942676,
+        "iv_coverage": 0.1035031847133758,
+        "returns_coverage": 0.12261146496815287
+      },
+      {
+        "ticker": "PSKY",
+        "min_coverage": 0.1624203821656051,
+        "rv_coverage": 0.1624203821656051,
+        "iv_coverage": 0.16560509554140126,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "CBOE",
+        "min_coverage": 0.2085987261146497,
+        "rv_coverage": 0.2085987261146497,
+        "iv_coverage": 1.0,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "SNDK",
+        "min_coverage": 0.2412420382165605,
+        "rv_coverage": 0.2412420382165605,
+        "iv_coverage": 0.25398089171974525,
+        "returns_coverage": 0.2627388535031847
+      },
+      {
+        "ticker": "XYZ",
+        "min_coverage": 0.2762738853503185,
+        "rv_coverage": 0.2770700636942675,
+        "iv_coverage": 0.2762738853503185,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "EXE",
+        "min_coverage": 0.3351910828025478,
+        "rv_coverage": 0.3359872611464968,
+        "iv_coverage": 0.3351910828025478,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "TPL",
+        "min_coverage": 0.34076433121019106,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.34076433121019106,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "SW",
+        "min_coverage": 0.36703821656050956,
+        "rv_coverage": 0.36703821656050956,
+        "iv_coverage": 0.38057324840764334,
+        "returns_coverage": 1.0
+      },
+      {
+        "ticker": "GEV",
+        "min_coverage": 0.4195859872611465,
+        "rv_coverage": 0.4195859872611465,
+        "iv_coverage": 0.43471337579617836,
+        "returns_coverage": 0.43869426751592355
+      },
+      {
+        "ticker": "SOLV",
+        "min_coverage": 0.42038216560509556,
+        "rv_coverage": 0.42038216560509556,
+        "iv_coverage": 0.4355095541401274,
+        "returns_coverage": 0.4394904458598726
+      },
+      {
+        "ticker": "CPAY",
+        "min_coverage": 0.4410828025477707,
+        "rv_coverage": 1.0,
+        "iv_coverage": 0.4410828025477707,
+        "returns_coverage": 1.0
+      }
+    ]
+  }
+]

@@ -1,0 +1,109 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{array}
+\title{Rolling GHAR/GNNHAR-IV Scale Experiment: Local Verification Run}
+\author{Volatility Research Pipeline}
+\date{June 11, 2026}
+\begin{document}
+\maketitle
+\section{Design}
+This verification run implements a Zhang-style rolling forecast design. For each forecast origin, the asset graph is recomputed from pre-origin returns using Graphical Lasso cross-validation. The forecasting block contains 22 trading days, and neural models use a pre-origin validation window. The target is 30-day close-to-close realized volatility; the IV extension adds 30-day mean implied volatility HAR lags.
+The model set is HAR, GHAR, GHAR2H, GHAR3H, HAR+IV, GHAR+IV, GHAR2H+IV, GHAR3H+IV, and GNNHAR1L/2L/3L with and without IV. GHAR2H and GHAR3H are linear multi-hop graph feature extensions; GNNHAR2L and GNNHAR3L are nonlinear multi-layer message passing models.
+\section{Run Scope}
+This is a local two-block verification run, not the final Colab long run. It is useful for checking data pairing, graph construction, model inclusion, and preliminary scale direction. A longer Colab run should increase the number of rolling blocks and neural epochs.
+\section{Universe Summary}
+\begin{table}[h]
+\centering
+\small
+\caption{Rolling verification summary}
+\begin{tabular}{lrrrrlrr}
+\toprule
+Universe & Assets & Dates & Test days & Blocks & Best QLIKE & HAR QLIKE & GHAR+IV QLIKE \\
+\midrule
+sp100 & 99 & 1073 & 44 & 2 & GHAR+IV & 0.00277137 & 0.00272525 \\
+sp500 & 449 & 1223 & 44 & 2 & GHAR+IV & 0.00576994 & 0.00544793 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{Graph Audit}
+\begin{table}[h]
+\centering
+\small
+\caption{Rolling graph construction}
+\begin{tabular}{lrrrrl}
+\toprule
+Universe & Assets & Blocks & Fallbacks & Median edges & Methods \\
+\midrule
+sp100 & 99 & 2 & 0 & 881.5 & glasso\_cv:2 \\
+sp500 & 449 & 2 & 0 & 2558.5 & glasso\_cv:2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{Scale Gains}
+\begin{table}[h]
+\centering
+\small
+\caption{Selected QLIKE gains}
+\begin{tabular}{llr}
+\toprule
+Universe & Comparison & QLIKE gain \\
+\midrule
+sp100 & Graph gain without IV: GHAR vs HAR & -0.22\% \\
+sp100 & Graph gain with IV: GHAR+IV vs HAR+IV & 0.03\% \\
+sp100 & IV gain in HAR: HAR+IV vs HAR & 1.63\% \\
+sp100 & IV gain in GHAR: GHAR+IV vs GHAR & 1.88\% \\
+sp500 & Graph gain without IV: GHAR vs HAR & 0.35\% \\
+sp500 & Graph gain with IV: GHAR+IV vs HAR+IV & 0.09\% \\
+sp500 & IV gain in HAR: HAR+IV vs HAR & 5.50\% \\
+sp500 & IV gain in GHAR: GHAR+IV vs GHAR & 5.25\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{Model Rankings}
+\subsection{SP100}
+\begin{table}[h]
+\centering
+\small
+\caption{sp100 top models by QLIKE}
+\begin{tabular}{llrr}
+\toprule
+Model & Adjacency & QLIKE & MSE \\
+\midrule
+GHAR+IV & Rolling GLASSO-1hop & 0.00272525 & 6.10924 \\
+HAR+IV & Identity & 0.00272614 & 6.10773 \\
+GHAR2H+IV & Rolling GLASSO-2hop & 0.00272798 & 6.11961 \\
+GHAR3H+IV & Rolling GLASSO-3hop & 0.00273196 & 6.11973 \\
+HAR & Identity & 0.00277137 & 6.31694 \\
+GHAR & Rolling GLASSO-1hop & 0.00277747 & 6.32539 \\
+GHAR2H & Rolling GLASSO-2hop & 0.00278154 & 6.33722 \\
+GHAR3H & Rolling GLASSO-3hop & 0.00278165 & 6.31748 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\subsection{SP500}
+\begin{table}[h]
+\centering
+\small
+\caption{sp500 top models by QLIKE}
+\begin{tabular}{llrr}
+\toprule
+Model & Adjacency & QLIKE & MSE \\
+\midrule
+GHAR+IV & Rolling GLASSO-1hop & 0.00544793 & 16.472 \\
+GHAR2H+IV & Rolling GLASSO-2hop & 0.00544939 & 16.4914 \\
+GHAR3H+IV & Rolling GLASSO-3hop & 0.00544994 & 16.4907 \\
+HAR+IV & Identity & 0.00545277 & 16.4541 \\
+GHAR2H & Rolling GLASSO-2hop & 0.00574786 & 17.2072 \\
+GHAR & Rolling GLASSO-1hop & 0.00574991 & 17.1616 \\
+GHAR3H & Rolling GLASSO-3hop & 0.00575064 & 17.2076 \\
+HAR & Identity & 0.00576994 & 17.1461 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{Interpretation}
+In this verification run, the graph-only GHAR gain is small. For S\&P100 it is slightly negative by QLIKE, while for S\&P500 it is positive but only about 0.35\%. The IV channel is much stronger and scales up: IV gain in GHAR is about 1.88\% for S\&P100 and 5.25\% for S\&P500. Linear multi-hop GHAR does not dominate one-hop GHAR in these two blocks; GHAR+IV remains the best QLIKE model in both universes. The neural GNNHAR models underperform in this short local run, so their ranking should not be treated as final without the longer Colab run and broader tuning.
+\end{document}

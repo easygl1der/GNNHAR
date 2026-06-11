@@ -21,6 +21,7 @@ import argparse
 import json
 import math
 import random
+import re
 import sys
 import time
 import warnings
@@ -502,6 +503,95 @@ def fit_linear_block(
     return np.clip(pred, pred_floor, None).astype(np.float32)
 
 
+def fit_torch_linear_block(
+    design: np.ndarray,
+    target: np.ndarray,
+    train_idx: np.ndarray,
+    valid_idx: np.ndarray,
+    test_idx: np.ndarray,
+    loss_name: str,
+    epochs: int,
+    lr: float,
+    batch_size: int,
+    seed: int,
+    pred_floor: float,
+) -> np.ndarray:
+    import torch
+    import torch.nn as nn
+
+    x_scaled, y_scaled, y_stats = standardize_features(design, train_idx, valid_idx, test_idx, target, loss_name)
+    n_train = len(train_idx)
+    n_valid = len(valid_idx)
+    test_local = np.arange(n_train + n_valid, x_scaled.shape[0])
+    train_local = np.arange(n_train, dtype=np.int64)
+    valid_local = np.arange(n_train, n_train + n_valid, dtype=np.int64)
+
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    x_t = torch.tensor(x_scaled, dtype=torch.float32, device=device)
+    y_t = torch.tensor(y_scaled, dtype=torch.float32, device=device)
+    model = nn.Linear(design.shape[-1], 1, bias=True).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+    rng = np.random.default_rng(seed)
+    batch_size = max(1, min(batch_size, n_train))
+    y_mean = y_stats["y_mean"]
+    y_std = y_stats["y_std"]
+    use_qlike = loss_name.upper() == "QLIKE"
+
+    def forward(values: torch.Tensor) -> torch.Tensor:
+        return model(values).squeeze(-1)
+
+    def criterion(pred: torch.Tensor, truth: torch.Tensor) -> torch.Tensor:
+        if use_qlike:
+            pred_orig = torch.exp(pred * y_std + y_mean).clamp_min(EPS)
+            truth_orig = torch.exp(truth * y_std + y_mean).clamp_min(EPS)
+            ratio = truth_orig / pred_orig
+            return (ratio - torch.log(ratio) - 1.0).mean()
+        return ((truth - pred) ** 2).mean()
+
+    best_state = None
+    best_valid = float("inf")
+    stale = 0
+    patience = max(20, epochs // 6)
+    valid_tensor = torch.tensor(valid_local, dtype=torch.long, device=device)
+    for _epoch in range(epochs):
+        order = train_local.copy()
+        rng.shuffle(order)
+        model.train()
+        for start in range(0, len(order), batch_size):
+            batch = torch.tensor(order[start : start + batch_size], dtype=torch.long, device=device)
+            optimizer.zero_grad()
+            loss = criterion(forward(x_t[batch]), y_t[batch])
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+            optimizer.step()
+        model.eval()
+        with torch.no_grad():
+            valid_loss = float(criterion(forward(x_t[valid_tensor]), y_t[valid_tensor]).detach().cpu().item())
+        if valid_loss + 1e-9 < best_valid:
+            best_valid = valid_loss
+            best_state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+            stale = 0
+        else:
+            stale += 1
+            if stale >= patience:
+                break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    model.eval()
+    with torch.no_grad():
+        test_tensor = torch.tensor(test_local, dtype=torch.long, device=device)
+        pred_scaled = forward(x_t[test_tensor]).detach().cpu().numpy()
+    if use_qlike:
+        pred = np.exp(pred_scaled * y_std + y_mean)
+    else:
+        pred = pred_scaled * y_std + y_mean
+    return np.clip(pred, pred_floor, None).astype(np.float32)
+
+
 def standardize_features(
     x: np.ndarray,
     train_idx: np.ndarray,
@@ -580,12 +670,8 @@ def train_gnn_block(
             h2 = self.mlp1(h2)
             return self.relu(h1 + h2).squeeze(-1)
 
-    if "3L" in model_name:
-        layers = 3
-    elif "2L" in model_name:
-        layers = 2
-    else:
-        layers = 1
+    layer_match = re.search(r"GNNHAR(\d+)L", model_name)
+    layers = int(layer_match.group(1)) if layer_match else 1
 
     x_scaled, y_scaled, y_stats = standardize_features(x, train_idx, valid_idx, test_idx, y, loss_name)
     n_train = len(train_idx)
@@ -1049,7 +1135,22 @@ def run(args: argparse.Namespace) -> None:
             else:
                 if model_name not in design_cache:
                     design_cache[model_name] = make_linear_design(panel, model_name, adj)
-                pred = fit_linear_block(design_cache[model_name], panel.target, train_idx, test_idx, pred_floor)
+                if args.loss.upper() == "QLIKE":
+                    pred = fit_torch_linear_block(
+                        design=design_cache[model_name],
+                        target=panel.target,
+                        train_idx=train_idx,
+                        valid_idx=valid_idx,
+                        test_idx=test_idx,
+                        loss_name=args.loss,
+                        epochs=args.epochs,
+                        lr=lr_grid[0],
+                        batch_size=args.batch_size,
+                        seed=args.seed + block_id * 1000 + len(model_name),
+                        pred_floor=pred_floor,
+                    )
+                else:
+                    pred = fit_linear_block(design_cache[model_name], panel.target, train_idx, test_idx, pred_floor)
                 predictions[model_name][test_idx] = pred
         elapsed = time.time() - start_time
         print(
@@ -1086,7 +1187,7 @@ def run(args: argparse.Namespace) -> None:
             family=model_family(name),
             iv_channel=model_iv_channel(name),
             adjacency=model_adjacency(name),
-            estimation=args.loss if name.startswith("GNNHAR") else "MSE",
+            estimation=args.loss.upper(),
             prediction=np.clip(predictions[name], EPS, None),
         )
         for name in models

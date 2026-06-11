@@ -1,0 +1,265 @@
+\documentclass[11pt,a4paper]{ctexart}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,longtable,array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{listings}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  citecolor=blue!55!black
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+\title{S\&P 100 / S\&P 500 GNNHAR-IV 规模实验审计与修正运行方案}
+\author{Volatility Project Audit Note}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{结论摘要}
+
+当前 S\&P 100 和 S\&P 500 的 realized volatility、implied volatility、daily returns 三类宽表已经完成同日期、同 ticker namespace 的配对；returns 也已经下载到本地并通过 metadata 显示无失败 ticker。因此，旧结果不符合预期的主要原因不是数据没有配对，而是方法实现还不能被解释为 Zhang 原始 GNNHAR 框架下的规模效应实验。
+
+最关键的问题是：旧 S\&P 500 输出中的图并不是成功的 GLASSO 图。旧 run 的 metadata 记录为
+\[
+\texttt{method = glasso\_fallback\_corr},
+\]
+并说明由于 non-SPD / ill-conditioned solver 错误，实际使用的是 absolute correlation graph。因此旧 S\&P 500 结果只能作为 preliminary static-graph screen，不能作为 ``GLASSO 图结构在 449 个节点下是否更有用'' 的最终证据。
+
+\section{数据配对审计}
+
+本地审计脚本为：
+\[
+\texttt{scripts/analysis/audit\_scale\_experiment\_data.py}.
+\]
+运行后输出：
+\[
+\texttt{outputs/scale-experiment-audit-current/scale\_data\_method\_audit.md}.
+\]
+
+审计结果如下：
+
+\begin{longtable}{lrrrr}
+\toprule
+Universe & RV shape & IV shape & Returns shape & Common tickers \\
+\midrule
+\endhead
+S\&P 100 & \(1256\times 101\) & \(1256\times 101\) & \(1256\times 101\) & 101 \\
+S\&P 500 & \(1256\times 503\) & \(1256\times 503\) & \(1256\times 503\) & 503 \\
+\bottomrule
+\end{longtable}
+
+两组数据共同日期范围均为 2021-06-09 到 2026-06-09。处理后的 RV 和 IV 文件中没有非正值。仍存在的 missing values 主要来自新上市、并购拆分、ticker 重组或 VolVue/AlphaQuery 本身 IV 覆盖不足，因此需要通过 coverage filter 处理，而不是把上市前历史硬填。
+
+旧静态 run 的筛选结果为：
+\begin{itemize}[leftmargin=*]
+\item S\&P 100: 99 个 selected tickers，排除 BNY 和 GEV；旧图为 \(\texttt{glasso}\)，edges 为 1083，density 为 0.2233。
+\item S\&P 500: 449 个 selected tickers；旧图为 \(\texttt{glasso\_fallback\_corr}\)，edges 为 6928，density 为 0.0689。
+\end{itemize}
+
+\section{旧 pipeline 与 Zhang 原始代码的差异}
+
+Zhang 原始代码 \(\texttt{chaozhang-ox/GNNHAR}\) 的核心设定不是一次静态训练/验证/测试切分，而是 rolling forecast blocks。对每个 forecast origin \(t\)：
+\begin{itemize}[leftmargin=*]
+\item 使用最多过去 1000 个交易日的 returns 估计图；
+\item 用 \(\texttt{GraphicalLassoCV()}\) 估计 precision matrix；
+\item 将 precision matrix 的非零 pattern 转换成 adjacency；
+\item 预测接下来的 22 个交易日；
+\item GNNHAR 训练时，将 forecast origin 前最近 22 个交易日作为 validation；
+\item 线性 GHAR 使用 \(\texttt{LinearRegression}\)，并把非正预测替换为该 ticker 训练期 target 的最小正值。
+\end{itemize}
+
+旧 scale pipeline 的主要差异是：
+\begin{enumerate}[leftmargin=*]
+\item 使用 70/15/15 chronological split，而不是 rolling \(1000/22/22\) block。
+\item 使用一个 static graph，而不是每个 forecast block 重新估计 graph。
+\item S\&P 500 graph 失败后 fallback 到 correlation graph。
+\item GNN architecture 是 concat self/neighbor message passing，不是 Zhang 的 residual \(H_1+\mathrm{GCN}\) 结构。
+\item 线性模型使用 RidgeCV/StandardScaler，而不是原始 GHAR.py 的 LinearRegression。
+\item GNN 训练 epoch 较短，且没有充分的 validation tuning / restart / ensemble screening。
+\end{enumerate}
+
+这些差异足以解释为什么旧输出不能直接验证 ``节点数越多，图结构预测增益越大'' 的假设。
+
+\section{已新增的修正实现}
+
+新增脚本：
+\[
+\texttt{scripts/analysis/gnnhar\_iv\_zhang\_scale\_pipeline.py}.
+\]
+
+这个脚本的目标是把规模实验改成 Zhang-style rolling design，同时保留你的 IV 扩展。其特征包括：
+
+\begin{itemize}[leftmargin=*]
+\item rolling forecast origins，默认每 22 个交易日一个 block；
+\item 每个 block 使用最多 1000 个 pre-origin returns 重新估计 graph；
+\item 默认优先使用 \(\texttt{GraphicalLassoCV}\)，并把每个 block 的 graph method、alpha、edges、density、fallback 状态写入 \(\texttt{tables/graph\_blocks.csv}\)；
+\item 线性 HAR/GHAR 使用 \(\texttt{LinearRegression}\)；
+\item GNNHAR1L/2L/3L 使用 Zhang 风格的 residual \(H_1+\mathrm{GCN}\) 架构；
+\item IV 作为扩展通道进入 HAR-IV、GHAR-IV、GNNHAR-IV；
+\item 支持 hidden/lr grid、ensemble screening、MSE/QLIKE loss、fake-IV controls。
+\end{itemize}
+
+本地 smoke tests 已通过：
+\begin{itemize}[leftmargin=*]
+\item S\&P 100 smoke: 12 tickers, 1 rolling block, \(\texttt{glasso\_cv}\) 成功，0 fallback blocks。
+\item S\&P 500 smoke: 25 tickers, 1 rolling block, \(\texttt{glasso\_cv}\) 成功，0 fallback blocks。
+\end{itemize}
+
+这些 smoke tests 只证明代码和输出结构正确，不构成研究结论。
+
+\section{Colab 运行流程}
+
+建议先把本地代码 push 到 GitHub branch \(\texttt{2026-06-01}\)，然后在原 Colab notebook 或新的 launcher cell 中运行以下命令。
+
+\subsection{环境与仓库}
+
+\begin{lstlisting}
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os, subprocess, pathlib, textwrap, json
+
+REPO = "/content/GNNHAR"
+BRANCH = "2026-06-01"
+if not pathlib.Path(REPO).exists():
+    subprocess.run([
+        "git", "clone", "--branch", BRANCH,
+        "https://github.com/easygl1der/GNNHAR.git", REPO
+    ], check=True)
+else:
+    subprocess.run(["git", "-C", REPO, "fetch", "origin", BRANCH], check=True)
+    subprocess.run(["git", "-C", REPO, "checkout", BRANCH], check=True)
+    subprocess.run(["git", "-C", REPO, "pull", "--ff-only", "origin", BRANCH], check=True)
+
+os.chdir(REPO)
+subprocess.run(["pip", "install", "-q", "-r", "requirements-scale.txt"], check=True)
+\end{lstlisting}
+
+\subsection{数据审计}
+
+\begin{lstlisting}
+subprocess.run([
+    "python", "scripts/analysis/audit_scale_experiment_data.py",
+    "--output-dir", "/content/GNNHAR-colab-runs/scale-zhang-audit"
+], check=True)
+\end{lstlisting}
+
+\subsection{先跑 smoke run}
+
+\begin{lstlisting}
+RUN = "/content/GNNHAR-colab-runs/scale-zhang-roll-smoke"
+
+subprocess.run([
+    "python", "scripts/analysis/gnnhar_iv_zhang_scale_pipeline.py",
+    "--universe-name", "sp100-smoke",
+    "--data-dir", "data/scale_experiment/sp100",
+    "--returns-file", "data/scale_experiment/sp100/daily_returns.csv",
+    "--output-dir", f"{RUN}/sp100",
+    "--coverage-threshold", "0.95",
+    "--max-tickers", "20",
+    "--max-blocks", "1",
+    "--models", "HAR,GHAR,HAR+IV,GHAR+IV,GNNHAR1L,GNNHAR1L-IV",
+    "--hidden-grid", "9",
+    "--lr-grid", "0.001",
+    "--epochs", "40",
+    "--num-nn", "1",
+    "--mcs-bootstrap", "20",
+    "--skip-figures",
+    "--fast"
+], check=True)
+\end{lstlisting}
+
+\subsection{正式 S\&P 100}
+
+\begin{lstlisting}
+RUN = "/content/GNNHAR-colab-runs/scale-zhang-roll-20260611"
+
+subprocess.run([
+    "python", "scripts/analysis/gnnhar_iv_zhang_scale_pipeline.py",
+    "--universe-name", "sp100",
+    "--data-dir", "data/scale_experiment/sp100",
+    "--returns-file", "data/scale_experiment/sp100/daily_returns.csv",
+    "--output-dir", f"{RUN}/sp100",
+    "--coverage-threshold", "0.95",
+    "--models", "HAR,GHAR,HAR+IV,GHAR+IV,GNNHAR1L,GNNHAR2L,GNNHAR3L,GNNHAR1L-IV,GNNHAR2L-IV,GNNHAR3L-IV",
+    "--hidden-grid", "9,16,32",
+    "--lr-grid", "0.001,0.0003",
+    "--epochs", "300",
+    "--num-nn", "2",
+    "--mcs-bootstrap", "80"
+], check=True)
+\end{lstlisting}
+
+\subsection{正式 S\&P 500}
+
+S\&P 500 的 rolling GLASSO 和 GNN 都更重。建议第一版先跑 \(N\leq 200\) 或只跑 GNNHAR1L/2L；确认 graph fallback blocks 为 0 或很少之后，再放开到 449+ 节点和 GNNHAR3L-IV。
+
+\begin{lstlisting}
+RUN = "/content/GNNHAR-colab-runs/scale-zhang-roll-20260611"
+
+subprocess.run([
+    "python", "scripts/analysis/gnnhar_iv_zhang_scale_pipeline.py",
+    "--universe-name", "sp500",
+    "--data-dir", "data/scale_experiment/sp500",
+    "--returns-file", "data/scale_experiment/sp500/daily_returns.csv",
+    "--output-dir", f"{RUN}/sp500",
+    "--coverage-threshold", "0.99",
+    "--max-tickers", "200",
+    "--models", "HAR,GHAR,HAR+IV,GHAR+IV,GNNHAR1L,GNNHAR2L,GNNHAR1L-IV,GNNHAR2L-IV",
+    "--hidden-grid", "9,16",
+    "--lr-grid", "0.001,0.0003",
+    "--epochs", "250",
+    "--num-nn", "2",
+    "--mcs-bootstrap", "60"
+], check=True)
+\end{lstlisting}
+
+\section{解释结果时的判定规则}
+
+规模效应应报告为 loss reduction：
+\[
+G^{linear}_N
+=
+1-\frac{L(GHAR_N)}{L(HAR_N)},
+\]
+\[
+G^{linear\text{-}iv}_N
+=
+1-\frac{L(GHAR\text{-}IV_N)}{L(HAR\text{-}IV_N)},
+\]
+\[
+G^{gnn}_N
+=
+1-\frac{L(GNNHAR_N)}{L(GHAR_N)},
+\]
+\[
+G^{gnn\text{-}iv}_N
+=
+1-\frac{L(GNNHAR\text{-}IV_N)}{L(GHAR\text{-}IV_N)}.
+\]
+
+在写论文时，必须先看 \(\texttt{tables/graph\_blocks.csv}\)。如果 S\&P 500 仍存在大量 fallback blocks，就不能把结果称为 clean GLASSO scale effect。如果 graph 成功但增益仍然缩小，下一步才讨论经济解释：例如图密度、sector heterogeneity、IV coverage noise、GNN capacity、over-smoothing 或大 \(N\) 下 GLASSO network 过稀疏。
+
+\section{当前可引用的本地路径}
+
+\begin{itemize}[leftmargin=*]
+\item 数据审计报告：\(\texttt{outputs/scale-experiment-audit-current/scale\_data\_method\_audit.md}\)
+\item Zhang-style rolling 脚本：\(\texttt{scripts/analysis/gnnhar\_iv\_zhang\_scale\_pipeline.py}\)
+\item S\&P 100 smoke output：\(\texttt{outputs/zhang-scale-smoke/sp100}\)
+\item S\&P 500 smoke output：\(\texttt{outputs/zhang-scale-smoke/sp500}\)
+\end{itemize}
+
+\end{document}

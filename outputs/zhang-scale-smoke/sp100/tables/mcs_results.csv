@@ -1,0 +1,7 @@
+model,included_at_5pct,mcs_pvalue
+HAR,True,1.0
+GHAR+IV,True,1.0
+GHAR,True,0.9
+HAR+IV,True,0.9
+GNNHAR1L,False,0.0
+GNNHAR1L-IV,False,0.0

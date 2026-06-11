@@ -1,0 +1,3 @@
+hidden,lr,layers,num_nn,valid_loss,model,selected,block_id,origin_date
+9,0.001,1,1,0.4451155662536621,GNNHAR1L,True,0,2025-07-07
+9,0.001,1,1,0.5643853545188904,GNNHAR1L-IV,True,0,2025-07-07

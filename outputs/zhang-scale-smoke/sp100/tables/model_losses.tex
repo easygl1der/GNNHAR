@@ -1,0 +1,12 @@
+\begin{tabular}{lllllrrrrrr}
+\toprule
+model & family & iv_channel & adjacency & estimation & test_mse & test_qlike & mse_ratio_vs_har & qlike_ratio_vs_har & mse_ratio_vs_har_iv & qlike_ratio_vs_har_iv \\
+\midrule
+GHAR+IV & GHAR & real & Rolling GLASSO & MSE & 5.08727 & 0.00401528 & 1.02001 & 0.999669 & 0.994925 & 0.999467 \\
+HAR & HAR & none & Identity & MSE & 4.98746 & 0.00401661 & 1 & 1 & 0.975403 & 0.999798 \\
+HAR+IV & HAR & real & Identity & MSE & 5.11323 & 0.00401742 & 1.02522 & 1.0002 & 1 & 1 \\
+GHAR & GHAR & none & Rolling GLASSO & MSE & 4.97102 & 0.00401976 & 0.996704 & 1.00078 & 0.972188 & 1.00058 \\
+GNNHAR1L & GNNHAR & none & Rolling GLASSO & MSE & 78.4889 & 0.052264 & 15.7373 & 13.012 & 15.3502 & 13.0093 \\
+GNNHAR1L-IV & GNNHAR & real & Rolling GLASSO & MSE & 93.0362 & 0.0571158 & 18.654 & 14.2199 & 18.1952 & 14.217 \\
+\bottomrule
+\end{tabular}

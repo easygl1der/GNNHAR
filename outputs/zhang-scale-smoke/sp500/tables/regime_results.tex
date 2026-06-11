@@ -1,0 +1,16 @@
+\begin{tabular}{llrrr}
+\toprule
+regime & model & n_dates & mse & qlike \\
+\midrule
+calm & HAR & 16 & 4.339 & 0.00300612 \\
+calm & GHAR & 16 & 4.37899 & 0.00301732 \\
+calm & HAR+IV & 16 & 4.54345 & 0.00332986 \\
+calm & GHAR+IV & 16 & 4.55017 & 0.00333339 \\
+calm & GNNHAR1L & 16 & 117.343 & 0.0728662 \\
+volatile_top_quartile & GHAR+IV & 6 & 113.483 & 0.01902 \\
+volatile_top_quartile & HAR+IV & 6 & 113.564 & 0.0190654 \\
+volatile_top_quartile & HAR & 6 & 117.309 & 0.020893 \\
+volatile_top_quartile & GHAR & 6 & 117.223 & 0.0208956 \\
+volatile_top_quartile & GNNHAR1L & 6 & 575.864 & 0.129513 \\
+\bottomrule
+\end{tabular}

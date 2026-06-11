@@ -1,0 +1,3 @@
+universe,path,n_assets,n_dates,n_test_dates,n_blocks,fallback_blocks,best_qlike_model,best_test_qlike,best_mse_model,best_test_mse,best_gnn_qlike_model,best_gnn_iv_qlike_model,har_qlike,ghar_qlike,har_iv_qlike,ghar_iv_qlike
+sp100-smoke,outputs/zhang-scale-smoke/sp100,12,1234,22,1,0,GHAR+IV,0.0040152785368263,GHAR,4.971018314361572,GNNHAR1L,GNNHAR1L-IV,0.0040166075341403,0.0040197568014264,0.0040174201130867,0.0040152785368263
+sp500-smoke,outputs/zhang-scale-smoke/sp500,25,1234,22,1,0,GHAR+IV,0.0076115694828331,GHAR+IV,34.259124755859375,GNNHAR1L,,0.0078843533992767,0.0078932298347353,0.0076213777065277,0.0076115694828331

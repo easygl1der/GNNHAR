@@ -123,6 +123,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--loss", choices=["MSE", "QLIKE"], default="MSE")
     parser.add_argument("--mcs-bootstrap", type=int, default=80)
     parser.add_argument("--seed", type=int, default=20260611)
+    parser.add_argument("--horizon", type=int, default=1, help="Forecasting horizon (1=daily, 5=weekly, 22=monthly)")
     parser.add_argument("--prediction-floor-quantile", type=float, default=0.001)
     parser.add_argument("--prediction-floor-value", type=float, default=0.0)
     parser.add_argument("--skip-figures", action="store_true")
@@ -238,10 +239,15 @@ def load_panel(args: argparse.Namespace) -> RollingPanel:
 
     rv_dates, rv_features = build_feature_tensor(rv)
     iv_dates, iv_features = build_feature_tensor(iv)
-    dates = rv_dates.intersection(iv_dates).intersection(rv.index).intersection(returns.index)
+    horizon = getattr(args, "horizon", 1)
+    if horizon > 1:
+        target_df = sum(rv.shift(-i) for i in range(horizon)) / float(horizon)
+    else:
+        target_df = rv
+    dates = rv_dates.intersection(iv_dates).intersection(target_df.index).intersection(returns.index)
     rv_features = rv_features[rv_dates.get_indexer(dates)]
     iv_features = iv_features[iv_dates.get_indexer(dates)]
-    target = rv.loc[dates, tickers].to_numpy(dtype=np.float32)
+    target = target_df.loc[dates, tickers].to_numpy(dtype=np.float32)
 
     valid = np.isfinite(target).all(axis=1)
     valid &= np.isfinite(rv_features).all(axis=(1, 2))
@@ -616,6 +622,34 @@ def standardize_features(
     return x_scaled.astype(np.float32), y_scaled.astype(np.float32), {"y_mean": y_mean, "y_std": y_std}
 
 
+def compute_mad_value(h_repr: np.ndarray, adj: np.ndarray) -> float:
+    # h_repr shape: [B, N, D]
+    # adj shape: [N, N] (normalized adjacency matrix)
+    # The connectivity mask is defined by non-zero elements in adj (excluding the diagonal)
+    B, N, D = h_repr.shape
+    mask = (np.abs(adj) > 1e-9).astype(float)
+    np.fill_diagonal(mask, 0.0)
+    
+    connected_counts = mask.sum(axis=1) # [N]
+    valid_nodes = connected_counts > 0 # [N]
+    if not np.any(valid_nodes):
+        return 0.0
+        
+    mads = []
+    for t in range(B):
+        H = h_repr[t] # [N, D]
+        norms = np.linalg.norm(H, axis=1, keepdims=True)
+        H_norm = H / (norms + 1e-9)
+        cosine_sim = H_norm @ H_norm.T # [N, N]
+        dist = 1.0 - cosine_sim # [N, N]
+        
+        sum_dist = (dist * mask).sum(axis=1) # [N]
+        d_bar = sum_dist[valid_nodes] / connected_counts[valid_nodes]
+        mads.append(float(d_bar.mean()))
+        
+    return float(np.mean(mads))
+
+
 def train_gnn_block(
     model_name: str,
     x: np.ndarray,
@@ -662,13 +696,16 @@ def train_gnn_block(
             self.mlp1 = nn.Linear(hidden_features, 1, bias=False)
             self.relu = nn.ReLU()
 
-        def forward(self, node_feat: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
+        def forward(self, node_feat: torch.Tensor, adj: torch.Tensor, return_repr: bool = False) -> torch.Tensor:
             h1 = self.linear1(node_feat)
-            h2 = self.relu(self.gcn1(node_feat, adj))
+            h_repr = self.relu(self.gcn1(node_feat, adj))
             for layer in self.extra:
-                h2 = self.relu(layer(h2, adj))
-            h2 = self.mlp1(h2)
-            return self.relu(h1 + h2).squeeze(-1)
+                h_repr = self.relu(layer(h_repr, adj))
+            h2 = self.mlp1(h_repr)
+            pred = self.relu(h1 + h2).squeeze(-1)
+            if return_repr:
+                return pred, h_repr
+            return pred
 
     layer_match = re.search(r"GNNHAR(\d+)L", model_name)
     layers = int(layer_match.group(1)) if layer_match else 1
@@ -701,6 +738,7 @@ def train_gnn_block(
 
     pred_list: List[np.ndarray] = []
     valid_losses: List[float] = []
+    model_mads: List[float] = []
     train_histories: List[Dict[str, object]] = []
     for model_i in range(max(1, num_nn)):
         torch.manual_seed(seed + model_i)
@@ -747,7 +785,9 @@ def train_gnn_block(
         model.eval()
         with torch.no_grad():
             test_tensor = torch.tensor(test_local, dtype=torch.long, device=device)
-            pred_scaled = model(x_t[test_tensor], adj_t).detach().cpu().numpy()
+            pred_scaled, repr_scaled = model(x_t[test_tensor], adj_t, return_repr=True)
+            pred_scaled = pred_scaled.detach().cpu().numpy()
+            repr_np = repr_scaled.detach().cpu().numpy()
         if use_qlike:
             pred = np.exp(pred_scaled * y_std + y_mean)
         else:
@@ -755,6 +795,11 @@ def train_gnn_block(
         pred = np.clip(pred, pred_floor, None).astype(np.float32)
         pred_list.append(pred)
         valid_losses.append(best_valid)
+        
+        # Calculate MAD for this model on the test set representations
+        mad_val = compute_mad_value(repr_np, adjacency)
+        model_mads.append(mad_val)
+        
         train_histories.append({"model_index": model_i, "best_valid": best_valid, "epochs_run": len(valid_trace)})
 
     threshold = np.percentile(valid_losses, screen_percentile)
@@ -770,6 +815,7 @@ def train_gnn_block(
         "selected_ensemble": selected,
         "valid_loss": float(np.mean([valid_losses[idx] for idx in selected])),
         "all_valid_losses": [float(value) for value in valid_losses],
+        "test_mad": float(np.mean([model_mads[idx] for idx in selected])),
         "histories": train_histories,
     }
     return pred.astype(np.float32), info
@@ -1194,6 +1240,20 @@ def run(args: argparse.Namespace) -> None:
     ]
     loss_table, losses = evaluate_runs(runs, eval_panel)
     loss_table.attrs["n_test_dates"] = int(test_mask.sum())
+    
+    # Calculate average test MAD for GNN models from gnn_rows
+    gnn_mads = {}
+    for row in gnn_rows:
+        if row.get("selected", False):
+            m_name = row["model"]
+            gnn_mads.setdefault(m_name, []).append(row["test_mad"])
+    
+    # Add test_mad column to loss_table
+    loss_table["test_mad"] = float("nan")
+    for idx, row in loss_table.iterrows():
+        m_name = row["model"]
+        if m_name in gnn_mads:
+            loss_table.loc[idx, "test_mad"] = float(np.mean(gnn_mads[m_name]))
     ratio_table = loss_table[
         [
             "model",

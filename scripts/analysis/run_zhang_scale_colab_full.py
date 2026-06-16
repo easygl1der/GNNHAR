@@ -93,6 +93,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-root", default=str(DEFAULT_OUT_ROOT))
     parser.add_argument("--universes", default="dow30,sp100,sp500", help="Comma-separated subset of dow30,sp100,sp500")
     parser.add_argument("--losses", default="MSE,QLIKE", help="Comma-separated subset of MSE,QLIKE")
+    parser.add_argument("--horizons", default="1", help="Comma-separated subset of horizons, e.g. 1,5,22")
     parser.add_argument("--models", default=DEFAULT_MODELS)
     parser.add_argument("--hidden-grid", default="9,16")
     parser.add_argument("--lr-grid", default="0.001,0.0003")
@@ -186,7 +187,7 @@ def selected_universes(keys: Iterable[str]) -> List[UniverseConfig]:
     return configs
 
 
-def pipeline_command(args: argparse.Namespace, universe: UniverseConfig, loss: str, output_dir: Path) -> List[str]:
+def pipeline_command(args: argparse.Namespace, universe: UniverseConfig, loss: str, horizon: int, output_dir: Path) -> List[str]:
     cmd = [
         sys.executable,
         "scripts/analysis/gnnhar_iv_zhang_scale_pipeline.py",
@@ -228,6 +229,8 @@ def pipeline_command(args: argparse.Namespace, universe: UniverseConfig, loss: s
         args.graph_method,
         "--loss",
         loss,
+        "--horizon",
+        str(horizon),
     ]
     if args.max_blocks > 0:
         cmd.extend(["--max-blocks", str(args.max_blocks)])
@@ -240,15 +243,16 @@ def pipeline_command(args: argparse.Namespace, universe: UniverseConfig, loss: s
     return cmd
 
 
-def summarize_existing(out_root: Path, configs: List[UniverseConfig], losses: List[str], dry_run: bool) -> None:
+def summarize_existing(out_root: Path, configs: List[UniverseConfig], losses: List[str], horizons: List[int], dry_run: bool) -> None:
     run_dirs: List[Path] = []
     labels: List[str] = []
     for universe in configs:
         for loss in losses:
-            path = out_root / "full" / universe.key / loss
-            if complete_run(path):
-                run_dirs.append(path)
-                labels.append(f"{universe.label}-{loss}")
+            for horizon in horizons:
+                path = out_root / "full" / universe.key / loss / f"H{horizon}"
+                if complete_run(path):
+                    run_dirs.append(path)
+                    labels.append(f"{universe.label}-{loss}-H{horizon}")
     if not run_dirs:
         print("No complete run directories found for summary.", flush=True)
         return
@@ -280,6 +284,7 @@ def main() -> None:
     unknown_losses = sorted(set(losses).difference({"MSE", "QLIKE"}))
     if unknown_losses:
         raise ValueError(f"Unknown losses: {unknown_losses}")
+    horizons = [int(h) for h in parse_csv(args.horizons)]
 
     gpu = check_gpu(args.require_gpu_name, args.allow_missing_gpu)
     append_jsonl(
@@ -291,6 +296,7 @@ def main() -> None:
             "gpu": gpu,
             "universes": [cfg.key for cfg in configs],
             "losses": losses,
+            "horizons": horizons,
             "models": parse_csv(args.models),
         },
     )
@@ -298,42 +304,45 @@ def main() -> None:
 
     for universe in configs:
         for loss in losses:
-            output_dir = out_root / "full" / universe.key / loss
-            log_path = out_root / "logs" / f"{universe.key}_{loss}.log"
-            if complete_run(output_dir) and not args.rerun_existing:
-                append_jsonl(progress_path, {"event": "skip_existing", "universe": universe.key, "loss": loss})
-                print(f"Skipping existing complete run: {output_dir}", flush=True)
-                continue
-            append_jsonl(
-                progress_path,
-                {
-                    "event": "run_start",
-                    "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "universe": universe.key,
-                    "loss": loss,
-                    "output_dir": str(output_dir),
-                },
-            )
-            started = time.time()
-            rc = run_streaming(pipeline_command(args, universe, loss, output_dir), REPO_ROOT, log_path, args.dry_run)
-            elapsed = time.time() - started
-            append_jsonl(
-                progress_path,
-                {
-                    "event": "run_end" if rc == 0 else "run_error",
-                    "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "universe": universe.key,
-                    "loss": loss,
-                    "returncode": rc,
-                    "elapsed_sec": round(elapsed, 2),
-                    "output_dir": str(output_dir),
-                    "log_path": str(log_path),
-                },
-            )
-            if rc != 0:
-                raise SystemExit(f"{universe.key} {loss} failed with exit code {rc}; see {log_path}")
+            for horizon in horizons:
+                output_dir = out_root / "full" / universe.key / loss / f"H{horizon}"
+                log_path = out_root / "logs" / f"{universe.key}_{loss}_H{horizon}.log"
+                if complete_run(output_dir) and not args.rerun_existing:
+                    append_jsonl(progress_path, {"event": "skip_existing", "universe": universe.key, "loss": loss, "horizon": horizon})
+                    print(f"Skipping existing complete run: {output_dir}", flush=True)
+                    continue
+                append_jsonl(
+                    progress_path,
+                    {
+                        "event": "run_start",
+                        "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "universe": universe.key,
+                        "loss": loss,
+                        "horizon": horizon,
+                        "output_dir": str(output_dir),
+                    },
+                )
+                started = time.time()
+                rc = run_streaming(pipeline_command(args, universe, loss, horizon, output_dir), REPO_ROOT, log_path, args.dry_run)
+                elapsed = time.time() - started
+                append_jsonl(
+                    progress_path,
+                    {
+                        "event": "run_end" if rc == 0 else "run_error",
+                        "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "universe": universe.key,
+                        "loss": loss,
+                        "horizon": horizon,
+                        "returncode": rc,
+                        "elapsed_sec": round(elapsed, 2),
+                        "output_dir": str(output_dir),
+                        "log_path": str(log_path),
+                    },
+                )
+                if rc != 0:
+                    raise SystemExit(f"{universe.key} {loss} H{horizon} failed with exit code {rc}; see {log_path}")
 
-    summarize_existing(out_root, configs, losses, args.dry_run)
+    summarize_existing(out_root, configs, losses, horizons, args.dry_run)
     append_jsonl(
         progress_path,
         {

@@ -1,0 +1,396 @@
+{
+  "universe": "sp500",
+  "horizon": 1,
+  "created_utc": "2026-06-17T11:41:00.086272+00:00",
+  "source_root": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source",
+  "source_dirs": {
+    "MSE": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source/full/sp500/MSE/H1",
+    "QLIKE": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source/full/sp500/QLIKE/H1"
+  },
+  "output_dir": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/gnnhar_colab_runs/sp500/sp500_parallel_a100_20260617T0706Z",
+  "models": [
+    {
+      "name": "GHAR2H_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR2H_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR2H_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR2H_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR3H_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR3H_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR3H_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR3H_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR1L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR1L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR2L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR2L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR3L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR3L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR4L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR4L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR5L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR5L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "HAR_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "HAR_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    }
+  ],
+  "baseline": "HAR_M",
+  "conversion": "zhang-scale outputs merged into Colab-style single-run layout",
+  "n_models": 36,
+  "n_test_dates": 223,
+  "truth_shape": [
+    223,
+    449
+  ],
+  "files": [
+    "dm_depth_tests.csv",
+    "dm_tests.csv",
+    "fvu.csv",
+    "loss_table.csv",
+    "post_run_diagnostics/data_integrity_checks.csv",
+    "post_run_diagnostics/diagnostic_loss_summary.csv",
+    "post_run_diagnostics/hidden_state_mad.csv",
+    "post_run_diagnostics/mad_smoothing_diagnostics.csv",
+    "post_run_diagnostics/market_state_series.csv",
+    "post_run_diagnostics/mcs_mse.csv",
+    "post_run_diagnostics/mcs_qlike.csv",
+    "post_run_diagnostics/mcs_summary.csv",
+    "post_run_diagnostics/oversmoothing_depth_summary.csv",
+    "post_run_diagnostics/per_date_mse_losses.csv",
+    "post_run_diagnostics/per_date_qlike_losses.csv",
+    "post_run_diagnostics/post_run_diagnostics_manifest.json",
+    "post_run_diagnostics/regime_loss_table.csv",
+    "post_run_diagnostics/regime_metadata.json",
+    "pred_GHAR2H_M.npy",
+    "pred_GHAR2H_M_IV.npy",
+    "pred_GHAR2H_Q.npy",
+    "pred_GHAR2H_Q_IV.npy",
+    "pred_GHAR3H_M.npy",
+    "pred_GHAR3H_M_IV.npy",
+    "pred_GHAR3H_Q.npy",
+    "pred_GHAR3H_Q_IV.npy",
+    "pred_GHAR_M.npy",
+    "pred_GHAR_M_IV.npy",
+    "pred_GHAR_Q.npy",
+    "pred_GHAR_Q_IV.npy",
+    "pred_GNNHAR1L_M.npy",
+    "pred_GNNHAR1L_M_IV.npy",
+    "pred_GNNHAR1L_Q.npy",
+    "pred_GNNHAR1L_Q_IV.npy",
+    "pred_GNNHAR2L_M.npy",
+    "pred_GNNHAR2L_M_IV.npy",
+    "pred_GNNHAR2L_Q.npy",
+    "pred_GNNHAR2L_Q_IV.npy",
+    "pred_GNNHAR3L_M.npy",
+    "pred_GNNHAR3L_M_IV.npy",
+    "pred_GNNHAR3L_Q.npy",
+    "pred_GNNHAR3L_Q_IV.npy",
+    "pred_GNNHAR4L_M.npy",
+    "pred_GNNHAR4L_M_IV.npy",
+    "pred_GNNHAR4L_Q.npy",
+    "pred_GNNHAR4L_Q_IV.npy",
+    "pred_GNNHAR5L_M.npy",
+    "pred_GNNHAR5L_M_IV.npy",
+    "pred_GNNHAR5L_Q.npy",
+    "pred_GNNHAR5L_Q_IV.npy",
+    "pred_HAR_M.npy",
+    "pred_HAR_M_IV.npy",
+    "pred_HAR_Q.npy",
+    "pred_HAR_Q_IV.npy",
+    "run_config.json",
+    "run_manifest.json",
+    "source_tables/mse/dm_tests.csv",
+    "source_tables/mse/gnn_tuning.csv",
+    "source_tables/mse/graph_blocks.csv",
+    "source_tables/mse/iv_decomposition.csv",
+    "source_tables/mse/loss_ratios.csv",
+    "source_tables/mse/mcs_results.csv",
+    "source_tables/mse/model_losses.csv",
+    "source_tables/mse/regime_results.csv",
+    "source_tables/qlike/dm_tests.csv",
+    "source_tables/qlike/gnn_tuning.csv",
+    "source_tables/qlike/graph_blocks.csv",
+    "source_tables/qlike/iv_decomposition.csv",
+    "source_tables/qlike/loss_ratios.csv",
+    "source_tables/qlike/mcs_results.csv",
+    "source_tables/qlike/model_losses.csv",
+    "source_tables/qlike/regime_results.csv",
+    "test_dates.npy",
+    "tickers.npy",
+    "truth.npy"
+  ],
+  "source_tables": [
+    "source_tables/mse/graph_blocks.csv",
+    "source_tables/mse/gnn_tuning.csv",
+    "source_tables/mse/model_losses.csv",
+    "source_tables/mse/loss_ratios.csv",
+    "source_tables/mse/dm_tests.csv",
+    "source_tables/mse/mcs_results.csv",
+    "source_tables/mse/iv_decomposition.csv",
+    "source_tables/mse/regime_results.csv",
+    "source_tables/qlike/graph_blocks.csv",
+    "source_tables/qlike/gnn_tuning.csv",
+    "source_tables/qlike/model_losses.csv",
+    "source_tables/qlike/loss_ratios.csv",
+    "source_tables/qlike/dm_tests.csv",
+    "source_tables/qlike/mcs_results.csv",
+    "source_tables/qlike/iv_decomposition.csv",
+    "source_tables/qlike/regime_results.csv"
+  ],
+  "created_unix": 1781696460.090086,
+  "diagnostics": {
+    "created_utc": "2026-06-17T11:41:14.518968+00:00",
+    "mcs_alpha": 0.05,
+    "mcs_bootstrap": 10000,
+    "mcs_block_size": 2,
+    "mcs_algorithm": "SQ",
+    "regime_quantile": 0.9,
+    "regime_source": "cross-sectional mean RV proxy from truth array",
+    "baseline_model": "HAR_M",
+    "note": "MCS and regime analysis use saved out-of-sample forecasts. MAD uses hidden states if saved; otherwise prediction-level smoothing proxies are reported.",
+    "files": [
+      "post_run_diagnostics/data_integrity_checks.csv",
+      "post_run_diagnostics/per_date_mse_losses.csv",
+      "post_run_diagnostics/per_date_qlike_losses.csv",
+      "post_run_diagnostics/diagnostic_loss_summary.csv",
+      "post_run_diagnostics/mcs_mse.csv",
+      "post_run_diagnostics/mcs_qlike.csv",
+      "post_run_diagnostics/mcs_summary.csv",
+      "post_run_diagnostics/regime_loss_table.csv",
+      "post_run_diagnostics/market_state_series.csv",
+      "post_run_diagnostics/mad_smoothing_diagnostics.csv",
+      "post_run_diagnostics/hidden_state_mad.csv",
+      "post_run_diagnostics/oversmoothing_depth_summary.csv",
+      "post_run_diagnostics/regime_metadata.json",
+      "post_run_diagnostics/post_run_diagnostics_manifest.json"
+    ]
+  }
+}

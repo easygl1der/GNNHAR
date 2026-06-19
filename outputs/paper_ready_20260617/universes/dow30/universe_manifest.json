@@ -1,0 +1,460 @@
+{
+  "universe": "dow30",
+  "source_note": "Colab-style Dow30 full run written to Google Drive.",
+  "source_root": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z",
+  "created_utc": "2026-06-18T08:22:00.511252+00:00",
+  "truth": {
+    "shape": [
+      232,
+      30
+    ],
+    "dtype": "float32",
+    "finite_share": 1.0
+  },
+  "prediction_file_count": 20,
+  "table_file_count": 3,
+  "diagnostic_file_count": 12,
+  "graph_matrix_file_count": 0,
+  "run_manifest_summary": {
+    "universe": "dow30",
+    "files_count": 44,
+    "diagnostics": {
+      "created_utc": "2026-06-16T08:36:02.446212+00:00",
+      "mcs_alpha": 0.05,
+      "mcs_bootstrap": 10000,
+      "mcs_block_size": 2,
+      "mcs_algorithm": "SQ",
+      "regime_quantile": 0.9,
+      "regime_source": "cross-sectional mean RV proxy from truth array",
+      "baseline_model": "HAR_M",
+      "note": "MCS and regime analysis use saved out-of-sample forecasts. MAD uses hidden states if saved; otherwise prediction-level smoothing proxies are reported.",
+      "files": [
+        "post_run_diagnostics/data_integrity_checks.csv",
+        "post_run_diagnostics/per_date_mse_losses.csv",
+        "post_run_diagnostics/per_date_qlike_losses.csv",
+        "post_run_diagnostics/diagnostic_loss_summary.csv",
+        "post_run_diagnostics/mcs_mse.csv",
+        "post_run_diagnostics/mcs_qlike.csv",
+        "post_run_diagnostics/mcs_summary.csv",
+        "post_run_diagnostics/regime_loss_table.csv",
+        "post_run_diagnostics/market_state_series.csv",
+        "post_run_diagnostics/mad_smoothing_diagnostics.csv",
+        "post_run_diagnostics/hidden_state_mad.csv",
+        "post_run_diagnostics/oversmoothing_depth_summary.csv",
+        "post_run_diagnostics/regime_metadata.json",
+        "post_run_diagnostics/post_run_diagnostics_manifest.json"
+      ]
+    }
+  },
+  "run_config_summary": {
+    "run_id": null,
+    "universe": "dow30",
+    "n_tickers": 30,
+    "n_test_dates": null,
+    "notes": null
+  },
+  "tables": {
+    "dm_tests.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 19,
+      "columns": [
+        "model",
+        "DM_MSE_avg",
+        "p_MSE_avg",
+        "DM_QL_avg",
+        "p_QL_avg"
+      ]
+    },
+    "fvu.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 19,
+      "columns": [
+        "model",
+        "FVU_mean"
+      ]
+    },
+    "loss_table.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 20,
+      "columns": [
+        "model",
+        "mse",
+        "qlike",
+        "mse_ratio",
+        "qlike_ratio"
+      ]
+    }
+  },
+  "diagnostics": {
+    "data_integrity_checks.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 21,
+      "columns": [
+        "array",
+        "shape",
+        "n_dates",
+        "n_tickers",
+        "finite_share",
+        "nonpositive_count",
+        "min",
+        "max"
+      ]
+    },
+    "diagnostic_loss_summary.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 20,
+      "columns": [
+        "model",
+        "mse",
+        "qlike",
+        "mse_ratio_vs_HAR_M",
+        "qlike_ratio_vs_HAR_M",
+        "model_class",
+        "depth",
+        "uses_iv",
+        "training_loss"
+      ]
+    },
+    "hidden_state_mad.csv": {
+      "exists": true,
+      "empty": true
+    },
+    "mad_smoothing_diagnostics.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 20,
+      "columns": [
+        "model",
+        "model_class",
+        "depth",
+        "uses_iv",
+        "training_loss",
+        "forecast_mad_time_series",
+        "mean_cross_section_std",
+        "mean_cross_section_cv",
+        "diagnostic_level",
+        "note"
+      ]
+    },
+    "market_state_series.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 232,
+      "columns": [
+        "test_date",
+        "market_rv_proxy",
+        "regime"
+      ]
+    },
+    "mcs_mse.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 20,
+      "columns": [
+        "model",
+        "metric",
+        "mean_loss",
+        "rank_mean_loss",
+        "mcs_included",
+        "mcs_pvalue",
+        "n_dates",
+        "alpha",
+        "bootstrap",
+        "block_size",
+        "algorithm",
+        "status"
+      ]
+    },
+    "mcs_qlike.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 20,
+      "columns": [
+        "model",
+        "metric",
+        "mean_loss",
+        "rank_mean_loss",
+        "mcs_included",
+        "mcs_pvalue",
+        "n_dates",
+        "alpha",
+        "bootstrap",
+        "block_size",
+        "algorithm",
+        "status"
+      ]
+    },
+    "mcs_summary.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 40,
+      "columns": [
+        "model",
+        "metric",
+        "mean_loss",
+        "rank_mean_loss",
+        "mcs_included",
+        "mcs_pvalue",
+        "n_dates",
+        "alpha",
+        "bootstrap",
+        "block_size",
+        "algorithm",
+        "status"
+      ]
+    },
+    "oversmoothing_depth_summary.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 8,
+      "columns": [
+        "uses_iv",
+        "training_loss",
+        "metric",
+        "depth_min",
+        "depth_max",
+        "n_depths",
+        "pearson_corr_with_depth",
+        "first_depth_value",
+        "last_depth_value",
+        "direction"
+      ]
+    },
+    "per_date_mse_losses.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 232,
+      "columns": [
+        "GHAR_M",
+        "GHAR_M_IV",
+        "GHAR_Q",
+        "GHAR_Q_IV",
+        "GNNHAR1L_M",
+        "GNNHAR1L_M_IV",
+        "GNNHAR1L_Q",
+        "GNNHAR1L_Q_IV",
+        "GNNHAR2L_M",
+        "GNNHAR2L_M_IV",
+        "GNNHAR2L_Q",
+        "GNNHAR2L_Q_IV",
+        "GNNHAR3L_M",
+        "GNNHAR3L_M_IV",
+        "GNNHAR3L_Q",
+        "GNNHAR3L_Q_IV",
+        "HAR_M",
+        "HAR_M_IV",
+        "HAR_Q",
+        "HAR_Q_IV"
+      ]
+    },
+    "per_date_qlike_losses.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 232,
+      "columns": [
+        "GHAR_M",
+        "GHAR_M_IV",
+        "GHAR_Q",
+        "GHAR_Q_IV",
+        "GNNHAR1L_M",
+        "GNNHAR1L_M_IV",
+        "GNNHAR1L_Q",
+        "GNNHAR1L_Q_IV",
+        "GNNHAR2L_M",
+        "GNNHAR2L_M_IV",
+        "GNNHAR2L_Q",
+        "GNNHAR2L_Q_IV",
+        "GNNHAR3L_M",
+        "GNNHAR3L_M_IV",
+        "GNNHAR3L_Q",
+        "GNNHAR3L_Q_IV",
+        "HAR_M",
+        "HAR_M_IV",
+        "HAR_Q",
+        "HAR_Q_IV"
+      ]
+    },
+    "regime_loss_table.csv": {
+      "exists": true,
+      "empty": false,
+      "rows": 40,
+      "columns": [
+        "regime",
+        "model",
+        "n_dates",
+        "mse",
+        "qlike",
+        "mse_ratio_vs_HAR_M",
+        "qlike_ratio_vs_HAR_M",
+        "model_class",
+        "depth",
+        "uses_iv",
+        "training_loss",
+        "rank_qlike_within_regime",
+        "rank_mse_within_regime"
+      ]
+    }
+  },
+  "supplements": {
+    "wide_multihop_ghar_20260618": {
+      "source_root": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar",
+      "truth": {
+        "shape": [
+          234,
+          30
+        ],
+        "dtype": "float32",
+        "finite_share": 1.0
+      },
+      "prediction_file_count": 8,
+      "date_summary": {
+        "n_test_dates": 234,
+        "start": "2025-07-07",
+        "end": "2026-06-09"
+      },
+      "files": [
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/multihop_supplement_manifest_20260618T075711Z.json",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M_IV.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q_IV.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M_IV.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q_IV.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/rolling_blocks.csv",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/run_manifest.json",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/run_manifest.json",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/test_dates.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/tickers.npy",
+        "universes/dow30/supplements/wide_multihop_ghar_20260618/truth.npy"
+      ]
+    }
+  },
+  "files": [
+    "universes/dow30/arrays/test_dates.npy",
+    "universes/dow30/arrays/tickers.npy",
+    "universes/dow30/arrays/truth.npy",
+    "universes/dow30/diagnostics/data_integrity_checks.csv",
+    "universes/dow30/diagnostics/diagnostic_loss_summary.csv",
+    "universes/dow30/diagnostics/hidden_state_mad.csv",
+    "universes/dow30/diagnostics/mad_smoothing_diagnostics.csv",
+    "universes/dow30/diagnostics/market_state_series.csv",
+    "universes/dow30/diagnostics/mcs_mse.csv",
+    "universes/dow30/diagnostics/mcs_qlike.csv",
+    "universes/dow30/diagnostics/mcs_summary.csv",
+    "universes/dow30/diagnostics/oversmoothing_depth_summary.csv",
+    "universes/dow30/diagnostics/per_date_mse_losses.csv",
+    "universes/dow30/diagnostics/per_date_qlike_losses.csv",
+    "universes/dow30/diagnostics/post_run_diagnostics_manifest.json",
+    "universes/dow30/diagnostics/regime_loss_table.csv",
+    "universes/dow30/diagnostics/regime_metadata.json",
+    "universes/dow30/metadata/model_training_log.csv",
+    "universes/dow30/metadata/rolling_blocks.csv",
+    "universes/dow30/metadata/run_config.json",
+    "universes/dow30/metadata/run_manifest.json",
+    "universes/dow30/predictions/pred_GHAR_M.npy",
+    "universes/dow30/predictions/pred_GHAR_M_IV.npy",
+    "universes/dow30/predictions/pred_GHAR_Q.npy",
+    "universes/dow30/predictions/pred_GHAR_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_Q_IV.npy",
+    "universes/dow30/predictions/pred_HAR_M.npy",
+    "universes/dow30/predictions/pred_HAR_M_IV.npy",
+    "universes/dow30/predictions/pred_HAR_Q.npy",
+    "universes/dow30/predictions/pred_HAR_Q_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/multihop_supplement_manifest_20260618T075711Z.json",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/rolling_blocks.csv",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/run_manifest.json",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/run_manifest.json",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/test_dates.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/tickers.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/truth.npy",
+    "universes/dow30/tables/dm_tests.csv",
+    "universes/dow30/tables/fvu.csv",
+    "universes/dow30/tables/loss_table.csv"
+  ],
+  "source_files": {
+    "universes/dow30/arrays/truth.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/truth.npy",
+    "universes/dow30/arrays/tickers.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/tickers.npy",
+    "universes/dow30/arrays/test_dates.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/test_dates.npy",
+    "universes/dow30/predictions/pred_GHAR_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GHAR_M.npy",
+    "universes/dow30/predictions/pred_GHAR_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GHAR_M_IV.npy",
+    "universes/dow30/predictions/pred_GHAR_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GHAR_Q.npy",
+    "universes/dow30/predictions/pred_GHAR_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GHAR_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR1L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR1L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR1L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR1L_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR1L_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR2L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR2L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR2L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR2L_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR2L_Q_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR3L_M.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR3L_M_IV.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR3L_Q.npy",
+    "universes/dow30/predictions/pred_GNNHAR3L_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_GNNHAR3L_Q_IV.npy",
+    "universes/dow30/predictions/pred_HAR_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_HAR_M.npy",
+    "universes/dow30/predictions/pred_HAR_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_HAR_M_IV.npy",
+    "universes/dow30/predictions/pred_HAR_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_HAR_Q.npy",
+    "universes/dow30/predictions/pred_HAR_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/pred_HAR_Q_IV.npy",
+    "universes/dow30/tables/loss_table.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/loss_table.csv",
+    "universes/dow30/tables/dm_tests.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/dm_tests.csv",
+    "universes/dow30/tables/fvu.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/fvu.csv",
+    "universes/dow30/diagnostics/data_integrity_checks.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/data_integrity_checks.csv",
+    "universes/dow30/diagnostics/diagnostic_loss_summary.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/diagnostic_loss_summary.csv",
+    "universes/dow30/diagnostics/hidden_state_mad.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/hidden_state_mad.csv",
+    "universes/dow30/diagnostics/mad_smoothing_diagnostics.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/mad_smoothing_diagnostics.csv",
+    "universes/dow30/diagnostics/market_state_series.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/market_state_series.csv",
+    "universes/dow30/diagnostics/mcs_mse.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/mcs_mse.csv",
+    "universes/dow30/diagnostics/mcs_qlike.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/mcs_qlike.csv",
+    "universes/dow30/diagnostics/mcs_summary.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/mcs_summary.csv",
+    "universes/dow30/diagnostics/oversmoothing_depth_summary.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/oversmoothing_depth_summary.csv",
+    "universes/dow30/diagnostics/per_date_mse_losses.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/per_date_mse_losses.csv",
+    "universes/dow30/diagnostics/per_date_qlike_losses.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/per_date_qlike_losses.csv",
+    "universes/dow30/diagnostics/post_run_diagnostics_manifest.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/post_run_diagnostics_manifest.json",
+    "universes/dow30/diagnostics/regime_loss_table.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/regime_loss_table.csv",
+    "universes/dow30/diagnostics/regime_metadata.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/post_run_diagnostics/regime_metadata.json",
+    "universes/dow30/metadata/run_manifest.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/run_manifest.json",
+    "universes/dow30/metadata/run_config.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/run_config.json",
+    "universes/dow30/metadata/rolling_blocks.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/rolling_blocks.csv",
+    "universes/dow30/metadata/model_training_log.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/dow30/20260614T032943Z/model_training_log.csv",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/truth.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/truth.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/tickers.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/tickers.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/test_dates.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/test_dates.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/run_manifest.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/run_manifest.json",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/rolling_blocks.csv": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/rolling_blocks.csv",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR2H_M.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR2H_M_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR2H_Q.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR2H_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR2H_Q_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR3H_M.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_M_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR3H_M_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR3H_Q.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/predictions/pred_GHAR3H_Q_IV.npy": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/pred_GHAR3H_Q_IV.npy",
+    "universes/dow30/supplements/wide_multihop_ghar_20260618/multihop_supplement_manifest_20260618T075711Z.json": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar/multihop_supplement_manifest_20260618T075711Z.json"
+  }
+}

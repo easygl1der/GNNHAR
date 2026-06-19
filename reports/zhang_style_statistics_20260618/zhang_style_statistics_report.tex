@@ -1,0 +1,563 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,graphicx,float,hyperref}
+\usepackage{caption}
+\usepackage{microtype}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+\title{\textbf{Zhang-Style Forecast Evaluation for Dow 30, S\&P 100, and S\&P 500 GNNHAR Runs}}
+\author{Generated from local Volatility outputs}
+\date{June 18, 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report summarizes the post-run evidence generated from the saved Dow 30, S\&P 100,
+and S\&P 500 GNNHAR forecasts.  The objective is not to retrain models, but to read the
+local prediction arrays and compute the statistics used in Zhang et al. (2024a)'s GNNHAR paper:
+HAR-normalized MSE and QLIKE loss ratios, model confidence sets (Hansen et al., 2011), calm-versus-turbulent
+regime tables, pairwise QLIKE Diebold-Mariano comparisons (Diebold and Mariano, 1995), FVU nonlinearity diagnostics,
+forecast error and forecast ratio boxplot sources, graph summaries, and smoothing diagnostics.
+The S\&P 500 analysis is now tied to the actual AutoDL run source rather than the smaller
+Google Drive upload panel.
+\end{abstract}
+
+
+\section{Notation}
+Let \(v_{i,t}\) denote the realized variance or realized volatility target for ticker \(i\) on
+date \(t\), and let \(\widehat v_{i,t}^{(m)}\) be the forecast from model \(m\).
+The benchmark model is \(HAR_{\mathrm{M}}\), the HAR model estimated under MSE.  The loss ratios are
+\[
+R^{MSE}_m =
+\frac{\frac{1}{NT}\sum_{i,t}(v_{i,t}-\widehat v_{i,t}^{(m)})^2}
+{\frac{1}{NT}\sum_{i,t}(v_{i,t}-\widehat v_{i,t}^{(HAR_{\mathrm{M}})})^2},
+\quad
+R^{QL}_m =
+\frac{\frac{1}{NT}\sum_{i,t}QL(v_{i,t},\widehat v_{i,t}^{(m)})}
+{\frac{1}{NT}\sum_{i,t}QL(v_{i,t},\widehat v_{i,t}^{(HAR_{\mathrm{M}})})}.
+\]
+The QLIKE loss is
+\[
+QL(y,\widehat y)=\frac{y}{\widehat y}-\log\!\left(\frac{y}{\widehat y}\right)-1.
+\]
+A ratio below one means lower average forecast loss than \(HAR_{\mathrm{M}}\).  \(GHARkH\) denotes a
+linear graph-HAR model using \(k\)-hop neighbors; \(GNNHARkL\) denotes a \(k\)-layer graph
+neural HAR model.  The suffix \(_IV\) indicates that lagged implied volatility is included.
+MCS denotes the Hansen--Lunde--Nason model confidence set at the \(5\%\) level.  DM denotes
+the QLIKE Diebold--Mariano comparison; in the generated files, a positive statistic favors the
+candidate model listed in the comparison.
+
+
+\section{Data Source Alignment and the 397-versus-449 Issue}
+
+The earlier discrepancy came from comparing the S\&P 500 AutoDL forecasts against the wrong raw panel.  The formal AutoDL run used the local equivalent of \texttt{data/scale\_experiment/sp500}, whose RV, IV, and return panels each contain 503 tickers before coverage filtering.  The model run selected 449 tickers.  The smaller 397-column RV/IV panel belongs to the Google Drive upload copy and is not the correct source for the formal S\&P 500 run.  After rebinding the analysis script to the AutoDL metadata source, all 449 model tickers match the S\&P 500 RV, IV, and return panels.
+
+\begin{table}[H]
+\centering
+\caption{Run-level sample summary}
+\label{tab:sample-summary}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Universe & Test dates & Tickers & Models & Test start & Test end & Raw source rule & RV missing \\
+\midrule
+dow30 & 234 & 30 & 8 & 2025-07-07 & 2026-06-09 & aligned\_wide\_multihop\_rerun & 0 \\
+sp100 & 234 & 91 & 32 & 2025-07-07 & 2026-06-09 & run\_config\_data\_paths\_data\_dir & 0 \\
+sp500 & 223 & 449 & 36 & 2025-07-14 & 2026-06-01 & autodl\_run\_metadata\_args\_data\_dir & 0 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize The table uses the current aligned sample where available. Dow 30 now refers to the 2025-07-07--2026-06-09 aligned wide-window multi-hop rerun; the older 232-date Dow 30 full-model run is archived evidence and should not be described as the current out-of-sample date range. The S\&P 500 source rule is AutoDL run metadata.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Ticker alignment audit}
+\label{tab:ticker-alignment}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Universe & Panel & Source rule & Panel tickers & Model tickers & Matched & Missing & Extra \\
+\midrule
+dow30 & local\_raw\_rv\_panel & run\_config\_data\_paths\_data\_dir & 30 & 30 & 30 & 0 & 0 \\
+dow30 & local\_raw\_return\_panel & run\_config\_data\_paths\_data\_dir & 30 & 30 & 30 & 0 & 0 \\
+dow30 & local\_raw\_iv\_panel & run\_config\_data\_paths\_data\_dir & 30 & 30 & 30 & 0 & 0 \\
+sp100 & local\_raw\_rv\_panel & run\_config\_data\_paths\_data\_dir & 91 & 91 & 91 & 0 & 0 \\
+sp100 & local\_raw\_return\_panel & run\_config\_data\_paths\_data\_dir & 101 & 91 & 91 & 0 & 10 \\
+sp100 & local\_raw\_iv\_panel & run\_config\_data\_paths\_data\_dir & 91 & 91 & 91 & 0 & 0 \\
+sp500 & local\_raw\_rv\_panel & autodl\_run\_metadata\_args\_data\_dir & 503 & 449 & 449 & 0 & 54 \\
+sp500 & local\_raw\_return\_panel & autodl\_run\_metadata\_args\_data\_dir & 503 & 449 & 449 & 0 & 54 \\
+sp500 & local\_raw\_iv\_panel & autodl\_run\_metadata\_args\_data\_dir & 503 & 449 & 449 & 0 & 54 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize Extra tickers are available in the raw panel but excluded by the modeling coverage filter; they are not missing model inputs.\end{minipage}
+\end{table}
+
+\section{Implemented Zhang-Style Statistics}
+
+\begin{table}[H]
+\centering
+\caption{Coverage of Zhang-style statistics}
+\label{tab:coverage}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrr}
+\toprule
+Component & Paper reference & Status \\
+\midrule
+forecast\_loss\_ratios & Table 1 and Table 5 & implemented\_from\_saved\_forecasts \\
+weekly\_monthly\_horizons & Table 1, Table 2, Table 3, Table 5 & scope\_gap\_current\_saved\_forecasts\_are\_one\_day\_only \\
+model\_confidence\_set & Table 1, Table 2, Table 4, Table 5 & implemented\_from\_per\_ticker\_losses \\
+market\_regime\_losses & Table 2 & implemented\_from\_saved\_forecasts \\
+alternative\_validation\_size & Table 4 & scope\_gap\_requires\_new\_rolling\_runs \\
+forecast\_error\_ratio\_boxplots & Figure 5 & implemented\_as\_source\_tables\_and\_pngs \\
+fvu\_nonlinearity & Table 3 and equation (11) & implemented\_with\_regime\_split \\
+multi\_hop\_dm & Figure 6 and Appendix E.1 & implemented\_when\_models\_exist \\
+mad\_smoothing & Figure 7 and equation (12) & implemented\_when\_graph\_and\_hidden\_or\_forecast\_representations\_exist \\
+data\_summary\_and\_correlation & Appendix A and Figure 1 & implemented\_for\_available\_local\_panels \\
+graph\_structure & Appendix A.2 & implemented\_when\_graph\_matrices\_exist \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize The current saved forecasts are one-day horizon forecasts. Zhang's one-week and one-month tables require separate horizon-specific target construction and reruns. Exact hidden-state MAD requires saved hidden representations; current diagnostics include forecast-level smoothing proxies.\end{minipage}
+\end{table}
+
+\section{Main Loss-Ratio Evidence}
+
+Tables below report the complete model set available for each universe in the current one-day-horizon saved forecasts.  These tables correspond to Zhang's Table 1 and Table 5 style, with the added IV variants and the S\&P 500 extension.
+
+\begin{table}[H]
+\centering
+\caption{Complete loss ratios for DOW30}
+\label{tab:dow30-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Model & Family & Depth/hop & IV & Est. & MSE ratio & QL ratio & MCS MSE & MCS QL \\
+\midrule
+GNNHAR2L\_Q\_IV & GNNHAR & L2 & yes & QLIKE & 0.892 & 0.889 & yes & yes \\
+GHAR\_Q\_IV & GHAR & H1 & yes & QLIKE & 0.908 & 0.909 & no & no \\
+GNNHAR3L\_Q\_IV & GNNHAR & L3 & yes & QLIKE & 0.916 & 0.912 & no & no \\
+GNNHAR1L\_Q\_IV & GNNHAR & L1 & yes & QLIKE & 0.924 & 0.914 & no & no \\
+GNNHAR2L\_M\_IV & GNNHAR & L2 & yes & MSE & 0.948 & 0.950 & no & no \\
+HAR\_Q\_IV & HAR &  & yes & QLIKE & 0.998 & 0.957 & no & no \\
+GNNHAR2L\_Q & GNNHAR & L2 & no & QLIKE & 0.967 & 0.957 & no & no \\
+GNNHAR3L\_Q & GNNHAR & L3 & no & QLIKE & 0.997 & 0.971 & no & no \\
+GNNHAR1L\_Q & GNNHAR & L1 & no & QLIKE & 0.986 & 0.980 & no & no \\
+HAR\_M & HAR &  & no & MSE & 1.000 & 1.000 & no & no \\
+GNNHAR1L\_M & GNNHAR & L1 & no & MSE & 0.945 & 1.007 & no & no \\
+HAR\_Q & HAR &  & no & QLIKE & 1.090 & 1.013 & no & no \\
+GHAR\_Q & GHAR & H1 & no & QLIKE & 0.959 & 1.021 & no & no \\
+HAR\_M\_IV & HAR &  & yes & MSE & 0.920 & 1.030 & no & no \\
+GNNHAR3L\_M & GNNHAR & L3 & no & MSE & 0.982 & 1.058 & no & no \\
+GNNHAR1L\_M\_IV & GNNHAR & L1 & yes & MSE & 0.935 & 1.076 & no & no \\
+GHAR\_M\_IV & GHAR & H1 & yes & MSE & 0.868 & 1.137 & yes & no \\
+GHAR\_M & GHAR & H1 & no & MSE & 0.927 & 1.140 & no & no \\
+GNNHAR2L\_M & GNNHAR & L2 & no & MSE & 0.983 & 1.222 & no & no \\
+GNNHAR3L\_M\_IV & GNNHAR & L3 & yes & MSE & 0.995 & 1.233 & no & no \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize Ratios are relative to \(HAR_{\mathrm{M}}\). MCS columns indicate inclusion in the model confidence set based on per-ticker losses.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Complete loss ratios for SP100}
+\label{tab:sp100-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Model & Family & Depth/hop & IV & Est. & MSE ratio & QL ratio & MCS MSE & MCS QL \\
+\midrule
+HAR\_Q\_IV & HAR &  & yes & QLIKE & 0.981 & 0.933 & yes & yes \\
+GHAR\_Q\_IV & GHAR & H1 & yes & QLIKE & 0.981 & 0.933 & yes & yes \\
+GNNHAR2L\_Q\_IV & GNNHAR & L2 & yes & QLIKE & 0.982 & 0.933 & no & yes \\
+GNNHAR5L\_Q\_IV & GNNHAR & L5 & yes & QLIKE & 0.981 & 0.934 & yes & yes \\
+GNNHAR1L\_Q\_IV & GNNHAR & L1 & yes & QLIKE & 0.981 & 0.935 & no & yes \\
+GNNHAR4L\_Q\_IV & GNNHAR & L4 & yes & QLIKE & 0.986 & 0.936 & no & yes \\
+GNNHAR3L\_Q\_IV & GNNHAR & L3 & yes & QLIKE & 0.981 & 0.940 & no & no \\
+GHAR\_Q & GHAR & H1 & no & QLIKE & 1.003 & 0.976 & no & no \\
+GNNHAR5L\_Q & GNNHAR & L5 & no & QLIKE & 1.003 & 0.977 & no & no \\
+GHAR2H\_M\_IV & GHAR & H2 & yes & MSE & 0.965 & 0.977 & yes & no \\
+GNNHAR3L\_Q & GNNHAR & L3 & no & QLIKE & 1.003 & 0.977 & no & no \\
+GHAR\_M\_IV & GHAR & H1 & yes & MSE & 0.965 & 0.978 & yes & no \\
+GHAR3H\_M\_IV & GHAR & H3 & yes & MSE & 0.965 & 0.978 & yes & no \\
+GNNHAR4L\_Q & GNNHAR & L4 & no & QLIKE & 1.003 & 0.978 & no & no \\
+HAR\_M\_IV & HAR &  & yes & MSE & 0.965 & 0.979 & yes & no \\
+GNNHAR2L\_Q & GNNHAR & L2 & no & QLIKE & 1.004 & 0.979 & no & no \\
+HAR\_Q & HAR &  & no & QLIKE & 1.006 & 0.980 & no & no \\
+GNNHAR1L\_Q & GNNHAR & L1 & no & QLIKE & 1.004 & 0.980 & no & no \\
+GNNHAR1L\_M\_IV & GNNHAR & L1 & yes & MSE & 0.972 & 0.987 & yes & no \\
+GNNHAR3L\_M\_IV & GNNHAR & L3 & yes & MSE & 0.968 & 0.990 & yes & no \\
+GHAR\_M & GHAR & H1 & no & MSE & 0.997 & 0.993 & no & no \\
+GNNHAR5L\_M\_IV & GNNHAR & L5 & yes & MSE & 0.980 & 0.994 & no & no \\
+GNNHAR4L\_M\_IV & GNNHAR & L4 & yes & MSE & 0.979 & 0.996 & no & no \\
+GNNHAR1L\_M & GNNHAR & L1 & no & MSE & 1.000 & 0.997 & no & no \\
+GHAR2H\_M & GHAR & H2 & no & MSE & 0.998 & 0.998 & no & no \\
+GNNHAR2L\_M & GNNHAR & L2 & no & MSE & 1.000 & 0.999 & no & no \\
+GNNHAR3L\_M & GNNHAR & L3 & no & MSE & 1.001 & 1.000 & no & no \\
+HAR\_M & HAR &  & no & MSE & 1.000 & 1.000 & no & no \\
+GHAR3H\_M & GHAR & H3 & no & MSE & 0.998 & 1.001 & no & no \\
+GNNHAR4L\_M & GNNHAR & L4 & no & MSE & 1.004 & 1.003 & no & no \\
+GNNHAR5L\_M & GNNHAR & L5 & no & MSE & 1.003 & 1.010 & no & no \\
+GNNHAR2L\_M\_IV & GNNHAR & L2 & yes & MSE & 0.989 & 1.012 & no & no \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize Ratios are relative to \(HAR_{\mathrm{M}}\). MCS columns indicate inclusion in the model confidence set based on per-ticker losses.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Complete loss ratios for SP500}
+\label{tab:sp500-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Model & Family & Depth/hop & IV & Est. & MSE ratio & QL ratio & MCS MSE & MCS QL \\
+\midrule
+GHAR\_M\_IV & GHAR & H1 & yes & MSE & 0.966 & 0.973 & yes & yes \\
+HAR\_M\_IV & HAR &  & yes & MSE & 0.966 & 0.974 & yes & no \\
+GHAR2H\_M\_IV & GHAR & H2 & yes & MSE & 0.986 & 0.991 & no & no \\
+GHAR\_M & GHAR & H1 & no & MSE & 1.000 & 0.998 & no & no \\
+GHAR2H\_M & GHAR & H2 & no & MSE & 1.001 & 0.998 & no & no \\
+GHAR3H\_M & GHAR & H3 & no & MSE & 1.001 & 0.998 & no & no \\
+HAR\_M & HAR &  & no & MSE & 1.000 & 1.000 & no & no \\
+GHAR3H\_M\_IV & GHAR & H3 & yes & MSE & 1.002 & 1.020 & no & no \\
+GHAR3H\_Q\_IV & GHAR & H3 & yes & QLIKE & 88.253 & 2.621 & no & no \\
+GHAR2H\_Q\_IV & GHAR & H2 & yes & QLIKE & 88.340 & 2.624 & no & no \\
+HAR\_Q\_IV & HAR &  & yes & QLIKE & 124.370 & 2.677 & no & no \\
+GHAR\_Q\_IV & GHAR & H1 & yes & QLIKE & 83.373 & 2.698 & no & no \\
+GHAR\_Q & GHAR & H1 & no & QLIKE & 161.079 & 2.851 & no & no \\
+GHAR3H\_Q & GHAR & H3 & no & QLIKE & 142.460 & 2.895 & no & no \\
+GHAR2H\_Q & GHAR & H2 & no & QLIKE & 142.009 & 2.899 & no & no \\
+HAR\_Q & HAR &  & no & QLIKE & 180.880 & 2.910 & no & no \\
+GNNHAR2L\_Q\_IV & GNNHAR & L2 & yes & QLIKE & 12.851 & 7.802 & no & no \\
+GNNHAR4L\_Q\_IV & GNNHAR & L4 & yes & QLIKE & 13.632 & 7.808 & no & no \\
+GNNHAR1L\_Q\_IV & GNNHAR & L1 & yes & QLIKE & 13.818 & 7.823 & no & no \\
+GNNHAR3L\_Q\_IV & GNNHAR & L3 & yes & QLIKE & 12.930 & 7.824 & no & no \\
+GNNHAR5L\_Q\_IV & GNNHAR & L5 & yes & QLIKE & 13.241 & 7.826 & no & no \\
+GNNHAR3L\_Q & GNNHAR & L3 & no & QLIKE & 17.289 & 7.854 & no & no \\
+GNNHAR5L\_Q & GNNHAR & L5 & no & QLIKE & 17.652 & 7.856 & no & no \\
+GNNHAR1L\_Q & GNNHAR & L1 & no & QLIKE & 17.051 & 7.857 & no & no \\
+GNNHAR2L\_Q & GNNHAR & L2 & no & QLIKE & 16.106 & 8.152 & no & no \\
+GNNHAR4L\_Q & GNNHAR & L4 & no & QLIKE & 19.880 & 9.965 & no & no \\
+GNNHAR1L\_M\_IV & GNNHAR & L1 & yes & MSE & 6.261 & 10.912 & no & no \\
+GNNHAR5L\_M & GNNHAR & L5 & no & MSE & 6.272 & 10.919 & no & no \\
+GNNHAR1L\_M & GNNHAR & L1 & no & MSE & 6.282 & 10.922 & no & no \\
+GNNHAR3L\_M\_IV & GNNHAR & L3 & yes & MSE & 6.321 & 10.935 & no & no \\
+GNNHAR5L\_M\_IV & GNNHAR & L5 & yes & MSE & 6.361 & 10.951 & no & no \\
+GNNHAR2L\_M\_IV & GNNHAR & L2 & yes & MSE & 6.380 & 10.956 & no & no \\
+GNNHAR3L\_M & GNNHAR & L3 & no & MSE & 6.466 & 10.987 & no & no \\
+GNNHAR4L\_M\_IV & GNNHAR & L4 & yes & MSE & 6.578 & 11.048 & no & no \\
+GNNHAR4L\_M & GNNHAR & L4 & no & MSE & 6.743 & 11.098 & no & no \\
+GNNHAR2L\_M & GNNHAR & L2 & no & MSE & 7.040 & 11.258 & no & no \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize Ratios are relative to \(HAR_{\mathrm{M}}\). MCS columns indicate inclusion in the model confidence set based on per-ticker losses.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Best models by universe and evaluation loss}
+\label{tab:best-models}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Universe & Selection metric & Best model & Ratio & Gain & Family & IV \\
+\midrule
+dow30 & mse\_ratio\_vs\_HAR\_M & GHAR\_M\_IV & 0.868 & 13.2\% & GHAR & yes \\
+dow30 & qlike\_ratio\_vs\_HAR\_M & GNNHAR2L\_Q\_IV & 0.889 & 11.1\% & GNNHAR & yes \\
+sp100 & mse\_ratio\_vs\_HAR\_M & HAR\_M\_IV & 0.965 & 3.5\% & HAR & yes \\
+sp100 & qlike\_ratio\_vs\_HAR\_M & HAR\_Q\_IV & 0.933 & 6.7\% & HAR & yes \\
+sp500 & mse\_ratio\_vs\_HAR\_M & HAR\_M\_IV & 0.966 & 3.4\% & HAR & yes \\
+sp500 & qlike\_ratio\_vs\_HAR\_M & GHAR\_M\_IV & 0.973 & 2.7\% & GHAR & yes \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize The best QLIKE model differs by universe: Dow 30 favors a nonlinear IV model, S\&P 100 favors HAR with IV, and S\&P 500 favors GHAR with IV.\end{minipage}
+\end{table}
+
+\section{MCS and DM Interpretation}
+
+The MCS results are stricter than simple loss ranking.  Dow 30 has a clear QLIKE winner \(GNNHAR2L\_Q\_IV\).  S\&P 100 has a broad IV-trained QLIKE confidence set, indicating that several IV variants are statistically hard to separate.  S\&P 500 is much more linear in the current run: \texttt{GHAR\_M\_IV} is the QLIKE MCS winner, while most QLIKE-trained neural specifications have very poor loss ratios.
+
+\begin{table}[H]
+\centering
+\caption{QLIKE DM comparison summary for DOW30}
+\label{tab:dow30-dm}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Type & Base & Candidate & Cand./base & Gain & p<0.05 share & Positive share \\
+\midrule
+graph\_linear & HAR\_M & GHAR\_M & 1.140 & -14.0\% & 0.0\% & 16.7\% \\
+graph\_linear & HAR\_M\_IV & GHAR\_M\_IV & 1.104 & -10.4\% & 3.3\% & 30.0\% \\
+graph\_linear & HAR\_Q & GHAR\_Q & 1.008 & -0.8\% & 6.7\% & 63.3\% \\
+graph\_linear & HAR\_Q\_IV & GHAR\_Q\_IV & 0.950 & 5.0\% & 20.0\% & 83.3\% \\
+nonlinear\_one\_hop & GHAR\_M & GNNHAR1L\_M & 0.883 & 11.7\% & 10.0\% & 76.7\% \\
+nonlinear\_one\_hop & GHAR\_M\_IV & GNNHAR1L\_M\_IV & 0.946 & 5.4\% & 0.0\% & 66.7\% \\
+nonlinear\_one\_hop & GHAR\_Q & GNNHAR1L\_Q & 0.960 & 4.0\% & 0.0\% & 56.7\% \\
+nonlinear\_one\_hop & GHAR\_Q\_IV & GNNHAR1L\_Q\_IV & 1.005 & -0.5\% & 10.0\% & 40.0\% \\
+gnn\_depth & GNNHAR1L\_M & GNNHAR2L\_M & 1.214 & -21.4\% & 56.7\% & 10.0\% \\
+gnn\_depth & GNNHAR1L\_M\_IV & GNNHAR2L\_M\_IV & 0.883 & 11.7\% & 43.3\% & 90.0\% \\
+gnn\_depth & GNNHAR1L\_Q & GNNHAR2L\_Q & 0.976 & 2.4\% & 13.3\% & 73.3\% \\
+gnn\_depth & GNNHAR1L\_Q\_IV & GNNHAR2L\_Q\_IV & 0.973 & 2.7\% & 23.3\% & 80.0\% \\
+gnn\_depth & GNNHAR2L\_M & GNNHAR3L\_M & 0.866 & 13.4\% & 13.3\% & 83.3\% \\
+gnn\_depth & GNNHAR2L\_M\_IV & GNNHAR3L\_M\_IV & 1.297 & -29.7\% & 66.7\% & 3.3\% \\
+gnn\_depth & GNNHAR2L\_Q & GNNHAR3L\_Q & 1.015 & -1.5\% & 10.0\% & 26.7\% \\
+gnn\_depth & GNNHAR2L\_Q\_IV & GNNHAR3L\_Q\_IV & 1.026 & -2.6\% & 3.3\% & 30.0\% \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize A candidate/base ratio below one means the candidate has lower average QLIKE than the base.  Positive DM share is the share of tickers where the DM statistic favors the candidate.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{QLIKE DM comparison summary for SP100}
+\label{tab:sp100-dm}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Type & Base & Candidate & Cand./base & Gain & p<0.05 share & Positive share \\
+\midrule
+graph\_linear & HAR\_M & GHAR\_M & 0.993 & 0.7\% & 22.0\% & 47.3\% \\
+graph\_linear & HAR\_M\_IV & GHAR\_M\_IV & 0.999 & 0.1\% & 12.1\% & 57.1\% \\
+graph\_linear & HAR\_Q & GHAR\_Q & 0.996 & 0.4\% & 6.6\% & 56.0\% \\
+graph\_linear & HAR\_Q\_IV & GHAR\_Q\_IV & 1.001 & -0.1\% & 4.4\% & 50.5\% \\
+nonlinear\_one\_hop & GHAR\_M & GNNHAR1L\_M & 1.004 & -0.4\% & 15.4\% & 40.7\% \\
+nonlinear\_one\_hop & GHAR\_M\_IV & GNNHAR1L\_M\_IV & 1.009 & -0.9\% & 18.7\% & 44.0\% \\
+nonlinear\_one\_hop & GHAR\_Q & GNNHAR1L\_Q & 1.004 & -0.4\% & 15.4\% & 35.2\% \\
+nonlinear\_one\_hop & GHAR\_Q\_IV & GNNHAR1L\_Q\_IV & 1.001 & -0.1\% & 7.7\% & 40.7\% \\
+linear\_multihop & GHAR2H\_M & GHAR3H\_M & 1.003 & -0.3\% & 33.0\% & 49.5\% \\
+linear\_multihop & GHAR2H\_M\_IV & GHAR3H\_M\_IV & 1.001 & -0.1\% & 18.7\% & 39.6\% \\
+linear\_multihop & GHAR\_M & GHAR2H\_M & 1.006 & -0.6\% & 20.9\% & 36.3\% \\
+linear\_multihop & GHAR\_M\_IV & GHAR2H\_M\_IV & 0.999 & 0.1\% & 16.5\% & 51.6\% \\
+gnn\_depth & GNNHAR1L\_M & GNNHAR2L\_M & 1.003 & -0.3\% & 17.6\% & 45.1\% \\
+gnn\_depth & GNNHAR1L\_M\_IV & GNNHAR2L\_M\_IV & 1.026 & -2.6\% & 18.7\% & 42.9\% \\
+gnn\_depth & GNNHAR1L\_Q & GNNHAR2L\_Q & 0.999 & 0.1\% & 3.3\% & 54.9\% \\
+gnn\_depth & GNNHAR1L\_Q\_IV & GNNHAR2L\_Q\_IV & 0.999 & 0.1\% & 14.3\% & 62.6\% \\
+gnn\_depth & GNNHAR2L\_M & GNNHAR3L\_M & 1.000 & -0.0\% & 11.0\% & 58.2\% \\
+gnn\_depth & GNNHAR2L\_M\_IV & GNNHAR3L\_M\_IV & 0.978 & 2.2\% & 20.9\% & 54.9\% \\
+gnn\_depth & GNNHAR2L\_Q & GNNHAR3L\_Q & 0.998 & 0.2\% & 11.0\% & 54.9\% \\
+gnn\_depth & GNNHAR2L\_Q\_IV & GNNHAR3L\_Q\_IV & 1.007 & -0.7\% & 15.4\% & 37.4\% \\
+gnn\_depth & GNNHAR3L\_M & GNNHAR4L\_M & 1.004 & -0.4\% & 7.7\% & 31.9\% \\
+gnn\_depth & GNNHAR3L\_M\_IV & GNNHAR4L\_M\_IV & 1.006 & -0.6\% & 15.4\% & 53.8\% \\
+gnn\_depth & GNNHAR3L\_Q & GNNHAR4L\_Q & 1.001 & -0.1\% & 9.9\% & 46.2\% \\
+gnn\_depth & GNNHAR3L\_Q\_IV & GNNHAR4L\_Q\_IV & 0.996 & 0.4\% & 12.1\% & 61.5\% \\
+gnn\_depth & GNNHAR4L\_M & GNNHAR5L\_M & 1.007 & -0.7\% & 4.4\% & 47.3\% \\
+gnn\_depth & GNNHAR4L\_M\_IV & GNNHAR5L\_M\_IV & 0.998 & 0.2\% & 11.0\% & 60.4\% \\
+gnn\_depth & GNNHAR4L\_Q & GNNHAR5L\_Q & 0.998 & 0.2\% & 13.2\% & 60.4\% \\
+gnn\_depth & GNNHAR4L\_Q\_IV & GNNHAR5L\_Q\_IV & 0.998 & 0.2\% & 8.8\% & 57.1\% \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize A candidate/base ratio below one means the candidate has lower average QLIKE than the base.  Positive DM share is the share of tickers where the DM statistic favors the candidate.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{QLIKE DM comparison summary for SP500}
+\label{tab:sp500-dm}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Type & Base & Candidate & Cand./base & Gain & p<0.05 share & Positive share \\
+\midrule
+graph\_linear & HAR\_M & GHAR\_M & 0.998 & 0.2\% & 17.6\% & 51.2\% \\
+graph\_linear & HAR\_M\_IV & GHAR\_M\_IV & 0.999 & 0.1\% & 26.9\% & 56.1\% \\
+graph\_linear & HAR\_Q & GHAR\_Q & 0.980 & 2.0\% & 70.6\% & 61.7\% \\
+graph\_linear & HAR\_Q\_IV & GHAR\_Q\_IV & 1.008 & -0.8\% & 65.0\% & 40.3\% \\
+nonlinear\_one\_hop & GHAR\_M & GNNHAR1L\_M & 10.943 & -994.3\% & 88.2\% & 4.2\% \\
+nonlinear\_one\_hop & GHAR\_M\_IV & GNNHAR1L\_M\_IV & 11.211 & -1021.1\% & 92.2\% & 1.8\% \\
+nonlinear\_one\_hop & GHAR\_Q & GNNHAR1L\_Q & 2.756 & -175.6\% & 86.4\% & 25.2\% \\
+nonlinear\_one\_hop & GHAR\_Q\_IV & GNNHAR1L\_Q\_IV & 2.899 & -189.9\% & 87.8\% & 20.9\% \\
+linear\_multihop & GHAR2H\_M & GHAR3H\_M & 1.000 & -0.0\% & 11.8\% & 49.2\% \\
+linear\_multihop & GHAR2H\_M\_IV & GHAR3H\_M\_IV & 1.030 & -3.0\% & 58.1\% & 8.0\% \\
+linear\_multihop & GHAR2H\_Q & GHAR3H\_Q & 0.999 & 0.1\% & 45.0\% & 60.4\% \\
+linear\_multihop & GHAR2H\_Q\_IV & GHAR3H\_Q\_IV & 0.999 & 0.1\% & 73.3\% & 52.1\% \\
+linear\_multihop & GHAR\_M & GHAR2H\_M & 1.000 & -0.0\% & 13.4\% & 48.6\% \\
+linear\_multihop & GHAR\_M\_IV & GHAR2H\_M\_IV & 1.018 & -1.8\% & 25.2\% & 28.3\% \\
+linear\_multihop & GHAR\_Q & GHAR2H\_Q & 1.017 & -1.7\% & 47.0\% & 33.2\% \\
+linear\_multihop & GHAR\_Q\_IV & GHAR2H\_Q\_IV & 0.972 & 2.8\% & 61.2\% & 75.7\% \\
+gnn\_depth & GNNHAR1L\_M & GNNHAR2L\_M & 1.031 & -3.1\% & 39.4\% & 36.7\% \\
+gnn\_depth & GNNHAR1L\_M\_IV & GNNHAR2L\_M\_IV & 1.004 & -0.4\% & 29.2\% & 38.8\% \\
+gnn\_depth & GNNHAR1L\_Q & GNNHAR2L\_Q & 1.038 & -3.8\% & 63.9\% & 23.6\% \\
+gnn\_depth & GNNHAR1L\_Q\_IV & GNNHAR2L\_Q\_IV & 0.997 & 0.3\% & 58.8\% & 49.0\% \\
+gnn\_depth & GNNHAR2L\_M & GNNHAR3L\_M & 0.976 & 2.4\% & 39.4\% & 46.5\% \\
+gnn\_depth & GNNHAR2L\_M\_IV & GNNHAR3L\_M\_IV & 0.998 & 0.2\% & 23.2\% & 44.3\% \\
+gnn\_depth & GNNHAR2L\_Q & GNNHAR3L\_Q & 0.963 & 3.7\% & 63.7\% & 70.6\% \\
+gnn\_depth & GNNHAR2L\_Q\_IV & GNNHAR3L\_Q\_IV & 1.003 & -0.3\% & 52.3\% & 39.0\% \\
+gnn\_depth & GNNHAR3L\_M & GNNHAR4L\_M & 1.010 & -1.0\% & 36.5\% & 45.0\% \\
+gnn\_depth & GNNHAR3L\_M\_IV & GNNHAR4L\_M\_IV & 1.010 & -1.0\% & 34.7\% & 35.6\% \\
+gnn\_depth & GNNHAR3L\_Q & GNNHAR4L\_Q & 1.269 & -26.9\% & 84.6\% & 7.6\% \\
+gnn\_depth & GNNHAR3L\_Q\_IV & GNNHAR4L\_Q\_IV & 0.998 & 0.2\% & 42.5\% & 56.8\% \\
+gnn\_depth & GNNHAR4L\_M & GNNHAR5L\_M & 0.984 & 1.6\% & 40.1\% & 51.0\% \\
+gnn\_depth & GNNHAR4L\_M\_IV & GNNHAR5L\_M\_IV & 0.991 & 0.9\% & 33.4\% & 50.3\% \\
+gnn\_depth & GNNHAR4L\_Q & GNNHAR5L\_Q & 0.788 & 21.2\% & 84.2\% & 88.4\% \\
+gnn\_depth & GNNHAR4L\_Q\_IV & GNNHAR5L\_Q\_IV & 1.002 & -0.2\% & 48.6\% & 34.3\% \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize A candidate/base ratio below one means the candidate has lower average QLIKE than the base.  Positive DM share is the share of tickers where the DM statistic favors the candidate.\end{minipage}
+\end{table}
+
+\section{Regime, FVU, and Graph Diagnostics}
+
+\begin{table}[H]
+\centering
+\caption{Best regime-specific loss ratios}
+\label{tab:regime-best}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Universe & Regime & Metric & Best model & Ratio & Gain & Dates \\
+\midrule
+dow30 & calm\_bottom\_90pct & MSE & GHAR\_M\_IV & 0.973 & 2.7\% & 208 \\
+dow30 & calm\_bottom\_90pct & QLIKE & GNNHAR2L\_Q\_IV & 0.947 & 5.3\% & 208 \\
+dow30 & turbulent\_top\_10pct & MSE & GHAR\_M\_IV & 0.766 & 23.4\% & 24 \\
+dow30 & turbulent\_top\_10pct & QLIKE & GHAR\_M\_IV & 0.664 & 33.6\% & 24 \\
+sp100 & calm\_bottom\_90pct & MSE & GHAR3H\_M\_IV & 0.969 & 3.1\% & 210 \\
+sp100 & calm\_bottom\_90pct & QLIKE & GNNHAR2L\_Q\_IV & 0.933 & 6.7\% & 210 \\
+sp100 & turbulent\_top\_10pct & MSE & HAR\_M\_IV & 0.929 & 7.1\% & 24 \\
+sp100 & turbulent\_top\_10pct & QLIKE & HAR\_Q\_IV & 0.921 & 7.9\% & 24 \\
+sp500 & calm\_bottom\_90pct & MSE & HAR\_M\_IV & 0.968 & 3.2\% & 200 \\
+sp500 & calm\_bottom\_90pct & QLIKE & GHAR\_M\_IV & 0.976 & 2.4\% & 200 \\
+sp500 & turbulent\_top\_10pct & MSE & GHAR\_M\_IV & 0.944 & 5.6\% & 23 \\
+sp500 & turbulent\_top\_10pct & QLIKE & GHAR\_M\_IV & 0.943 & 5.7\% & 23 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize The current regime split uses the cross-sectional mean RV proxy because SPY is not present in these saved truth arrays or raw panels.  Zhang uses SPY RV, so this is method-aligned but not data-identical.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Lowest FVU relative to HAR\_M by universe and regime}
+\label{tab:fvu-best}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Universe & Regime & Model & Mean FVU & Median FVU & IV & Est. \\
+\midrule
+dow30 & calm\_bottom\_90pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+dow30 & turbulent\_top\_10pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+sp100 & calm\_bottom\_90pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+sp100 & turbulent\_top\_10pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+sp500 & calm\_bottom\_90pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+sp500 & turbulent\_top\_10pct & HAR\_M & 0.0000 & 0.0000 & no & MSE \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize FVU is an effect-size diagnostic for how far a model's forecast function moves away from \(HAR_{\mathrm{M}}\); it is not a significance test.\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Available graph rollup}
+\label{tab:graph-rollup}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Universe & Loss group & Graphs & Nodes & Edges & Density & Mean degree & Diameter \\
+\midrule
+sp500 & MSE & 11 & 449.0 & 2238.8 & 0.022 & 9.97 & 10.73 \\
+sp500 & QLIKE & 11 & 449.0 & 2238.8 & 0.022 & 9.97 & 10.73 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}\begin{minipage}{0.98\textwidth}\footnotesize Only the S\&P 500 AutoDL package currently contains graph matrices in the paper-ready tree; Dow 30 and S\&P 100 forecasts remain analyzable, but graph structural summaries require saved graph matrices.\end{minipage}
+\end{table}
+
+\section{Comparison with Zhang et al.}
+
+Zhang et al. (2024a) find that GHAR improves on HAR, GNNHAR1L or GNNHAR2L often improves further,
+QLIKE training is useful especially under turbulent regimes, and very deep GNNHAR can deteriorate
+because of over-smoothing.  Our Dow 30 result is directionally close once IV is included:
+\texttt{GNNHAR2L\_Q\_IV} is the best QLIKE model and improves roughly \(11.1\%\) over \(HAR_{\mathrm{M}}\).
+The S\&P 100 run is weaker for graph nonlinearity: IV helps, but the best QLIKE model is
+\(HAR_Q\_IV\), and several IV graph/neural variants are statistically close by MCS.
+The S\&P 500 AutoDL run is different again.  It is internally consistent over 449 selected
+tickers, but the best QLIKE model is \texttt{GHAR\_M\_IV}, and QLIKE-trained neural models perform
+poorly in the saved run.  This means the large-universe extension does not currently show a
+stronger GNN improvement just because the graph has more nodes.  It instead suggests that
+large-universe GNN training is more sensitive to optimization, scaling, and possibly over-smoothing.
+
+
+\section{Current Scope Gaps}
+
+The current local outputs support the one-day Zhang-style analysis.  The following pieces
+cannot be reconstructed exactly from the saved forecasts alone:
+\begin{itemize}
+\item one-week and one-month horizon tables, because those require horizon-specific targets and reruns;
+\item Zhang's exact SPY regime split, unless a SPY RV series is added and aligned;
+\item exact hidden-state MAD from Zhang's Figure 7, because hidden representations were not saved;
+\item the smaller-validation robustness table, because that changes the rolling train-validation split.
+\end{itemize}
+The generated CSV layer records these limitations explicitly in
+\texttt{outputs/paper\_ready\_20260617/zhang\_style\_statistics/zhang\_statistics\_reference\_coverage.csv}.
+
+
+\section{Generated Files}
+
+The complete machine-readable results are stored under
+\texttt{outputs/paper\_ready\_20260617/zhang\_style\_statistics/} and under each universe's
+\texttt{zhang\_style\_statistics/} folder.  The most important cross-universe files are:
+\begin{itemize}
+\item \texttt{cross\_universe\_loss\_ratio\_summary.csv}
+\item \texttt{cross\_universe\_mcs\_rollup.csv}
+\item \texttt{cross\_universe\_pairwise\_qlike\_dm\_summary.csv}
+\item \texttt{cross\_universe\_fvu\_by\_regime\_vs\_HAR\_M.csv}
+\item \texttt{cross\_universe\_ticker\_alignment\_audit.csv}
+\item \texttt{cross\_universe\_graph\_rollup.csv}
+\end{itemize}
+
+\section*{References}
+\small
+Andersen, T. G., Bollerslev, T., Diebold, F. X., and Ebens, H. (2001). The distribution of realized stock return volatility. \textit{Journal of Financial Economics}.\\
+Barndorff-Nielsen, O. E., and Shephard, N. (2002). Econometric analysis of realized volatility and its use in estimating stochastic volatility models. \textit{Journal of the Royal Statistical Society: Series B}.\\
+Bollerslev, T., Hood, B., Huss, J., and Pedersen, L. H. (2018). Risk everywhere: Modeling and managing volatility. \textit{Review of Financial Studies}. DOI: 10.1093/rfs/hhy041.\\
+Busch, T., Christensen, B. J., and Nielsen, M. O. (2010). The role of implied volatility in forecasting future realized volatility and jumps in foreign exchange, stock, and bond markets. \textit{Journal of Econometrics}. DOI: 10.1016/j.jeconom.2010.03.014.\\
+Chen, D., Lin, Y., Li, W., Li, P., Zhou, J., and Sun, X. (2020). Measuring and relieving the over-smoothing problem for graph neural networks from the topological view. \textit{Proceedings of the AAAI Conference on Artificial Intelligence}. DOI: 10.1609/aaai.v34i04.5747.\\
+Corsi, F. (2009). A simple approximate long-memory model of realized volatility. \textit{Journal of Financial Econometrics}. DOI: 10.1093/jjfinec/nbp001.\\
+Diebold, F. X., and Mariano, R. S. (1995). Comparing predictive accuracy. \textit{Journal of Business \& Economic Statistics}. DOI: 10.1080/07350015.1995.10524599.\\
+Friedman, J., Hastie, T., and Tibshirani, R. (2008). Sparse inverse covariance estimation with the graphical lasso. \textit{Biostatistics}. DOI: 10.1093/biostatistics/kxm045.\\
+Hansen, P. R., Lunde, A., and Nason, J. M. (2011). The model confidence set. \textit{Econometrica}. DOI: 10.3982/ECTA5771.\\
+Kipf, T. N., and Welling, M. (2017). Semi-supervised classification with graph convolutional networks. \textit{International Conference on Learning Representations}. arXiv: 1609.02907.\\
+Li, S. Z., and Tang, Y. (2021). Forecasting realized volatility: An automatic system using many features and many machine learning algorithms. \textit{SSRN Electronic Journal}. DOI: 10.2139/ssrn.3776915.\\
+Lin, W. (2013). Agnostic notes on regression adjustments to experimental data: Reexamining Freedman's critique. \textit{The Annals of Applied Statistics}. DOI: 10.1214/12-AOAS583.\\
+Patton, A. J. (2011). Volatility forecast comparison using imperfect volatility proxies. \textit{Journal of Econometrics}. DOI: 10.1016/j.jeconom.2010.03.034.\\
+Zhang, C., Pu, X., Cucuringu, M., and Dong, X. (2024a). Forecasting realized volatility with spillover effects: Perspectives from graph neural networks. \textit{International Journal of Forecasting}. DOI: 10.1016/j.ijforecast.2024.09.002.\\
+Zhang, C., Pu, X., Cucuringu, M., and Dong, X. (2024b). Graph-based methods for forecasting realized covariances. \textit{SSRN Electronic Journal}. DOI: 10.2139/ssrn.4274989.
+
+\end{document}

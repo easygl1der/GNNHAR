@@ -1,0 +1,267 @@
+{
+  "universe": "sp500",
+  "horizon": 1,
+  "created_utc": "2026-06-17T11:41:00.086272+00:00",
+  "source_root": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source",
+  "source_dirs": {
+    "MSE": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source/full/sp500/MSE/H1",
+    "QLIKE": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/zhang_scale_source/full/sp500/QLIKE/H1"
+  },
+  "output_dir": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/gnnhar_colab_runs/sp500/sp500_parallel_a100_20260617T0706Z",
+  "models": [
+    {
+      "name": "GHAR2H_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR2H_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR2H_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR2H_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR3H_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR3H_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR3H_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR3H_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GHAR_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR1L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR1L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 1,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR2L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR2L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 2,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR3L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR3L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 3,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR4L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR4L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 4,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR5L_M",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_M_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_Q",
+      "use_iv": false,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "GNNHAR5L_Q_IV",
+      "use_iv": true,
+      "is_linear": false,
+      "n_layers": 5,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "HAR_M",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_M_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_Q",
+      "use_iv": false,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    },
+    {
+      "name": "HAR_Q_IV",
+      "use_iv": true,
+      "is_linear": true,
+      "n_layers": 0,
+      "loss_fn": "QL"
+    }
+  ],
+  "baseline": "HAR_M",
+  "conversion": "zhang-scale outputs merged into Colab-style single-run layout"
+}

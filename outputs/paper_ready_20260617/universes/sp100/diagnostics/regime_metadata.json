@@ -1,0 +1,11 @@
+{
+  "universe": "sp100",
+  "run_dir": "/Users/yitwah/Library/CloudStorage/GoogleDrive-easyglider458@gmail.com/My Drive/GNNHAR_Research (1)/outputs/gnnhar_colab_runs/sp100/20260614T181453Z",
+  "source": "cross-sectional mean RV proxy from truth array",
+  "quantile": 0.9,
+  "threshold": 5.935336112976074,
+  "n_dates": 234,
+  "n_calm": 210,
+  "n_turbulent": 24,
+  "created_utc": "2026-06-16T08:36:02.470420+00:00"
+}

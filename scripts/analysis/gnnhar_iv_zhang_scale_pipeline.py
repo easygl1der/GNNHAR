@@ -18,6 +18,7 @@ features and, for linear GHAR+IV, graph-aggregated IV lags.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import random
@@ -106,6 +107,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-blocks", type=int, default=0)
     parser.add_argument("--block-stride", type=int, default=22)
     parser.add_argument("--graph-method", choices=["glasso_cv", "glasso", "corr"], default="glasso_cv")
+    parser.add_argument("--graph-cache-dir", default="", help="Optional shared directory for per-block graph cache")
     parser.add_argument("--glasso-alpha", type=float, default=0.05)
     parser.add_argument("--glasso-alpha-grid", default="0.01,0.03,0.05,0.08,0.1,0.2")
     parser.add_argument("--glasso-cv-folds", type=int, default=3)
@@ -127,6 +129,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--prediction-floor-quantile", type=float, default=0.001)
     parser.add_argument("--prediction-floor-value", type=float, default=0.0)
     parser.add_argument("--skip-figures", action="store_true")
+    parser.add_argument("--worker-output-only", action="store_true", help="Write worker predictions/graph logs without full-model evaluation")
     parser.add_argument("--fast", action="store_true")
     return parser.parse_args()
 
@@ -422,6 +425,10 @@ def build_block_adjacency(
     train_start: int,
     args: argparse.Namespace,
 ) -> Tuple[np.ndarray, Dict[str, object]]:
+    cache_dir_text = getattr(args, "graph_cache_dir", "")
+    if cache_dir_text:
+        return build_block_adjacency_cached(panel, origin, train_start, args, Path(cache_dir_text))
+
     ret_window = panel.returns.iloc[train_start:origin]
     values = standardized_return_values(ret_window)
     precision, alpha, method, fallback = fit_precision_graph(values, args)
@@ -442,6 +449,94 @@ def build_block_adjacency(
         "fallback": fallback,
     }
     return adj, info
+
+
+def graph_cache_key(panel: RollingPanel, origin: int, train_start: int, args: argparse.Namespace) -> str:
+    payload = {
+        "universe": panel.universe,
+        "origin": int(origin),
+        "train_start": int(train_start),
+        "origin_date": str(panel.dates[origin].date()),
+        "train_start_date": str(panel.dates[train_start].date()),
+        "tickers": panel.tickers,
+        "graph_method": args.graph_method,
+        "max_neighbors": int(args.max_neighbors),
+        "zhang_exact": bool(args.zhang_exact),
+        "glasso_alpha": float(args.glasso_alpha),
+        "glasso_alpha_grid": args.glasso_alpha_grid,
+        "glasso_cv_folds": int(args.glasso_cv_folds),
+        "glasso_max_iter": int(args.glasso_max_iter),
+        "glasso_tol": float(args.glasso_tol),
+        "lookback": int(args.lookback),
+    }
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[:20]
+    return f"{panel.universe}_origin{origin}_{digest}"
+
+
+def build_block_adjacency_uncached(
+    panel: RollingPanel,
+    origin: int,
+    train_start: int,
+    args: argparse.Namespace,
+) -> Tuple[np.ndarray, Dict[str, object]]:
+    cache_dir = getattr(args, "graph_cache_dir", "")
+    try:
+        args.graph_cache_dir = ""
+        return build_block_adjacency(panel, origin, train_start, args)
+    finally:
+        args.graph_cache_dir = cache_dir
+
+
+def load_cached_adjacency(path: Path) -> Tuple[np.ndarray, Dict[str, object]]:
+    payload = np.load(path, allow_pickle=False)
+    adj = payload["adjacency"].astype(np.float32)
+    info = json.loads(str(payload["info_json"]))
+    info["cache_status"] = "hit"
+    return adj, info
+
+
+def build_block_adjacency_cached(
+    panel: RollingPanel,
+    origin: int,
+    train_start: int,
+    args: argparse.Namespace,
+    cache_dir: Path,
+) -> Tuple[np.ndarray, Dict[str, object]]:
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    key = graph_cache_key(panel, origin, train_start, args)
+    path = cache_dir / f"{key}.npz"
+    lock_dir = cache_dir / f"{key}.lock"
+    if path.exists():
+        return load_cached_adjacency(path)
+
+    try:
+        lock_dir.mkdir()
+    except FileExistsError:
+        start = time.time()
+        while True:
+            if path.exists():
+                return load_cached_adjacency(path)
+            if not lock_dir.exists():
+                continue
+            if time.time() - start > 21600:
+                raise TimeoutError(f"Timed out waiting for graph cache: {path}")
+            time.sleep(5)
+
+    try:
+        if path.exists():
+            return load_cached_adjacency(path)
+        adj, info = build_block_adjacency_uncached(panel, origin, train_start, args)
+        info = dict(info)
+        info["cache_status"] = "miss"
+        tmp_path = path.with_suffix(".tmp.npz")
+        np.savez_compressed(tmp_path, adjacency=adj.astype(np.float32), info_json=json.dumps(info, default=str))
+        tmp_path.replace(path)
+        return adj, info
+    finally:
+        try:
+            lock_dir.rmdir()
+        except FileNotFoundError:
+            pass
 
 
 def apply_graph(features: np.ndarray, adjacency: np.ndarray) -> np.ndarray:
@@ -1118,6 +1213,21 @@ def run(args: argparse.Namespace) -> None:
         if len(train_idx) < 20 or len(valid_idx) < 1 or len(test_idx) < 1:
             continue
         adj, graph_info = build_block_adjacency(panel, origin, train_start, args)
+        print(
+            json.dumps(
+                {
+                    "event": "graph_ready",
+                    "block": block_id,
+                    "origin": str(panel.dates[origin].date()),
+                    "graph": graph_info["method"],
+                    "edges": graph_info["edges"],
+                    "fallback": bool(graph_info.get("fallback")),
+                    "cache": graph_info.get("cache_status", "disabled"),
+                    "elapsed_sec": round(time.time() - start_time, 2),
+                }
+            ),
+            flush=True,
+        )
         pred_floor = prediction_floor(panel, train_idx, args)
         block_rows.append(
             BlockInfo(
@@ -1210,13 +1320,16 @@ def run(args: argparse.Namespace) -> None:
                     "fallback": bool(graph_info.get("fallback")),
                     "elapsed_sec": round(elapsed, 2),
                 }
-            )
+            ),
+            flush=True,
         )
 
     if not test_mask.any():
         raise RuntimeError("No test predictions were generated")
 
     split = {"train": np.flatnonzero(~test_mask), "valid": np.array([], dtype=np.int64), "test": np.flatnonzero(test_mask)}
+    block_table = pd.DataFrame([asdict(row) for row in block_rows])
+    gnn_table = pd.DataFrame(gnn_rows)
     eval_panel = type(
         "EvalPanel",
         (),
@@ -1238,6 +1351,30 @@ def run(args: argparse.Namespace) -> None:
         )
         for name in models
     ]
+    if args.worker_output_only:
+        table_dir = output_dir / "tables"
+        table_dir.mkdir(parents=True, exist_ok=True)
+        block_table.to_csv(table_dir / "graph_blocks.csv", index=False)
+        gnn_table.to_csv(table_dir / "gnn_tuning.csv", index=False)
+        save_predictions(output_dir, panel, runs, test_mask)
+        save_metadata(output_dir, panel, args, block_table, test_mask)
+        print(
+            json.dumps(
+                {
+                    "output_dir": str(output_dir),
+                    "universe": panel.universe,
+                    "n_tickers": len(panel.tickers),
+                    "n_blocks": len(block_table),
+                    "n_test_dates": int(test_mask.sum()),
+                    "models": models,
+                    "worker_output_only": True,
+                    "fallback_blocks": int(block_table["graph_fallback"].notna().sum()),
+                },
+                indent=2,
+            ),
+            flush=True,
+        )
+        return
     loss_table, losses = evaluate_runs(runs, eval_panel)
     loss_table.attrs["n_test_dates"] = int(test_mask.sum())
     
@@ -1274,9 +1411,6 @@ def run(args: argparse.Namespace) -> None:
     mcs_table = build_mcs_table(losses["qlike"], args.mcs_bootstrap)
     iv_decomposition = build_iv_decomposition(loss_table)
     regime_table = build_regime_table(runs, eval_panel)
-    block_table = pd.DataFrame([asdict(row) for row in block_rows])
-    gnn_table = pd.DataFrame(gnn_rows)
-
     tables = {
         "model_losses": loss_table,
         "loss_ratios": ratio_table,

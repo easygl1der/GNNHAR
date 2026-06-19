@@ -19,7 +19,6 @@
 \usepackage{longtable}
 \usepackage{threeparttable}
 \usepackage{placeins}
-\usepackage{listings}
 
 \pgfplotsset{compat=1.18}
 \graphicspath{{reports/gnnhar_iv/figures/}{figures/}}
@@ -33,15 +32,6 @@
   urlcolor=blue!55!black
 }
 \urlstyle{same}
-
-\lstset{
-  basicstyle=\ttfamily\footnotesize,
-  breaklines=true,
-  frame=single,
-  columns=fullflexible,
-  keepspaces=true,
-  showstringspaces=false
-}
 
 \title{\textbf{Forecasting Realized Volatility with Graph Spillovers and Implied Volatility: A GNNHAR-IV Extension}}
 \author{Manuscript for Review}
@@ -60,6 +50,10 @@ MSE and QLIKE. We preserve that evaluation logic and construct HAR-IV, GHAR-IV, 
 GNNHAR-IV models for Dow 30 realized volatility forecasting. To distinguish genuine IV
 information from mere parameter expansion, we compare real-IV models with fake-IV controls
 that preserve the scale and dimension of IV features while breaking their time alignment.
+Motivated by preliminary simulation evidence on random adjacency matrices, we also compare
+GLASSO graph models with random-graph placebo models. This second placebo asks whether
+the estimated adjacency matrix itself contributes relation information, or whether graph terms
+mainly add transformed features and parameters.
 The IV source is AlphaQuery's stock-level implied-volatility data product, using the
 30-day implied-volatility mean as the forward-looking option-market signal. The reproducible run
 covers 30 Dow constituents from 2021-02-26 to 2026-01-26, uses a chronological
@@ -67,13 +61,13 @@ train-validation-test split, builds a GLASSO return network, and evaluates all f
 out-of-sample MSE, QLIKE, relative loss ratios, model confidence sets, Diebold-Mariano tests,
 and calm-versus-volatile regime splits. The best model by test QLIKE is
 GHAR-IV, with QLIKE \(0.0007849\), while the best model by test MSE is the
-validation-tuned GNNHAR3L-IV, with MSE \(0.9591\). The IV decomposition shows
-that real IV carries economically meaningful predictive information for linear HAR and GHAR
-specifications, and validation tuning makes the nonlinear GNNHAR-IV extension competitive
-with the strongest linear benchmark. The results position IV as a useful extension to Zhang
-et al.'s graph-spillover volatility framework while also showing that neural graph models
-require careful validation-based tuning before they can be interpreted in small-sample
-empirical finance settings.
+validation-tuned GNNHAR3L-IV, with MSE \(0.9591\). The IV decomposition shows that real
+IV carries predictive information for linear HAR and GHAR specifications beyond a
+dimension-matched IV placebo. The random-graph tests give a more qualified interpretation:
+GHAR-IV with a random graph is nearly tied with GLASSO GHAR-IV, but GNNHAR3L-IV with a
+random graph deteriorates substantially. The evidence therefore supports the IV channel more
+directly than the linear graph channel, and it locates the clearest GLASSO-relation evidence in
+the nonlinear GNNHAR-IV specification.
 \end{abstract}
 
 \noindent\begin{minipage}{\textwidth}
@@ -105,22 +99,26 @@ features with IV lag features at the same daily, weekly, and monthly HAR horizon
 keeps the structure of Zhang et al.'s framework while adding a new economic information
 channel.
 
-The key empirical concern is that IV models contain more regressors and neural-network input
-features. Apparent gains could therefore arise from parameter expansion rather than genuine IV
-information. To address this, we introduce fake-IV controls. Fake IV is obtained by permuting
-the IV feature tensor over dates, preserving the dimension and scale of the IV channel while
-destroying its timing relation with future realized volatility. Comparing no-IV, real-IV, and
-fake-IV models allows us to decompose the improvement into total IV gain, genuine information
-gain, and parameter expansion gain.
+The key empirical concern is that IV and graph models contain more regressors and transformed
+features. Apparent gains could therefore arise from parameter expansion rather than genuine
+economic information. To address this, we introduce two placebo designs. Fake IV is obtained
+by permuting the IV feature tensor over dates, preserving the dimension and scale of the IV
+channel while destroying its timing relation with future realized volatility. Random graphs
+replace the GLASSO adjacency matrix with a density-matched random adjacency matrix. Comparing
+no-IV, real-IV, and fake-IV models decomposes the IV gain, while comparing GLASSO and random
+graphs tests whether graph performance reflects relation information rather than generic
+feature transformation.
 
-Our contribution is threefold. First, we provide a reproducible Colab and private GitHub pipeline
+Our contribution is fourfold. First, we provide a reproducible computational pipeline
 that implements HAR, GHAR, GNNHAR1L, GNNHAR2L, GNNHAR3L, and their IV counterparts
 on a Dow 30 panel. Second, we evaluate the IV extension using the same style of evidence
 emphasized by \citet{zhang2025gnnhar}: MSE, QLIKE, relative loss ratios, model confidence
 sets (MCS), Diebold-Mariano (DM) tests, regime splits, and forecast distribution plots. Third,
 we show that IV improves linear HAR/GHAR specifications in a way that survives the fake-IV
 benchmark, and that validation-tuned GNNHAR-IV can outperform linear graph benchmarks by
-MSE while remaining close to GHAR-IV by QLIKE.
+MSE while remaining close to GHAR-IV by QLIKE. Fourth, we include a random-relation
+placebo: random adjacency is not used because it is economically meaningful, but because it is
+a diagnostic for parameter and feature expansion.
 
 The main finding is that GHAR-IV is the best-performing model by QLIKE in the tuned run,
 achieving a test QLIKE of \(0.0007849\) and a QLIKE ratio of \(0.9549\) relative to HAR.
@@ -128,10 +126,13 @@ The validation-tuned GNNHAR3L-IV is the best-performing model by MSE, achieving 
 \(0.9591\), below GHAR-IV's \(1.0272\) and GHAR's \(1.0848\). HAR-IV also improves on
 HAR, but GHAR-IV is better than HAR-IV, indicating that IV and graph spillovers are
 complementary. The fake-IV experiment strengthens the interpretation: for HAR and GHAR,
-real-IV gains are much larger than fake-IV gains. Neural graph models require careful
-validation tuning: without tuning they are fragile, while with validation-selected
-hyperparameters the IV-augmented GNN variants become competitive. We interpret this as
-evidence for careful tuning rather than as evidence against graph spillovers or IV.
+real-IV gains are much larger than fake-IV gains. The random-graph experiment qualifies the
+graph interpretation. In the linear GHAR-IV specification, random and GLASSO graphs are
+almost indistinguishable, so the linear graph-IV gain should not be over-interpreted as
+identified network structure. In contrast, GNNHAR3L-IV with the random graph performs much
+worse than GNNHAR3L-IV with GLASSO, indicating that the nonlinear graph extension is much
+more sensitive to the estimated relation matrix. Neural graph models therefore require careful
+validation tuning and placebo relation checks before they can be interpreted.
 
 \section{Relation to Zhang et al.'s GNNHAR Framework}
 
@@ -259,7 +260,7 @@ forecast loss is important. Linear models are estimated by MSE, while the neural
 both MSE-trained and QLIKE-trained variants. All models are evaluated out of sample using both
 MSE and QLIKE.
 
-\subsection{Fake-IV Decomposition}
+\subsection{Placebo Decompositions: Fake IV and Fake Relations}
 
 Let \(L_0\), \(L_{IV}\), and \(L_{fake}\) denote the test loss of a no-IV model, its real-IV
 extension, and its fake-IV extension. We report
@@ -274,6 +275,21 @@ extension, and its fake-IV extension. We report
 and \(\Delta_{param}\) is the parameter expansion gain. A credible IV result should have
 \(\Delta_{info}>0\), not merely \(\Delta_{total}>0\).
 
+The same logic applies to the graph relation matrix. In small samples, random adjacency
+matrices can occasionally perform as well as economically motivated or estimated adjacency
+matrices. That outcome is not a reason to prefer random graphs economically; it indicates that
+graph terms can behave as generic feature transformations. In GHAR, for example,
+\[
+\mathbb{E}(v_{i,t}\mid \mathcal{F}_{t-1})
+= \alpha_i + H^{RV}_{i,t-1}\beta + (WH^{RV}_{t-1})_i\gamma,
+\]
+so even a fake \(W\) creates extra regressors \((WH^{RV}_{t-1})_i\). We therefore compare
+GLASSO \(W\) with a density-matched random \(W^{rand}\). If the GLASSO model does not
+outperform the random-graph placebo, the result should be interpreted as parameter or feature
+expansion rather than identified spillover structure. If GLASSO materially outperforms the
+random graph, the evidence is stronger that the estimated relation matrix carries useful
+cross-sectional information.
+
 \section{Data and Experimental Design}
 
 The empirical analysis uses Dow 30 constituents with realized volatility, implied volatility, and
@@ -286,14 +302,11 @@ measures; this study uses the mean IV series as the primary forward-looking opti
 signal. After HAR lag construction, the sample contains 1234 trading dates from 2021-02-26 to
 2026-01-26. The chronological split uses 863 training dates, 185 validation dates, and 186 test
 dates. All reported tables are produced by the repository pipeline on branch
-\texttt{2026-06-01}. The tuned run metadata confirms \(250\) base neural training epochs,
-\(60\) MCS bootstrap replications, seed \(20260602\), \texttt{fast=false},
-\texttt{tune\_gnn=true}, and \texttt{skip\_qlike\_training=true}. The Colab notebook in
-\path{notebooks/gnnhar_iv_colab_full_run.ipynb} has been updated to run the same
-validation-tuned pipeline and to push generated artifacts back to the private GitHub
-repository. The exported tables contain HAR, GHAR, GNNHAR1L, GNNHAR2L, GNNHAR3L,
-GNNHAR1L-IV, GNNHAR2L-IV, GNNHAR3L-IV, fake-IV controls, random-graph controls, and
-the GNN hyperparameter-selection table.
+\texttt{2026-06-01}. The tuned run uses \(250\) base neural training epochs,
+\(60\) MCS bootstrap replications, seed \(20260602\), validation-based GNN hyperparameter
+selection, and MSE-trained neural forecasts. The exported tables contain HAR, GHAR,
+GNNHAR1L, GNNHAR2L, GNNHAR3L, their IV extensions, IV placebos, random-graph controls,
+and the GNN hyperparameter-selection table.
 
 \begin{table}[t]
 \centering
@@ -326,13 +339,16 @@ MCS bootstrap replications & 60 \\
 \subsection{Main Forecast Comparison}
 
 Table \ref{tab:mainloss} reports the main out-of-sample comparison. GHAR-IV is the best model
-by QLIKE, while validation-tuned GNNHAR3L-IV is the best model by MSE. The no-IV graph
-model GHAR improves over HAR, but adding IV produces a larger improvement. Relative to HAR,
-GHAR-IV reduces MSE by about \(8.86\%\) and QLIKE by about \(4.51\%\). GNNHAR3L-IV
-reduces MSE by about \(14.90\%\) relative to HAR and by about \(6.63\%\) relative to HAR-IV,
-while its QLIKE is nearly tied with GHAR-IV. These results support the view that IV and graph
-spillovers are complementary, and that nonlinear graph layers can add value after validation
-tuning.
+by QLIKE among economically interpretable GLASSO specifications, while validation-tuned
+GNNHAR3L-IV is the best model by MSE. Relative to HAR, GHAR-IV reduces MSE by about
+\(8.86\%\) and QLIKE by about \(4.51\%\). GNNHAR3L-IV reduces MSE by about
+\(14.90\%\) relative to HAR and by about \(6.63\%\) relative to HAR-IV, while its QLIKE is
+close to GHAR-IV. The placebo relation results require a more careful interpretation. The
+linear GHAR-IV-random model is nearly tied with GLASSO GHAR-IV, with QLIKE
+\(0.0007843\) versus \(0.0007849\). This means the linear GHAR-IV table alone cannot prove
+that the GLASSO relation matrix is economically identified. By contrast, GNNHAR3L-IV-random
+has QLIKE \(0.0009459\), much worse than GLASSO GNNHAR3L-IV, indicating that the nonlinear
+graph extension is much more dependent on the estimated relation matrix.
 
 \begin{table}[t]
 \centering
@@ -343,6 +359,7 @@ tuning.
 \toprule
 Model & Test MSE & Test QLIKE & MSE ratio/HAR & QLIKE ratio/HAR \\
 \midrule
+GHAR-IV-random & 1.0272 & 0.0007843 & 0.9114 & 0.9541 \\
 GHAR-IV & 1.0272 & 0.0007849 & 0.9114 & 0.9549 \\
 HAR-IV & 1.0464 & 0.0007928 & 0.9285 & 0.9645 \\
 GNNHAR3L-IV & 0.9591 & 0.0007964 & 0.8510 & 0.9689 \\
@@ -352,13 +369,15 @@ GHAR-fakeIV & 1.0897 & 0.0008136 & 0.9669 & 0.9898 \\
 GHAR-random & 1.0901 & 0.0008142 & 0.9672 & 0.9905 \\
 HAR-fakeIV & 1.1217 & 0.0008207 & 0.9953 & 0.9985 \\
 HAR & 1.1270 & 0.0008220 & 1.0000 & 1.0000 \\
+GNNHAR3L-IV-random & 1.1733 & 0.0009459 & 1.0411 & 1.1508 \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
 \footnotesize
 \item Notes: The table reports test-period averages across dates and assets. The suffix ``fakeIV''
-denotes a date-permuted IV control. GHAR-random uses a random graph with comparable density.
-GNNHAR rows use hyperparameters selected on the validation split, not on the test split.
+denotes a date-permuted IV control. The suffix ``random'' denotes a density-matched random
+graph placebo. GNNHAR rows use hyperparameters selected on the validation split, not on the
+test split.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -370,9 +389,11 @@ GNNHAR-IV is explicitly estimated and tuned using the validation split: the tabl
 one-, two-, and three-layer GNNHAR models and their IV counterparts. Among the neural IV
 models, GNNHAR3L-IV has the lowest test MSE, \(0.9591\), and QLIKE \(0.0007964\).
 GNNHAR2L-IV is also competitive, with MSE \(1.0180\) and QLIKE \(0.0008120\). The IV
-channel is important: the corresponding no-IV neural models have higher losses. The tuned
-neural results therefore change the interpretation from ``untuned GNNHAR-IV is fragile'' to
-``GNNHAR-IV is competitive when hyperparameters are selected on validation data.''
+channel is important: the corresponding no-IV neural models have higher losses. The random
+relation control is especially informative here. Replacing the GLASSO graph in GNNHAR3L-IV
+with a density-matched random graph raises MSE from \(0.9591\) to \(1.1733\) and QLIKE from
+\(0.0007964\) to \(0.0009459\). Thus, unlike the linear GHAR-IV case, the leading nonlinear
+GNNHAR-IV result is not reproduced by a randomized relation matrix.
 
 \begin{table}[t]
 \centering
@@ -387,8 +408,9 @@ GNNHAR2L-IV & MSE & 1.0180 & 0.0008120 & 0.9878 \\
 GNNHAR1L-IV & MSE & 1.0369 & 0.0008348 & 1.0156 \\
 GNNHAR1L & MSE & 1.1485 & 0.0008476 & 1.0312 \\
 GNNHAR2L & MSE & 1.1326 & 0.0008616 & 1.0483 \\
-GNNHAR1L-IV-fakeIV & MSE & 1.1786 & 0.0008702 & 1.0587 \\
+GNNHAR1L-IV-fakeIV & MSE & 1.2279 & 0.0008866 & 1.0786 \\
 GNNHAR3L & MSE & 1.1905 & 0.0008962 & 1.0903 \\
+GNNHAR3L-IV-random & MSE & 1.1733 & 0.0009459 & 1.1508 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -396,10 +418,12 @@ GNNHAR3L & MSE & 1.1905 & 0.0008962 & 1.0903 \\
 \subsection{Model Confidence Set and DM Tests}
 
 Table \ref{tab:mcs} reports the MCS results at the \(5\%\) level. The confidence set contains
-GHAR-IV, HAR-IV, GNNHAR3L-IV, GNNHAR2L-IV, HAR, GHAR, and the main fake-IV and
-random-graph controls. Within the included set, GHAR-IV has the largest MCS p-value, but
-GNNHAR3L-IV and HAR-IV are also retained with high p-values. This supports the view that the
-best linear and tuned neural IV models are statistically close by QLIKE in this sample.
+GHAR-IV-random, GHAR-IV, HAR-IV, GNNHAR3L-IV, GNNHAR2L-IV, HAR, GHAR, and the main
+fake-IV controls. The high p-value of GHAR-IV-random is not interpreted as economic evidence
+for a random network. Instead, it shows that in the linear GHAR-IV model, the graph
+feature block can perform well even when the relation matrix is randomized. The nonlinear placebo
+behaves differently. GNNHAR3L-IV-random is excluded from the \(5\%\) MCS, while GLASSO
+GNNHAR3L-IV remains in the confidence set.
 
 \begin{table}[t]
 \centering
@@ -409,17 +433,18 @@ best linear and tuned neural IV models are statistically close by QLIKE in this 
 \toprule
 Model & Included & MCS p-value \\
 \midrule
-GHAR-IV & Yes & 1.000 \\
+GHAR-IV-random & Yes & 1.000 \\
 HAR-IV & Yes & 0.833 \\
+GHAR-IV & Yes & 0.833 \\
 GNNHAR3L-IV & Yes & 0.833 \\
-HAR & Yes & 0.417 \\
+HAR & Yes & 0.467 \\
+HAR-fakeIV & Yes & 0.400 \\
 GNNHAR2L-IV & Yes & 0.400 \\
-GHAR & Yes & 0.383 \\
-HAR-fakeIV & Yes & 0.383 \\
-GHAR-random & Yes & 0.317 \\
-GHAR-fakeIV & Yes & 0.317 \\
-GNNHAR1L-IV & Yes & 0.317 \\
-GNNHAR1L-IV-fakeIV & No & 0.033 \\
+GHAR & Yes & 0.333 \\
+GHAR-random & Yes & 0.250 \\
+GHAR-fakeIV & Yes & 0.217 \\
+GNNHAR1L-IV & Yes & 0.217 \\
+GNNHAR3L-IV-random & No & 0.033 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -510,11 +535,12 @@ GNNHAR1L & 0.0008476 & 0.0008348 & 0.0008702 & 0.0000128 & 0.0000354 & -0.000022
 
 Table \ref{tab:regime} reports QLIKE losses in calm and volatile regimes. The volatile regime is
 defined as the top quartile of market-average realized volatility in the test period. GHAR-IV is
-the best model in both regimes. Its advantage is economically more visible in the volatile
-regime, where its QLIKE is \(0.001168\), compared with \(0.001187\) for HAR-IV,
-\(0.001211\) for GHAR, and \(0.001244\) for HAR. This regime evidence is consistent with the
-interpretation that IV is especially useful when option markets price forward-looking risk during
-high-volatility periods.
+the best GLASSO linear model in the calm regime, while GNNHAR3L-IV is the best model in the
+volatile top quartile. Its volatile-regime QLIKE is \(0.001048\), compared with
+\(0.001168\) for GHAR-IV, \(0.001187\) for HAR-IV, and \(0.001244\) for HAR. The random
+GNNHAR3L-IV placebo has volatile-regime QLIKE \(0.001321\), confirming that the stress-regime
+gain of the nonlinear model is tied to the GLASSO relation matrix rather than a generic random
+feature expansion.
 
 \begin{table}[t]
 \centering
@@ -525,12 +551,15 @@ high-volatility periods.
 Model & Calm QLIKE & Volatile QLIKE \\
 \midrule
 GHAR-IV & 0.000655 & 0.001168 \\
+GHAR-IV-random & 0.000656 & 0.001163 \\
 HAR-IV & 0.000660 & 0.001187 \\
+GNNHAR3L-IV & 0.000711 & 0.001048 \\
 GHAR & 0.000676 & 0.001211 \\
 GHAR-random & 0.000678 & 0.001218 \\
 GHAR-fakeIV & 0.000678 & 0.001215 \\
 HAR-fakeIV & 0.000678 & 0.001241 \\
 HAR & 0.000679 & 0.001244 \\
+GNNHAR3L-IV-random & 0.000819 & 0.001321 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -549,7 +578,7 @@ Values below one indicate stronger out-of-sample QLIKE performance.
   height=0.42\textwidth,
   bar width=13pt,
   ylabel={QLIKE ratio relative to HAR},
-  symbolic x coords={GHAR-IV,HAR-IV,GHAR,GHAR-fakeIV,GHAR-random,HAR-fakeIV,HAR},
+  symbolic x coords={GHAR-IV-random,GHAR-IV,HAR-IV,GHAR,GHAR-fakeIV,GHAR-random,HAR-fakeIV,HAR},
   xtick=data,
   x tick label style={rotate=35,anchor=east},
   ymin=0.94,
@@ -560,6 +589,7 @@ Values below one indicate stronger out-of-sample QLIKE performance.
   every node near coord/.append style={font=\scriptsize, rotate=90, anchor=west}
 ]
 \addplot coordinates {
+  (GHAR-IV-random,0.954119)
   (GHAR-IV,0.954947)
   (HAR-IV,0.964532)
   (GHAR,0.986764)
@@ -597,37 +627,17 @@ Zhang et al. The rows report the full test period, calm days, and volatile days.
 \label{fig:zhangbox}
 \end{figure}
 
-Figures \ref{fig:incremental}--\ref{fig:phase} separate two different visual questions. Figure
-\ref{fig:incremental} focuses on loss improvements relative to HAR. It shows that GHAR-IV
-has the largest average QLIKE reduction, that real-IV gains dominate fake-IV gains in the HAR
-and GHAR families, and that the cumulative test-period improvement remains positive after
-the early volatile observations. This is the figure that should be used to compare forecast
-accuracy across the close linear specifications.
-
-Figure \ref{fig:qq} instead asks whether the residual distributions have different shapes. The
-answer is mostly no: the standardized Q-Q curves for HAR, HAR-IV, GHAR, and GHAR-IV are
-nearly overlapping and all exhibit heavy right tails. This is useful diagnostically because it
-shows that IV and graph spillovers reduce average forecast loss without eliminating the common
-tail-risk problem in realized-volatility forecasting. The right panels of Figure \ref{fig:qq}
-therefore report quantile differences and tail shifts relative to HAR, rather than presenting four
-nearly indistinguishable Q-Q panels. Figure \ref{fig:phase} compares realized RV with forecast
-RV; points close to the \(45^\circ\) line correspond to well-calibrated forecasts.
+Figures \ref{fig:qq} and \ref{fig:phase} report residual and calibration diagnostics. Figure
+\ref{fig:qq} shows standardized residual Q-Q plots for HAR, HAR-IV, GHAR, and GHAR-IV.
+The four curves have similar central behavior and heavy right tails, indicating that IV and graph
+terms reduce average forecast loss without eliminating tail forecast errors. Figure
+\ref{fig:phase} compares realized RV with forecast RV; points close to the \(45^\circ\) line
+correspond to well-calibrated forecasts.
 
 \begin{figure}[p]
 \centering
-\includegraphics[width=\textwidth]{incremental_loss_diagnostics.png}
-\caption{Incremental QLIKE diagnostics relative to HAR. The panels report average QLIKE
-loss reductions, observation-level improvement distributions, cumulative mean improvements
-over the test period, and real-IV gains compared with fake-IV controls.}
-\label{fig:incremental}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\includegraphics[width=\textwidth]{residual_qq_differential.png}
-\caption{Differential Q-Q diagnostics for standardized forecast residuals. The overlay shows
-that the four linear specifications have very similar residual tail shapes; the difference and
-tail-shift panels isolate the small departures relative to HAR.}
+\includegraphics[width=\textwidth]{residual_qq_plots.png}
+\caption{Q-Q plots of standardized forecast residuals for the main linear specifications.}
 \label{fig:qq}
 \end{figure}
 
@@ -642,233 +652,98 @@ tail-shift panels isolate the small departures relative to HAR.}
 \section{Discussion}
 
 The empirical evidence supports three conclusions. First, implied volatility adds predictive
-content to graph-spillover realized-volatility models. The strongest evidence comes from the
+content to graph-spillover realized-volatility models. The most direct evidence comes from the
 HAR and GHAR fake-IV comparisons, where real IV dominates fake IV. This matters because it
 rules out the simplest explanation that gains arise only because IV models contain more
 features.
 
-Second, graph spillovers and IV are complementary in the linear family. GHAR improves on HAR,
-HAR-IV improves on HAR, and GHAR-IV improves on both. This is the cleanest extension of
-Zhang et al.'s framework: rather than replacing graph spillovers, IV enriches the information set
-on which spillovers operate.
+Second, graph spillovers and IV are complementary in the linear family for prediction, but the
+relation interpretation is not fully identified by the linear table alone. GHAR improves on HAR,
+HAR-IV improves on HAR, and GHAR-IV improves on both. However, GHAR-IV-random is nearly
+tied with GLASSO GHAR-IV. This means that the
+linear graph block may partly work as a transformed-feature expansion. The appropriate conclusion
+is therefore not that the random graph is meaningful, but that linear GHAR-IV is not sufficient
+by itself to certify GLASSO relation information.
 
-Third, nonlinear graph neural networks are sensitive to tuning in the Dow 30 setting. Zhang
-et al. study a larger universe and report that nonlinear GNNHAR models can improve
-forecasting accuracy. In the present Dow 30 run, validation-tuned GNNHAR3L-IV delivers the
-lowest MSE, while GHAR-IV remains the best model by QLIKE. This split ranking is useful:
-neural graph layers help capture large realized-volatility movements, especially in volatile
-regimes, while the linear GHAR-IV benchmark remains slightly better under the
-scale-sensitive QLIKE criterion.
+Third, nonlinear graph neural networks are sensitive to tuning and to the relation matrix in the
+Dow 30 setting. Zhang et al. study a larger universe and report that nonlinear GNNHAR models
+can improve forecasting accuracy. In the present Dow 30 run, validation-tuned GNNHAR3L-IV
+delivers the lowest MSE and the best volatile-regime QLIKE, while GHAR-IV remains the best
+economically interpretable GLASSO linear model by full-sample QLIKE. Crucially,
+GNNHAR3L-IV-random is much worse than GLASSO GNNHAR3L-IV. This is the main evidence
+in the paper that the estimated GLASSO relation matrix matters beyond generic graph-feature
+expansion.
 
 \section{Robustness and Limitations}
 
-Several robustness checks are built into the analysis. First, the random-graph GHAR benchmark
-performs slightly worse than GLASSO GHAR, indicating that the return-based network contains
-useful structure. Second, fake-IV controls show that real-IV gains are not explained by feature
-dimension alone in HAR and GHAR. Third, the regime split shows that GHAR-IV remains strong
-in calm periods, while GNNHAR3L-IV performs best in the volatile top quartile. Fourth, the
-GNN tuning table records validation MSE, validation QLIKE, and the selected hidden size,
-learning rate, and epoch budget for each neural specification.
+Several robustness checks are built into the analysis. First, fake-IV controls show that real-IV
+gains are not explained by feature dimension alone in HAR and GHAR. Second, random-graph
+controls separate relation information from transformed-feature expansion. These controls give
+mixed but informative evidence: GHAR-IV-random is nearly tied with GLASSO GHAR-IV, whereas
+GNNHAR3L-IV-random is substantially worse than GLASSO GNNHAR3L-IV and is excluded from
+the \(5\%\) MCS. Third, the regime split shows that GHAR-IV remains strong in calm periods,
+while GNNHAR3L-IV performs best in the volatile top quartile. Fourth, the GNN tuning table
+records validation MSE, validation QLIKE, and the selected hidden size, learning rate, and
+epoch budget for each neural specification.
 
 The study has limitations. The Dow 30 universe is much smaller than the S\&P 100 setting in
 Zhang et al., so the graph neural networks have less cross-sectional information. The IV data
 are taken from AlphaQuery's summarized option-statistics fields rather than reconstructed from
 raw option chains; therefore, vendor definitions, data availability, and interpolation choices
 may affect results. The neural models use a compact validation grid rather than a very large
-hyperparameter sweep. Finally, Colab neural results can remain subject to runtime stochasticity
-even with fixed seeds; the reported tuned tables here are produced by the repository pipeline,
-and the Colab notebook has been updated to reproduce the same tuning workflow.
+hyperparameter sweep. Finally, neural results can remain subject to runtime stochasticity even
+with fixed seeds; the reported tuned tables are therefore tied to the stated seed, split, and
+hyperparameter-selection protocol.
 
 \section{Conclusion}
 
 This paper develops and evaluates a GNNHAR-IV extension of Zhang et al.'s graph-spillover
 realized-volatility forecasting framework. The extension adds implied volatility at the same HAR
 horizons as realized volatility and evaluates whether the IV channel contributes genuine
-information beyond parameter expansion. The empirical results are clear for the linear graph
-family: GHAR-IV is the best model by test QLIKE, real IV dominates fake IV, and the model
-performs well across regimes. The nonlinear extension also becomes competitive after
-validation tuning: GNNHAR3L-IV achieves the lowest test MSE and the best volatile-regime
-losses. Overall, IV is a valuable addition to the GNNHAR framework. The strongest current
-interpretation is not that one model dominates under every loss, but that GHAR-IV provides
-the most stable QLIKE performance while tuned GNNHAR-IV captures additional nonlinear
-spillover information under MSE and stress-regime evaluation.
+information beyond parameter expansion. The empirical results are strongest for IV: real IV
+dominates fake IV in HAR and GHAR. The graph evidence is deliberately more qualified.
+Linear GHAR-IV forecasts are strong, but the random-relation placebo is nearly tied with the
+GLASSO relation, so the linear relation channel should not be over-interpreted. The nonlinear
+extension gives sharper relation evidence: GNNHAR3L-IV achieves the lowest test MSE and the
+best volatile-regime QLIKE, while its random-graph counterpart performs poorly. Overall, IV is
+a useful addition to the GNNHAR framework, and IV-placebo plus relation-placebo validation is
+necessary for interpreting the source of the forecasting gains.
 
 \appendix
-\section{Colab Reproducibility Appendix}
+\section{Reproducibility Appendix}
 \label{app:colab}
 
-The GNNHAR and GNNHAR-IV results in this paper were run on Google Colab, not only on a
-local machine. The reproducibility notebook is stored in the GitHub repository and can be
-opened directly in Colab:
+The empirical results are generated from the project repository rather than from hand-edited
+tables. The repository contains the notebook
+\path{notebooks/gnnhar_iv_colab_full_run.ipynb}, which runs the same pipeline used for the
+reported tables and figures. The notebook can be opened in Colab through:
 
-\noindent\href{https://colab.research.google.com/github/easygl1der/GNNHAR/blob/2026-06-01/notebooks/gnnhar_iv_colab_full_run.ipynb}{Open the GNNHAR-IV Colab full-run notebook}.
-The repository path is \path{notebooks/gnnhar_iv_colab_full_run.ipynb}.
+\noindent\href{https://colab.research.google.com/github/easygl1der/GNNHAR/blob/2026-06-01/notebooks/gnnhar_iv_colab_full_run.ipynb}{Colab notebook for the GNNHAR-IV replication run}.
 
-The notebook clones the repository branch \texttt{2026-06-01} from the private GitHub
-repository, runs the full GNNHAR-IV pipeline with the repository's tracked Dow 30 input data,
-writes outputs to \path{/content/gnnhar_outputs}, and commits those outputs back to the same
-private repository under \path{outputs/colab-runs/<run_id>/}. This avoids both
-\texttt{drive.mount} and external cloud-storage state, leaving GitHub as the single source of
-versioned code, data, and output artifacts.
+For local replication, the main command is:
+\[
+\begin{gathered}
+\texttt{python scripts/analysis/gnnhar\_iv\_pipeline.py
+--data-dir experiments/dow30/data}\\
+\texttt{--output-dir outputs/gnnhar\_iv\_relation\_tuned\_full
+--epochs 250 --tune-gnn}\\
+\texttt{--mcs-bootstrap 60 --skip-qlike-training}.
+\end{gathered}
+\]
+The run uses seed \(20260602\), \(1234\) usable dates, and the \(863/185/186\)
+train-validation-test split reported in Table \ref{tab:data}. The key output files are:
 
 \begin{itemize}
 \setlength{\itemsep}{0pt}
-\item Colab GitHub secret: \texttt{GITHUB\_TOKEN}.
-\item Private-repository access: \texttt{GITHUB\_TOKEN} gives Colab read access to the
-private GitHub repository containing the code and input data.
-\item GitHub output access: the same token gives Colab write access to push the generated
-tables, figures, metadata, and report draft back to the private repository.
-\item Full run flags: \texttt{fast=false}, \texttt{epochs=250}, \texttt{tune\_gnn=true},
-\texttt{skip\_qlike\_training=true}, and \texttt{mcs\_bootstrap=60}.
-\item Sample and split: seed \(20260602\), 1234 usable dates, and a \(863/185/186\)
-train-validation-test split.
-\item Neural tables: \path{tables/model_losses.csv} reports one-, two-, and three-layer
-GNNHAR models and their IV extensions; \path{tables/gnn_tuning.csv} records the
-validation-selected neural hyperparameters.
+\item \path{tables/model_losses.csv}: out-of-sample MSE, QLIKE, and relative loss ratios.
+\item \path{tables/gnn_tuning.csv}: validation-selected hidden size, learning rate, and epoch
+budget for each GNNHAR specification.
+\item \path{tables/iv_decomposition.csv}: fake-IV decomposition into information and
+parameter-expansion components.
+\item \path{tables/mcs_results.csv} and \path{tables/dm_tests.csv}: MCS and pairwise
+forecast-loss tests.
+\item \path{figures/}: boxplots, Q-Q plots, phase plots, IV decomposition, and graph diagnostics.
 \end{itemize}
-
-\subsection{Notebook Cells}
-
-The core notebook cells are reproduced below so that the empirical run is checkable even
-without relying on screenshots.
-
-\begin{lstlisting}[language=Python,caption={Clone the private GitHub branch and set local output directory.}]
-import json
-import pathlib
-import shutil
-import subprocess
-import sys
-from datetime import datetime, timezone
-
-from google.colab import userdata
-
-REPO_OWNER = 'easygl1der'
-REPO_NAME = 'GNNHAR'
-BRANCH = '2026-06-01'
-REPO_DIR = pathlib.Path('/content/GNNHAR')
-OUTPUT_DIR = pathlib.Path('/content/gnnhar_outputs')
-RUN_ID = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-REPO_OUTPUT_DIR = REPO_DIR / 'outputs' / 'colab-runs' / RUN_ID
-
-GITHUB_TOKEN = userdata.get('GITHUB_TOKEN')
-if not GITHUB_TOKEN:
-    raise RuntimeError('Missing Colab Secret: GITHUB_TOKEN')
-
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-if REPO_DIR.exists():
-    shutil.rmtree(REPO_DIR)
-
-netrc_path = pathlib.Path.home() / '.netrc'
-netrc_path.write_text(
-    f'machine github.com login x-access-token password {GITHUB_TOKEN}\n'
-)
-netrc_path.chmod(0o600)
-repo_url = f'https://github.com/{REPO_OWNER}/{REPO_NAME}.git'
-subprocess.run([
-    'git', 'clone', '--depth', '1', '--branch', BRANCH, repo_url, str(REPO_DIR),
-], check=True)
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Install missing Colab dependencies if needed.}]
-import subprocess
-import sys
-
-mods = [
-    'numpy', 'pandas', 'sklearn', 'matplotlib', 'torch', 'scipy',
-]
-packages = {
-    'sklearn': 'scikit-learn',
-}
-missing = []
-for mod in mods:
-    try:
-        __import__(mod)
-    except Exception:
-        missing.append(mod)
-print('missing:', missing)
-if missing:
-    subprocess.check_call([
-        sys.executable, '-m', 'pip', 'install',
-        *[packages.get(m, m) for m in missing],
-    ])
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Run the full GNNHAR-IV empirical pipeline.}]
-subprocess.run([
-    'python', str(REPO_DIR / 'scripts/analysis/gnnhar_iv_pipeline.py'),
-    '--data-dir', str(REPO_DIR / 'experiments/dow30/data'),
-    '--output-dir', str(OUTPUT_DIR),
-    '--epochs', '250',
-    '--tune-gnn',
-], check=True)
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={List outputs and inspect run metadata.}]
-import json
-import pathlib
-
-for path in sorted(OUTPUT_DIR.glob('**/*')):
-    if path.is_file():
-        print(path)
-
-print('\nmetadata:')
-print(json.dumps(json.loads((OUTPUT_DIR / 'run_metadata.json').read_text()), indent=2))
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Inspect the GNNHAR and GNNHAR-IV loss table.}]
-import pandas as pd
-
-pd.read_csv(OUTPUT_DIR / 'tables/model_losses.csv').head(20)
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Commit and push Colab outputs back to private GitHub.}]
-import shutil
-import subprocess
-
-if REPO_OUTPUT_DIR.exists():
-    shutil.rmtree(REPO_OUTPUT_DIR)
-REPO_OUTPUT_DIR.parent.mkdir(parents=True, exist_ok=True)
-shutil.copytree(OUTPUT_DIR, REPO_OUTPUT_DIR)
-
-relative_output = REPO_OUTPUT_DIR.relative_to(REPO_DIR)
-subprocess.run([
-    'git', '-C', str(REPO_DIR), 'config', 'user.email',
-    'colab-runner@users.noreply.github.com',
-], check=True)
-subprocess.run([
-    'git', '-C', str(REPO_DIR), 'config', 'user.name', 'Colab Runner',
-], check=True)
-subprocess.run(['git', '-C', str(REPO_DIR), 'add', str(relative_output)], check=True)
-subprocess.run([
-    'git', '-C', str(REPO_DIR), 'commit', '-m',
-    f'Add Colab GNNHAR-IV outputs {RUN_ID}',
-], check=True)
-
-plain_url = f'https://github.com/{REPO_OWNER}/{REPO_NAME}.git'
-auth_url = (
-    f'https://x-access-token:{GITHUB_TOKEN}@github.com/'
-    f'{REPO_OWNER}/{REPO_NAME}.git'
-)
-subprocess.run([
-    'git', '-C', str(REPO_DIR), 'remote', 'set-url', 'origin', auth_url,
-], check=True)
-try:
-    try:
-        subprocess.run([
-            'git', '-C', str(REPO_DIR), 'push', 'origin', f'HEAD:{BRANCH}',
-        ], check=True)
-    except subprocess.CalledProcessError:
-        subprocess.run([
-            'git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', BRANCH,
-        ], check=True)
-        subprocess.run([
-            'git', '-C', str(REPO_DIR), 'push', 'origin', f'HEAD:{BRANCH}',
-        ], check=True)
-finally:
-    subprocess.run([
-        'git', '-C', str(REPO_DIR), 'remote', 'set-url', 'origin', plain_url,
-    ], check=True)
-\end{lstlisting}
 
 \begingroup
 \footnotesize

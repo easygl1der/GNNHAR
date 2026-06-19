@@ -1,0 +1,17 @@
+{
+  "universe": "sp100",
+  "output_dir": "/content/drive/MyDrive/GNNHAR_Research/outputs/gnnhar_colab_runs/sp100/20260614T181453Z",
+  "truth_shape": [
+    234,
+    91
+  ],
+  "n_available_models": 32,
+  "n_pair_specs": 34,
+  "primary_metric": "QLIKE",
+  "dm_null": "equal predictive accuracy between base_model and candidate_model",
+  "dm_direction": "positive statistic means candidate_model has lower loss",
+  "files": {
+    "multi_hop_dm_tests": "/content/drive/MyDrive/GNNHAR_Research/outputs/gnnhar_colab_runs/sp100/20260614T181453Z/multi_hop_dm_tests.csv",
+    "incremental_fvu": "/content/drive/MyDrive/GNNHAR_Research/outputs/gnnhar_colab_runs/sp100/20260614T181453Z/incremental_fvu.csv"
+  }
+}

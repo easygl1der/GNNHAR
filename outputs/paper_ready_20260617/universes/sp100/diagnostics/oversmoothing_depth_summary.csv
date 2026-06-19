@@ -1,0 +1,9 @@
+uses_iv,training_loss,metric,depth_min,depth_max,n_depths,pearson_corr_with_depth,first_depth_value,last_depth_value,direction
+False,MSE-trained,forecast_mad_time_series,1,5,5,0.520833335440702,0.7875278035268121,0.7885825313110874,increases_with_depth
+False,MSE-trained,mean_cross_section_cv,1,5,5,-0.4187475941626992,1.0919592987492226,1.0904702251689766,decreases_with_depth
+False,QLIKE-trained,forecast_mad_time_series,1,5,5,0.5977772931097981,0.7910239833215297,0.7919865679129695,increases_with_depth
+False,QLIKE-trained,mean_cross_section_cv,1,5,5,-0.42401647042729446,1.103684289939147,1.1034150478963314,decreases_with_depth
+True,MSE-trained,forecast_mad_time_series,1,5,5,-0.8388521724018488,0.7824656118664057,0.7768529805004839,decreases_with_depth
+True,MSE-trained,mean_cross_section_cv,1,5,5,0.8595326906772136,1.0951096464488108,1.099532177515103,increases_with_depth
+True,QLIKE-trained,forecast_mad_time_series,1,5,5,-0.7980428021933804,0.7845181930257561,0.7830514771294713,decreases_with_depth
+True,QLIKE-trained,mean_cross_section_cv,1,5,5,-0.14381563473256104,1.0893449853475006,1.0890660603898328,decreases_with_depth

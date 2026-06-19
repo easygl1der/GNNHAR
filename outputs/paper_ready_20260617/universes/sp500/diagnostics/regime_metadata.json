@@ -1,0 +1,11 @@
+{
+  "universe": "sp500",
+  "run_dir": "/root/autodl-tmp/gnnhar_sp500_autodl/autodl_runs/sp500_parallel_a100_20260617T0706Z/gnnhar_colab_runs/sp500/sp500_parallel_a100_20260617T0706Z",
+  "source": "cross-sectional mean RV proxy from truth array",
+  "quantile": 0.9,
+  "threshold": 35.910771179199216,
+  "n_dates": 223,
+  "n_calm": 200,
+  "n_turbulent": 23,
+  "created_utc": "2026-06-17T11:41:00.623653+00:00"
+}

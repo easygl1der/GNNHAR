@@ -1,0 +1,29 @@
+{
+  "protocol": "post-hoc Zhang-style OLS GHAR multi-hop predictions",
+  "selected_reconstruction_variant": "current_notebook_glasso_cv",
+  "reconstruction_table": [
+    {
+      "variant": "current_notebook_glasso_cv",
+      "mean_abs_err_GHAR_M": 0.0,
+      "max_abs_err_GHAR_M": 0.0,
+      "mean_abs_err_GHAR_M_IV": 0.0,
+      "max_abs_err_GHAR_M_IV": 0.0,
+      "score": 0.0
+    },
+    {
+      "variant": "standardized_grid_glasso_cv",
+      "mean_abs_err_GHAR_M": 0.054384976625442505,
+      "max_abs_err_GHAR_M": 0.6846039295196533,
+      "mean_abs_err_GHAR_M_IV": 0.028194274753332138,
+      "max_abs_err_GHAR_M_IV": 0.38144683837890625,
+      "score": 0.08257925137877464
+    }
+  ],
+  "created_files": [
+    "pred_GHAR2H_M.npy",
+    "pred_GHAR3H_M.npy",
+    "pred_GHAR2H_M_IV.npy",
+    "pred_GHAR3H_M_IV.npy"
+  ],
+  "note": "These are MSE/OLS linear GHAR multi-hop predictions; QLIKE-trained GHAR2H_Q/GHAR3H_Q are not trained here."
+}

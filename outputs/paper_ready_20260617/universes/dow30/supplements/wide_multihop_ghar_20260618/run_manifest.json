@@ -1,0 +1,52 @@
+{
+  "universe": "dow30",
+  "created_utc": "2026-06-18T07:58:17.340940+00:00",
+  "run_id": "20260618T075711Z",
+  "output_dir": "/content/drive/MyDrive/GNNHAR_Research/outputs/gnnhar_colab_runs/dow30/20260618T075711Z_wide_multihop_ghar",
+  "task": "multi-hop GHAR supplement",
+  "data_dir": "/content/drive/MyDrive/GNNHAR_Research/data/dow30",
+  "rv_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_rv_data_filled.csv",
+  "iv_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_iv_data_filled.csv",
+  "ret_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/daily_returns.csv",
+  "n_tickers": 30,
+  "input_raw_dates": [
+    "2021-06-09",
+    "2026-06-09"
+  ],
+  "test_dates": [
+    "2025-07-07",
+    "2026-06-09"
+  ],
+  "n_test_dates": 234,
+  "truth_shape": [
+    234,
+    30
+  ],
+  "supplement_models": [
+    "GHAR2H_M",
+    "GHAR3H_M",
+    "GHAR2H_Q",
+    "GHAR3H_Q",
+    "GHAR2H_M_IV",
+    "GHAR3H_M_IV",
+    "GHAR2H_Q_IV",
+    "GHAR3H_Q_IV"
+  ],
+  "elapsed_sec": 66.18,
+  "files": [
+    "multihop_supplement_manifest_20260618T075711Z.json",
+    "multihop_training_log_20260618T075711Z.csv",
+    "pred_GHAR2H_M.npy",
+    "pred_GHAR2H_M_IV.npy",
+    "pred_GHAR2H_Q.npy",
+    "pred_GHAR2H_Q_IV.npy",
+    "pred_GHAR3H_M.npy",
+    "pred_GHAR3H_M_IV.npy",
+    "pred_GHAR3H_Q.npy",
+    "pred_GHAR3H_Q_IV.npy",
+    "rolling_blocks.csv",
+    "test_dates.npy",
+    "tickers.npy",
+    "truth.npy"
+  ]
+}

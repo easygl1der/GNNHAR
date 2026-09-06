@@ -1,0 +1,405 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,longtable,enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  citecolor=blue!55!black
+}
+
+\title{Research Plan: Zhang-Style HAR, GHAR, and GNNHAR-IV Across Dow 30, S\&P 100, and S\&P 500}
+\author{Volatility Project}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Objective}
+
+The project will build a reproducible empirical study following the forecasting framework of Zhang Chao's GNNHAR work, then extend it with implied volatility. The study will compare Dow 30, S\&P 100, and S\&P 500 universes using each stock's close price, return, historical volatility, and implied volatility.
+
+The central research questions are:
+\[
+\text{Does graph information improve volatility forecasts beyond HAR?}
+\]
+\[
+\text{Does a nonlinear GNNHAR graph model improve beyond linear GHAR?}
+\]
+\[
+\text{Does implied volatility add genuine predictive information beyond extra parameters?}
+\]
+\[
+\text{Do the graph and IV gains change as the universe size grows from } N=30 \text{ to } N=100 \text{ and } N=500?
+\]
+
+The main scale-effect quantities will be
+\[
+\Delta^{GHAR}_{N}=L(HAR_N)-L(GHAR_N),
+\]
+\[
+\Delta^{GNN}_{N,k}=L(GHAR_N)-L(GNNHAR{k}L_N),
+\]
+\[
+\Delta^{IV}_{N,m}=L(m_N)-L(m\text{-}IV_N),
+\]
+where \(L(\cdot)\) is out-of-sample MSE or QLIKE and \(m\) is HAR, GHAR, or GNNHAR.
+
+\section{Existing Data and Gaps}
+
+The current repository already has most of the required data.
+
+\begin{longtable}{llll}
+\toprule
+Universe & Main files & Approximate shape & Date range \\
+\midrule
+\endhead
+Dow 30 & \texttt{experiments/dow30/data} & 30 assets, 1250 trading days & 2021-01-26 to 2026-01-26 \\
+S\&P 100 & \texttt{data/scale\_experiment/sp100} & 101 assets, 1256 trading days & 2021-06-09 to 2026-06-09 \\
+S\&P 500 & \texttt{data/scale\_experiment/sp500} & 503 assets, 1256 trading days & 2021-06-09 to 2026-06-09 \\
+\bottomrule
+\end{longtable}
+
+Available panels:
+\begin{itemize}[leftmargin=*]
+  \item historical-volatility or realized-volatility target panel \(v_{i,t}\);
+  \item implied-volatility panel \(x_{i,t}\);
+  \item daily return panel \(r_{i,t}\), currently used to estimate the GLASSO graph.
+\end{itemize}
+
+One gap remains: close-price panels are not stored as first-class research inputs in the current repository. Returns exist, but the plan should fetch and save adjusted close panels so that the return construction is auditable:
+\[
+r_{i,t}=\log(P^{adj}_{i,t})-\log(P^{adj}_{i,t-1}).
+\]
+Close prices should not be used directly as model predictors in the main specification because price levels are nonstationary and not part of the Zhang HAR/GHAR/GNNHAR volatility setup. They are required for audit, return reconstruction, corporate-action checks, and robustness documentation.
+
+\section{Data Design}
+
+For each universe \(U_N\), build a synchronized panel with common dates and common tickers:
+\[
+\mathcal{D}_N=\{P^{adj}_{i,t}, r_{i,t}, v_{i,t}, x_{i,t}: i\in U_N, t=1,\ldots,T_N\}.
+\]
+
+The preferred target is the existing historical-volatility close-to-close 30-day panel when using the VolVue S\&P data. In the manuscript, this should be described carefully as the volatility target \(v_{i,t}\). It should not be overstated as high-frequency realized variance unless a true intraday realized-variance panel is later added.
+
+The minimum data cleaning rules are:
+\begin{itemize}[leftmargin=*]
+  \item align close, return, historical-volatility, and IV panels by date and ticker;
+  \item require at least 98 percent coverage in the main specification;
+  \item fill short internal gaps only, for example with time interpolation capped at five trading days;
+  \item winsorize or flag extreme volatility observations before final reporting;
+  \item keep raw downloaded close prices, cleaned close prices, returns, volatility panels, and manifests.
+\end{itemize}
+
+Recommended output layout:
+\begin{verbatim}
+data/research_panels/dow30/
+data/research_panels/sp100/
+data/research_panels/sp500/
+\end{verbatim}
+Each folder should contain \texttt{adjusted\_close.csv}, \texttt{daily\_returns.csv}, \texttt{merged\_rv\_data\_filled.csv}, \texttt{merged\_iv\_data\_filled.csv}, \texttt{tickers.txt}, and \texttt{panel\_manifest.json}.
+
+\section{Zhang-Style Feature Construction}
+
+The base HAR feature vector for stock \(i\) at forecast date \(t\) is
+\[
+H^{RV}_{i,t-1}
+=
+\left(
+v_{i,t-1},
+\frac{1}{5}\sum_{\ell=1}^{5}v_{i,t-\ell},
+\frac{1}{22}\sum_{\ell=1}^{22}v_{i,t-\ell}
+\right).
+\]
+
+The IV extension uses the same daily, weekly, and monthly lag structure:
+\[
+H^{IV}_{i,t-1}
+=
+\left(
+x_{i,t-1},
+\frac{1}{5}\sum_{\ell=1}^{5}x_{i,t-\ell},
+\frac{1}{22}\sum_{\ell=1}^{22}x_{i,t-\ell}
+\right).
+\]
+
+The forecasting target is \(v_{i,t}\). The main model input for IV models is either
+\[
+X_{i,t-1}=H^{RV}_{i,t-1}
+\]
+or
+\[
+X^{IV}_{i,t-1}=\left[H^{RV}_{i,t-1},H^{IV}_{i,t-1}\right].
+\]
+
+\section{Graph Construction}
+
+Following Zhang's setup, graph structure should come from the return panel, not from the volatility target. For each rolling forecast origin, estimate a graph from the training-window return matrix:
+\[
+R_t=(r_{1,t},\ldots,r_{N,t}).
+\]
+
+The main graph is the nonzero pattern of a GLASSO precision matrix:
+\[
+\widehat{\Theta}
+=
+\arg\max_{\Theta \succ 0}
+\left\{
+\log\det(\Theta)-\operatorname{tr}(\widehat{\Sigma}\Theta)-\lambda\|\Theta\|_1
+\right\}.
+\]
+The adjacency matrix \(W\) is constructed from off-diagonal nonzero entries of \(\widehat{\Theta}\), symmetrized, and normalized.
+
+Required graph robustness checks:
+\begin{itemize}[leftmargin=*]
+  \item GLASSO with cross-validated \(\lambda\);
+  \item fixed-\(\lambda\) GLASSO for reproducibility;
+  \item correlation graph fallback for numerical failures;
+  \item density-matched random graph placebo;
+  \item optional degree cap for S\&P 500 if the graph is too dense.
+\end{itemize}
+
+\section{Model Grid}
+
+Every universe should be run with the same model family.
+
+\begin{longtable}{lll}
+\toprule
+Group & Models & Main purpose \\
+\midrule
+\endhead
+No graph, no IV & HAR & baseline volatility autoregression \\
+Linear graph & GHAR & graph spillover gain beyond HAR \\
+Nonlinear graph & GNNHAR1L, GNNHAR2L, GNNHAR3L, GNNHAR4L, GNNHAR5L & nonlinear and multi-hop graph gain \\
+IV baseline & HAR-IV & option-market information gain without graph \\
+Linear graph with IV & GHAR-IV & graph plus IV interaction in a linear model \\
+GNN graph with IV & GNNHAR1L-IV through GNNHAR5L-IV & main extension \\
+Fake-IV placebo & HAR-fakeIV, GHAR-fakeIV, GNNHARkL-fakeIV & parameter-expansion control \\
+Graph placebo & GHAR-random, GNNHARkL-random & graph-structure control \\
+\bottomrule
+\end{longtable}
+
+The current rolling pipeline already parses layer counts from model names like \texttt{GNNHAR4L}; therefore, 4L and 5L should be implemented through the newer Zhang-style pipeline rather than the older \texttt{src/gnnhar/models.py}, which only hard-codes 1L, 2L, and 3L.
+
+\section{Linear Model Specifications}
+
+The HAR model is
+\[
+v_{i,t}=\alpha_i+\beta_i^\top H^{RV}_{i,t-1}+\varepsilon_{i,t}.
+\]
+
+The GHAR model adds graph-aggregated volatility features:
+\[
+v_{i,t}
+=
+\alpha_i+\beta_i^\top H^{RV}_{i,t-1}
++\gamma_i^\top (W H^{RV}_{t-1})_i
++\varepsilon_{i,t}.
+\]
+
+The HAR-IV model is
+\[
+v_{i,t}
+=
+\alpha_i+\beta_i^\top H^{RV}_{i,t-1}
++\delta_i^\top H^{IV}_{i,t-1}
++\varepsilon_{i,t}.
+\]
+
+The GHAR-IV model is
+\[
+v_{i,t}
+=
+\alpha_i+\beta_i^\top H^{RV}_{i,t-1}
++\gamma_i^\top (W H^{RV}_{t-1})_i
++\delta_i^\top H^{IV}_{i,t-1}
++\eta_i^\top (W H^{IV}_{t-1})_i
++\varepsilon_{i,t}.
+\]
+
+As a robustness check, GHAR can also include higher graph powers \(W^2\) and \(W^3\), but the main Zhang-aligned comparison should keep GHAR as the linear graph baseline and interpret GNNHAR layers as the nonlinear multi-hop extension.
+
+\section{GNNHAR Specifications}
+
+The GNNHAR input at each date is a node-feature tensor. Without IV:
+\[
+X_{t-1}\in\mathbb{R}^{N\times 3}.
+\]
+With IV:
+\[
+X^{IV}_{t-1}\in\mathbb{R}^{N\times 6}.
+\]
+
+A \(k\)-layer GNNHAR model applies graph propagation and nonlinear transformations:
+\[
+Z^{(0)}=X_{t-1},
+\]
+\[
+Z^{(\ell)}=\sigma\left(A Z^{(\ell-1)} B_{\ell}+Z^{(\ell-1)} C_{\ell}\right),
+\quad \ell=1,\ldots,k,
+\]
+followed by a node-level forecast head producing \(\widehat{v}_{i,t}\).
+
+The research grid will run \(k=1,2,3,4,5\). The 4L and 5L models are important for the scale hypothesis, but they should be interpreted carefully because deeper graph models can oversmooth and become unstable, especially for S\&P 500 and QLIKE training.
+
+\section{Fake-IV and Placebo Design}
+
+Fake IV should preserve the scale and cross-sectional shape of IV while breaking predictive timing. The default placebo is date permutation:
+\[
+\widetilde{H}^{IV}_{i,t}=H^{IV}_{i,\pi(t)}.
+\]
+
+The IV contribution can then be decomposed as:
+\[
+\text{total IV gain}=L(m)-L(m\text{-}IV),
+\]
+\[
+\text{parameter gain}=L(m)-L(m\text{-}fakeIV),
+\]
+\[
+\text{genuine IV information gain}=L(m\text{-}fakeIV)-L(m\text{-}IV).
+\]
+
+This decomposition is required for HAR, GHAR, and the best-performing GNNHAR depth.
+
+\section{Rolling Forecast Protocol}
+
+The main experiment should follow Zhang's rolling forecast structure:
+\begin{itemize}[leftmargin=*]
+  \item use up to 1000 prior observations for estimation;
+  \item reserve the latest 22 pre-origin observations for validation in neural models;
+  \item forecast the next 22 trading days as one block;
+  \item move the forecast origin forward by 22 trading days;
+  \item recompute GLASSO using only pre-origin returns for every block;
+  \item never use future returns, future IV, or future volatility in graph construction or features.
+\end{itemize}
+
+For local smoke tests, run only one or two blocks. For final Colab runs, use all feasible blocks after the first origin. If runtime is too high for S\&P 500, use a staged final run: first MSE-trained models for all depths, then QLIKE-trained models for selected depths.
+
+\section{Evaluation}
+
+Each model should be evaluated out of sample with:
+\[
+MSE=\frac{1}{|\mathcal{T}|N}\sum_{t,i}(v_{i,t}-\widehat{v}_{i,t})^2,
+\]
+\[
+QLIKE=\frac{1}{|\mathcal{T}|N}\sum_{t,i}
+\left(
+\log(\widehat{v}_{i,t})
++\frac{v_{i,t}}{\widehat{v}_{i,t}}
+\right).
+\]
+
+The report should distinguish estimation loss from evaluation loss. A model trained under MSE should still be evaluated with both MSE and QLIKE.
+
+Required tables:
+\begin{itemize}[leftmargin=*]
+  \item model loss table by universe, model, training criterion, MSE, and QLIKE;
+  \item loss ratio table relative to HAR and relative to HAR-IV;
+  \item MCS table at the 5 percent level;
+  \item Diebold-Mariano pairwise comparison table;
+  \item real-IV versus fake-IV decomposition table;
+  \item regime-split table for calm and volatile periods;
+  \item graph audit table with edge count, density, GLASSO alpha, and fallback flags.
+\end{itemize}
+
+Required figures:
+\begin{itemize}[leftmargin=*]
+  \item GLASSO adjacency heatmaps for each universe;
+  \item loss-ratio bar charts across universes;
+  \item forecast error boxplots;
+  \item IV decomposition chart;
+  \item GNN depth curve for 1L through 5L;
+  \item graph density and fallback diagnostics.
+\end{itemize}
+
+\section{Statistical Tests}
+
+Run MCS at the 5 percent level separately for each universe and evaluation loss. Run DM tests for the following pairs:
+\begin{itemize}[leftmargin=*]
+  \item HAR versus GHAR;
+  \item GHAR versus each GNNHAR depth;
+  \item HAR-IV versus GHAR-IV;
+  \item GHAR-IV versus each GNNHAR-IV depth;
+  \item each real-IV model versus its fake-IV counterpart;
+  \item GNNHAR1L-IV versus GNNHAR2L-IV, and adjacent depth comparisons through 5L.
+\end{itemize}
+
+Because forecasts are block-based and cross-sectional, standard errors should be reported with care. At minimum, keep ticker-date loss records so that block bootstrap or date-clustered variants can be added.
+
+\section{Colab Execution Plan}
+
+No full Colab run should begin until the local data audit and smoke tests pass.
+
+\subsection*{Stage 1: Local audit}
+\begin{enumerate}[leftmargin=*]
+  \item Create or refresh adjusted-close panels for Dow 30, S\&P 100, and S\&P 500.
+  \item Recompute returns from close prices and compare to existing return panels.
+  \item Build \texttt{panel\_manifest.json} for each universe.
+  \item Verify ticker counts, date ranges, missingness, and units.
+\end{enumerate}
+
+\subsection*{Stage 2: Local smoke tests}
+\begin{enumerate}[leftmargin=*]
+  \item Run Dow 30 with HAR, GHAR, HAR-IV, GHAR-IV, GNNHAR1L, and GNNHAR1L-IV for one block.
+  \item Run S\&P 100 with 1L through 5L for one block.
+  \item Run S\&P 500 with HAR/GHAR and one GNN depth for one block.
+  \item Confirm outputs are finite, positive, and written to the expected output folders.
+\end{enumerate}
+
+\subsection*{Stage 3: Colab final runs}
+\begin{enumerate}[leftmargin=*]
+  \item Upload or mount the audited panels in Google Drive.
+  \item Clone the repository in Colab and install requirements.
+  \item Run Dow 30 full rolling experiment.
+  \item Run S\&P 100 full rolling experiment.
+  \item Run S\&P 500 full rolling experiment, starting with MSE training and selected QLIKE training if time permits.
+  \item Save all predictions, losses, graph audits, tables, figures, and logs to Drive.
+\end{enumerate}
+
+\subsection*{Stage 4: Report}
+\begin{enumerate}[leftmargin=*]
+  \item Summarize whether GHAR improves on HAR as \(N\) grows.
+  \item Summarize whether GNNHAR improves on GHAR and which depth is best.
+  \item Summarize whether IV gains are genuine using fake-IV controls.
+  \item Discuss limitations: volatility-target definition, IV source quality, current-constituent bias, graph stability, and deep-GNN oversmoothing.
+\end{enumerate}
+
+\section{Proposed Commands}
+
+The final commands should use the existing Zhang-style rolling pipeline. The exact paths can be adjusted after the audited panels are written.
+
+\begin{verbatim}
+python scripts/analysis/gnnhar_iv_zhang_scale_pipeline.py \
+  --universe-name sp100 \
+  --data-dir data/research_panels/sp100 \
+  --returns-file data/research_panels/sp100/daily_returns.csv \
+  --output-dir outputs/final-zhang-scale/sp100 \
+  --models HAR,GHAR,HAR+IV,GHAR+IV,GNNHAR1L,GNNHAR2L,GNNHAR3L,GNNHAR4L,GNNHAR5L,GNNHAR1L-IV,GNNHAR2L-IV,GNNHAR3L-IV,GNNHAR4L-IV,GNNHAR5L-IV \
+  --lookback 1000 \
+  --window 22 \
+  --valid-len 22 \
+  --graph-method glasso_cv \
+  --loss MSE
+\end{verbatim}
+
+Run analogous commands for \texttt{dow30} and \texttt{sp500}. Add fake-IV and random-graph placebo models after the first full baseline run is verified.
+
+\section{Acceptance Criteria}
+
+The plan is complete only when the final artifact contains:
+\begin{itemize}[leftmargin=*]
+  \item audited data manifests for Dow 30, S\&P 100, and S\&P 500;
+  \item full rolling predictions for all requested model families;
+  \item MSE and QLIKE evaluation for every model;
+  \item MCS and DM statistical comparisons;
+  \item real-IV versus fake-IV decomposition;
+  \item graph diagnostics for every rolling block;
+  \item a final PDF or LaTeX report that clearly separates Zhang's original framework from the IV extension.
+\end{itemize}
+
+\end{document}

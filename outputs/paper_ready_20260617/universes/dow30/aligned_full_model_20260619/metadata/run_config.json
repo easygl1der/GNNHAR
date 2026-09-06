@@ -1,0 +1,324 @@
+{
+  "protocol": "Zhang-style rolling GNNHAR",
+  "universe": "dow30",
+  "created_utc": "2026-06-19T07:14:26.811423+00:00",
+  "n_tickers": 30,
+  "n_dates": 1256,
+  "tickers": [
+    "AAPL",
+    "AMGN",
+    "AMZN",
+    "AXP",
+    "BA",
+    "CAT",
+    "CRM",
+    "CSCO",
+    "CVX",
+    "DIS",
+    "DOW",
+    "GS",
+    "HD",
+    "HON",
+    "IBM",
+    "INTC",
+    "JNJ",
+    "JPM",
+    "KO",
+    "MCD",
+    "MMM",
+    "MRK",
+    "MSFT",
+    "NKE",
+    "PG",
+    "TRV",
+    "UNH",
+    "V",
+    "VZ",
+    "WMT"
+  ],
+  "date_start": "2021-06-09 00:00:00",
+  "date_end": "2026-06-09 00:00:00",
+  "lookback": 1000,
+  "validation_mode": "code_22d",
+  "train_len": 978,
+  "val_len": 22,
+  "window": 22,
+  "n_rolling_origins_total": 11,
+  "n_rolling_origins_run": 11,
+  "max_origins": null,
+  "n_hid": 9,
+  "hidden_grid_reference": [
+    3,
+    6,
+    9,
+    16,
+    32
+  ],
+  "lr": 0.001,
+  "batch_size": 128,
+  "patience": 50,
+  "max_epochs": 5000,
+  "n_ensemble": 1,
+  "ensemble_screen_percentile": 50.0,
+  "models": [
+    {
+      "name": "HAR_M",
+      "is_linear": true,
+      "n_layers": 0,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_M",
+      "is_linear": true,
+      "n_layers": 0,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_Q",
+      "is_linear": false,
+      "n_layers": 0,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GHAR_Q",
+      "is_linear": false,
+      "n_layers": 0,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR1L_M",
+      "is_linear": false,
+      "n_layers": 1,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_Q",
+      "is_linear": false,
+      "n_layers": 1,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR2L_M",
+      "is_linear": false,
+      "n_layers": 2,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_Q",
+      "is_linear": false,
+      "n_layers": 2,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR3L_M",
+      "is_linear": false,
+      "n_layers": 3,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_Q",
+      "is_linear": false,
+      "n_layers": 3,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "HAR_M_IV",
+      "is_linear": true,
+      "n_layers": 0,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GHAR_M_IV",
+      "is_linear": true,
+      "n_layers": 0,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "HAR_Q_IV",
+      "is_linear": false,
+      "n_layers": 0,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GHAR_Q_IV",
+      "is_linear": false,
+      "n_layers": 0,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR1L_M_IV",
+      "is_linear": false,
+      "n_layers": 1,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR1L_Q_IV",
+      "is_linear": false,
+      "n_layers": 1,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR2L_M_IV",
+      "is_linear": false,
+      "n_layers": 2,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR2L_Q_IV",
+      "is_linear": false,
+      "n_layers": 2,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR3L_M_IV",
+      "is_linear": false,
+      "n_layers": 3,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR3L_Q_IV",
+      "is_linear": false,
+      "n_layers": 3,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR4L_M",
+      "is_linear": false,
+      "n_layers": 4,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_Q",
+      "is_linear": false,
+      "n_layers": 4,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR5L_M",
+      "is_linear": false,
+      "n_layers": 5,
+      "use_iv": false,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_Q",
+      "is_linear": false,
+      "n_layers": 5,
+      "use_iv": false,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR4L_M_IV",
+      "is_linear": false,
+      "n_layers": 4,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR4L_Q_IV",
+      "is_linear": false,
+      "n_layers": 4,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    },
+    {
+      "name": "GNNHAR5L_M_IV",
+      "is_linear": false,
+      "n_layers": 5,
+      "use_iv": true,
+      "loss_fn": "MSE"
+    },
+    {
+      "name": "GNNHAR5L_Q_IV",
+      "is_linear": false,
+      "n_layers": 5,
+      "use_iv": true,
+      "loss_fn": "QLIKE"
+    }
+  ],
+  "data_paths": {
+    "data_dir": "/content/drive/MyDrive/GNNHAR_Research/data/dow30",
+    "rv_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_rv_data_filled.csv",
+    "iv_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_iv_data_filled.csv",
+    "ret_path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/daily_returns.csv"
+  },
+  "input_format": "annualized_percent",
+  "data_audit": {
+    "rv": {
+      "path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_rv_data_filled.csv",
+      "shape_raw": [
+        1256,
+        30
+      ],
+      "nulls_raw": 0,
+      "nonpositive_raw": 0,
+      "shape_after_clean": [
+        1256,
+        30
+      ],
+      "nulls_after_clean": 0,
+      "nonpositive_after_clean": 0
+    },
+    "iv": {
+      "path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/merged_iv_data_filled.csv",
+      "shape_raw": [
+        1256,
+        30
+      ],
+      "nulls_raw": 0,
+      "nonpositive_raw": 0,
+      "shape_after_clean": [
+        1256,
+        30
+      ],
+      "nulls_after_clean": 0,
+      "nonpositive_after_clean": 0
+    },
+    "returns": {
+      "path": "/content/drive/MyDrive/GNNHAR_Research/data/dow30/daily_returns.csv",
+      "shape_raw": [
+        1256,
+        30
+      ],
+      "nulls_raw": 0,
+      "nonpositive_raw": null,
+      "shape_after_clean": [
+        1256,
+        30
+      ],
+      "nulls_after_clean": 0,
+      "nonpositive_after_clean": null
+    },
+    "n_common_tickers": 30,
+    "n_common_dates_before_drop": 1256,
+    "rows_dropped_after_alignment": 0,
+    "n_common_dates_after_drop": 1256,
+    "zhang_ffill": true,
+    "rv_iv_input_format": "annualized_percent",
+    "return_input_format": "decimal_return",
+    "rv_iv_output_unit": "daily percent-squared variance",
+    "return_output_unit": "daily percent return"
+  }
+}

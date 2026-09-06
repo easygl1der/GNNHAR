@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Model & \(\rho_M\) & \(\rho_Q\) & \(1-\rho_Q\) \\
+\midrule
+\(\mathrm{HAR}\) & 1.0000 & 1.0000 & 0.00\% \\
+\(\mathrm{GHAR}\) & 0.9626 & 0.9868 & 1.32\% \\
+\(\mathrm{GNNHAR1L}\) & 1.0183 & 1.0304 & -3.04\% \\
+\(\mathrm{GNNHAR2L}\) & 1.0039 & 1.0464 & -4.64\% \\
+\(\mathrm{GNNHAR3L}\) & 1.0575 & 1.0947 & -9.47\% \\
+\(\mathrm{GNNHAR1L}_{Q}\) & 2.3467 & 1.2320 & -23.20\% \\
+\bottomrule
+\end{tabular}
+\caption{Dow30 strict-core loss ratios relative to HAR.  The QLIKE-trained row is only available for the legacy one-layer GNN artifact.}
+\label{tab:dow30-core-loss}
+\end{table}

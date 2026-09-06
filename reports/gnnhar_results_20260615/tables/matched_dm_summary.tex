@@ -1,0 +1,23 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrrl}
+\toprule
+Universe & Question & Comparison & \(L_B/L_A\) & \(1-L_B/L_A\) & DM & \(p\) & Result \\
+\midrule
+Dow30 & graph linearity & HAR vs GHAR & 0.9868 & 1.32\% & 0.4670 & 0.6411 & not significant \\
+Dow30 & nonlinearity & GHAR vs GNNHAR1L & 1.0442 & -4.42\% & -1.5033 & 0.1345 & not significant \\
+Dow30 & nonlinearity with IV & GHAR+IV vs GNNHAR1L-IV & 1.0634 & -6.34\% & -2.1735 & 0.0310 & deteriorates \\
+SP100 scale & graph linearity & HAR vs GHAR & 0.9977 & 0.23\% & 1.2934 & 0.1977 & not significant \\
+SP100 scale & nonlinearity & GHAR vs GNNHAR1L & 1.0184 & -1.84\% & -4.4868 & $<10^{-4}$ & deteriorates \\
+SP100 scale & nonlinearity with IV & GHAR+IV vs GNNHAR1L-IV & 1.1120 & -11.20\% & -13.4857 & 0.0000 & deteriorates \\
+SP500 scale & graph linearity & HAR vs GHAR & 0.9993 & 0.07\% & 0.5480 & 0.5844 & not significant \\
+SP500 scale & nonlinearity & GHAR vs GNNHAR1L & 1.0339 & -3.39\% & -8.9413 & $<10^{-4}$ & deteriorates \\
+SP500 scale & nonlinearity with IV & GHAR+IV vs GNNHAR1L-IV & 1.1459 & -14.59\% & -19.7360 & 0.0000 & deteriorates \\
+\bottomrule
+\end{tabular}
+}
+\caption{Matched QLIKE DM tests in available completed artifacts.  \(B\) is the second model in the comparison; positive \(1-L_B/L_A\) favors \(B\).}
+\label{tab:matched-dm}
+\end{table}

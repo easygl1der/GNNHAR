@@ -18,6 +18,25 @@
 
 这份 draft 仍然是研究历程笔记。好的写法不是把所有内容改成正式论文口吻，而是保留我们如何提出问题、如何跑出结果、如何发现异常、如何一步步定位 `SATS` 和 S&P500 GNNHAR 问题的过程。
 
+### 0.2 审稿意见后的叙述更新：守住本文重心
+
+根据后续审稿式检查和作者讨论，正式 paper draft 的叙述重心需要进一步收紧。本文不应被写成“一个数据口径不够强但勉强做了 GNNHAR 的实验”，而应写成：
+
+> 本文在 Zhang-style HAR / GHAR / GNNHAR 框架下，使用 option-linked volatility proxy 检验 implied volatility 与 graph neural depth 的相对预测价值。当前最稳定的结果不是“GNNHAR 在大图上全面胜出”，而是“IV 是稳定的信息来源，而 graph neural depth 在 QLIKE 和 large-universe setting 下并不稳健”。
+
+这一定位有几个直接写作后果：
+
+- 第一，30-day close-to-close historical volatility proxy 必须如实披露，不能把它写成 Zhang et al. 的高频 intraday RV。正式表述应使用 “daily variance-scale 30-day close-to-close historical-volatility proxy” 或 “proxy-volatility target”，避免让读者误以为我们在做 5-minute realized volatility 的直接复现。
+- 第二，这个 proxy target 不应只被动写成缺陷。它更平滑、更规则，并且与 IV30 的 option horizon 自然对应。也就是说，如果 GNNHAR 在这个更平滑的目标上已经出现 large-universe instability，那么转向更高频、更非正则的 intraday RV 未必会让问题自动消失，反而可能放大训练和 QLIKE loss 的不稳定性。
+- 第三，10-day HV/IV 数据已经是一个自然的 future robustness 方向，但当前 paper-ready 主结果仍是 30-day。因此 draft 里只能写 “10-day target is a sharper future robustness target”，不能写成已经完成的主证据。
+- 第四，S&P500 calendar 不能再写成简单“数据源已经对齐”。实际情况是：Dow30 aligned full-model 和 S&P100 都是 234 dates，2025-07-07 到 2026-06-09；S&P500 是 223 dates，2025-07-14 到 2026-06-01。S&P500 的 223 个日期全部包含在 Dow30/S&P100 的 234-date calendar 内，缺少的是开头 5 个交易日和结尾 6 个交易日。因此正式写法应是 “nested near-calendar comparison” 或 “223-date subset of the 234-date Dow30/S&P100 calendar”，而不是完全不兼容的 calendar。
+- 第五，MCS 小节已经应该同步为 Dow30、S&P100、S&P500 三组。Dow30 234-date MCS 已经补齐；仍需谨慎的是 aligned Dow30 regime diagnostics，而不是 MCS。
+- 第六，Appendix 可以保留 repo paths、artifact paths、Colab / AutoDL / reproducibility notes，但正文必须把核心经济和统计证据前置：IV 的稳定预测价值、S&P500 GNNHAR low-volatility over-prediction、SATS stress case、以及 RQ3 不支持“larger graph automatically improves GNNHAR gain”。
+
+因此后续写 paper 时，最推荐的中心论断是：
+
+> We do not claim that GNNHAR universally dominates HAR. Instead, we show that when the Zhang-style graph-HAR/GNNHAR framework is extended with option-implied volatility and scaled across equity universes, the stable predictive information comes from IV, while nonlinear graph depth is fragile under QLIKE evaluation. This fragility appears even under a smooth 30-day volatility proxy, suggesting that graph neural volatility forecasting requires careful target choice, output scaling, and robustness diagnostics before being treated as a superior financial forecasting tool.
+
 ## 1. Introduction
 
 ### 1.0 Introduction 必须保留的作者论证链
@@ -238,6 +257,8 @@ $$
 
 - 如果 IV 只是重复历史 RV 中已有的信息，那么加入 IV 后的模型不应显著改善；
 - 如果 IV 包含额外 forward-looking information，那么 `HAR_IV`、`GHAR_IV`、`GNNHAR_IV` 应该相对 non-IV 版本更好；
+- 这里尤其要用 S&P500 讲清楚机制：不加入 IV 时，大 universe 的 historical-only 线性图模型几乎不能明显改善 `HAR_M`，而 non-IV GNNHAR 甚至明显变差；加入 IV 后，`HAR_M_IV` / `GHAR_M_IV` 成为最优或并列最优行，说明 IV 中确实包含历史 HAR lag 没有吸收的 forward-looking option-market information；
+- 但也不能把 S&P500 写成 “GNNHAR-IV 已经成功”。更准确的结论是：IV 让 GNNHAR 的信息集更有意义，部分 QLIKE-trained GNNHAR-IV 行相对 non-IV GNNHAR 有改善，例如 S&P500 中 `GNNHAR2L_Q` 的 QLIKE ratio 从约 8.152 降到 7.802，`GNNHAR4L_Q` 从约 9.965 降到 7.808；但这些模型仍远差于 `HAR_M_IV` / `GHAR_M_IV`。因此 IV 改善了 nonlinear graph model 的信息基础，但没有解决当前 S&P500 GNNHAR 的尺度和低波动股票高估问题；
 - 如果更大的图能够更好地利用 cross-sectional option-implied information，那么从 Dow30 到 S&P100 再到 S&P500，IV-augmented GHAR/GNNHAR 相对 HAR 的提升幅度应当进一步扩大；
 - 这正是本文 RQ2 和 RQ3 的核心。
 
@@ -246,6 +267,8 @@ $$
 把上面的动机压缩成本文的问题意识，可以这样理解：Zhang et al. 已经说明，历史 RV 的自身记忆和图上的 volatility spillover 都有预测价值；但他们的框架主要还是从 historical realized information 出发。我们的研究不是简单多加一个变量，而是问：如果把 options market 对未来风险的定价也放进同一套 HAR / GHAR / GNNHAR 框架，模型的预测表现会不会更好？进一步，如果 universe 从 Dow30 扩大到 S&P100、S&P500，图上节点关系更丰富，这种改进会不会被放大？
 
 这里有一个需要提前讲清楚的边界。本文当前不是在复现 Zhang et al. 的数值结果，因为我们的 RV 和 IV 来自 30-day volatility proxy，而不是 Zhang 使用的 LOBSTER 高频 intraday RV。更准确地说，本文是在复刻 Zhang-style modeling and evaluation framework，然后在这个框架下做两个扩展：一个是加入 implied volatility，另一个是把 universe 扩到更大的 S&P500。这一点要在 Introduction 里讲出来，否则读者会误以为后面的表格应该和 Zhang Table 1 逐项数值可比。
+
+但这个边界不能只写成“数据不如 Zhang 强”。30-day close-to-close HV proxy 的确更平滑，并且和 HAR monthly lag、IV30 之间有更强 horizon overlap；这会削弱把结果解释成纯 high-frequency realized-volatility forecasting contribution 的力度。不过从本文重心看，这个平滑目标也提供了一个有意义的 stability test：如果 large-universe GNNHAR 在相对平滑的 proxy-volatility target 上已经出现明显低波动股票高估和 loss instability，那么在更高频、更噪声、更非正则的 intraday RV 目标上，GNNHAR 未必会更稳定。因此正式写法应把本文定位为 Zhang-style proxy-volatility extension，而不是直接 intraday RV replication。
 
 可以设置三个 research questions。这里的重点不是单独重复 Zhang 的原问题，而是把 Zhang 的模型族推广到更大的 universe，并加入 IV 后检验其预测增益：
 
@@ -263,9 +286,9 @@ $$
 
 这里应当用我们已经跑出来的数据写简洁结论：
 
-- Dow30：加入 IV 后，`GNNHAR2L_Q_IV` 是 QLIKE 下最优模型，约比 $HAR_M$ 降低 11.1% QLIKE loss；
+- Dow30：在标准窗口 aligned full-model rerun 中，`GNNHAR2L_Q_IV` 是 QLIKE 下最优模型，QLIKE ratio 约为 0.923，约比 $HAR_M$ 降低 7.7% QLIKE loss；MSE 下 `HAR_M_IV` 最优，MSE ratio 约为 0.959；
 - S&P 100：IV 明显有用，但最优 QLIKE 模型是 `HAR_Q_IV`，多个 IV 模型在 MCS 中接近；
-- S&P 500：正式 AutoDL 结果使用 449 个 ticker，数据源已经对齐；当前结果中最优 QLIKE 模型是 `GHAR_M_IV`，深层 GNN 没有表现出更强的大图优势；
+- S&P 500：正式 AutoDL 结果使用 449 个 ticker；当前 test dates 是 Dow30/S&P100 234-date calendar 的 223-date subset，覆盖 2025-07-14 到 2026-06-01；当前结果中最优 QLIKE 模型是 `GHAR_M_IV`，MSE 下 `HAR_M_IV` 与 `GHAR_M_IV` 显示为并列最优。这个结果应写成两层含义：第一，没有 IV 的 historical-only HAR/GHAR/GNNHAR 在大图里不能提供稳定优势；第二，引入 IV 后，最优模型变成 IV-augmented HAR/GHAR，说明 option-market forward-looking information 是当前最稳定的信息增量。GNNHAR-IV 相比 non-IV GNNHAR 有若干局部改善，但仍没有进入最优集合，因此不能说“带 IV 的 GNNHAR 已经解决 S&P500 问题”；
 - 因此，我们现在的证据不支持“节点越多 GNNHAR 提升越强”的简单结论，更合理的说法是：大图下 GNNHAR 对训练、尺度、层数和正则化更敏感。
 
 这一节需要明确告诉读者后文如何回答三个 RQ：
@@ -441,7 +464,7 @@ $$
 
 当前正式输出中，多跳 GHAR 的覆盖情况如下：
 
-- Dow30：当前 date-aligned wide-window rerun 使用 2021-06-09 到 2026-06-09 的输入面板，并保存了 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 版本。这个 rerun 的 test dates 为 2025-07-07 到 2026-06-09，共 234 个日期，和 S&P100 的当前 out-of-sample window 对齐。旧的 2025-02-21 到 2026-01-23、232-date Dow30 full-model run 只应视为 archived full-model evidence，不再作为当前跨 universe 日期对齐表格的主口径；
+- Dow30：当前已经有两个标准窗口 aligned artifacts。第一，`20260619T071426Z_aligned_full_model` 是 full-model rerun，使用 2021-06-09 到 2026-06-09 的输入面板，test dates 为 2025-07-07 到 2026-06-09，共 234 个日期，包含 HAR/GHAR/GNNHAR1L--5L 及 IV variants，共 28 个预测文件；这是当前 Dow30 主结果口径。第二，`20260618T075711Z_wide_multihop_ghar` 是 multi-hop supplement，只用于 Appendix C 的 $GHAR2H/GHAR3H$ 诊断。旧的 2025-02-21 到 2026-01-23、232-date Dow30 full-model run 只应视为历史对照，不再作为当前跨 universe 日期对齐表格的主口径；
 - S&P100：原 run 保存了 $GHAR2H_M,GHAR3H_M$ 及其 IV 版本；现在已经补充保存了 $GHAR2H_Q,GHAR3H_Q$ 及其 IV 版本，因此 S&P100 Appendix C 可以报告完整的 MSE-trained / QLIKE-trained multi-hop GHAR 诊断；
 - S&P500：保存了 $GHAR2H_M,GHAR3H_M,GHAR2H_Q,GHAR3H_Q$ 及其 IV 版本。
 
@@ -620,13 +643,25 @@ $$
 
 这里要避免一个常见误解：Zhang 并不是建议“用 MSE 训练、用 QLIKE 评估”。他的设计是对同一模型同时估计 $F_M$ 和 $F_Q$，然后在 out-of-sample 中同时报告 MSE forecast loss 和 QLIKE forecast loss。也就是说，estimation criterion 和 forecast loss 是两个概念。Zhang et al. (2024a) 的实证叙述更重视 QLIKE forecast loss，原因是 QLIKE 在 volatility forecast comparison 中更常用，并且 Patton (2011) 的观点支持在 noisy / imperfect volatility proxy 下使用 robust forecast comparison loss。本文应沿用这个口径：主表同时报告 MSE 和 QLIKE，但主结论以 QLIKE 为核心，MSE 作为重要的稳定性和异常诊断指标。
 
-当前实现细节：
+当前实现细节必须按实际 run config 写清楚。这里不是笼统说“following Zhang”，而是说明哪些训练设定来自 Zhang Chao 论文中的 hyperparameter tuning，哪些来自公开代码默认值，哪些是本文实际运行时固定下来的参数。
 
-- $HAR_M$、$GHAR_M$ 及其 IV 版本用 OLS；
-- $HAR_Q$、$GHAR_Q$、GNNHAR 及其 IV 版本用 Adam optimization；
-- $n_{\mathrm{hid}}=9$，这是 Zhang Appendix D grid search 得到的核心设定；
-- learning rate 为 $10^{-3}$；
-- 当前不同 universe 的 batch size / early stopping / ensemble 设置要按 run config 如实报告，不能在正文里写成完全等同 Zhang，如果实际 run config 不一致。
+Zhang Chao 论文和公开代码给出的信息并不完全是同一种证据。论文 Section 4.1 采用 rolling sample，每月重新估计模型，过去 1000 个交易日作为滚动窗口；主设定中约前三年用于 training，最近一年用于 validation，下一月作为 out-of-sample test。论文 Appendix D 明确做了 hidden dimension 的 validation grid search，候选集合为 $\{3,6,9,16,32\}$，并发现 $n_{\mathrm{hid}}=9$ 在 one-layer GNNHAR 的 validation MSE 和 QLIKE 上表现最好；多层 GNNHAR 随后沿用同一个 hidden dimension。Appendix D 同时说明 Adam learning rate 设为 $10^{-3}$，batch size 设为 32，并在 validation loss 出现 overfitting 信号时 early stop。因此，$n_{\mathrm{hid}}=9$ 不是任意预先给定的数，而是 Zhang 的 validation tuning 结果；learning rate 和 batch size 更像 Zhang 的实验设定，其中 learning rate 与代码默认一致，但 batch size 在论文和公开代码之间不同。
+
+Zhang Chao 的公开 `GNNHAR.py` 默认值为 `valid_len=22`、`n_epochs=5000`、`n_hid=9`、`batch_size=128`、`lr=1e-3`、`numNN=1`，optimizer 为 Adam，并带有 validation loss based checkpointing。公开代码中的 `valid_len=22` 对应约一个月 validation window，更接近 Zhang Table 4 的 smaller-validation robustness design，而不是论文主设定中的约一年 validation window。本文正式 runs 为了在 Dow30、S&P100 和 S&P500 上保持可比，并控制计算成本，没有为每个 universe 重新做 Appendix-D-style hyperparameter search，而是固定使用 Zhang 选出的 $n_{\mathrm{hid}}=9$ 和公开代码默认的 long-training setting。
+
+本文实际使用的训练参数如下。`lookback=1000` 表示每个 rolling origin 最多使用过去 1000 个交易日；其中最后 `valid_len=22` 个交易日作为 validation set，前面的 978 个交易日作为 training set。`window=22` 和 `block_stride=22` 表示每个 rolling block 预测接下来约一个月的 one-day-ahead targets，然后滚动到下一个 block。所有 neural / torch-estimated models 使用 Adam，learning rate 固定为 $10^{-3}$，batch size 固定为 128，maximum epochs 固定为 5000，single-network ensemble 即 `numNN=1` / `n_ensemble=1`。如果多个 ensemble members 存在，screening percentile 会按照 Zhang 代码逻辑取 validation loss 的下 50%; 但本文正式 runs 中实际是 single-network setting，所以这一筛选参数不会改变 ensemble composition。
+
+| Universe | Rolling lookback | Train / validation per block | Test window / stride | Hidden dim | LR | Batch size | Max epochs | Ensemble | Model depths actually reported |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Dow30 | 1000 | 978 / 22 | 22 / 22 | 9 | $10^{-3}$ | 128 | 5000 | 1 | GNNHAR1L--3L; no main GHAR2H/GHAR3H rows |
+| S&P100 | 1000 | 978 / 22 | 22 / 22 | 9 | $10^{-3}$ | 128 | 5000 | 1 | GNNHAR1L--5L; GHAR2H/GHAR3H available as supplement rows |
+| S&P500 | 1000 | 978 / 22 | 22 / 22 | 9 | $10^{-3}$ | 128 | 5000 | 1 | GNNHAR1L--5L; GHAR2H/GHAR3H available for MSE/QLIKE and IV/non-IV |
+
+Linear $HAR_M$、$GHAR_M$ 及其 IV 版本用 OLS 估计；QLIKE-trained linear rows, namely $HAR_Q$、$GHAR_Q$ and their IV versions, use the same torch/Adam optimization path as the QLIKE neural models, because QLIKE is not an ordinary least-squares criterion. GNNHAR rows, with or without IV, are always trained by Adam under the selected EC. This distinction is important: MSE-trained linear models are closed-form OLS, while QLIKE-trained linear models and all neural models are numerical optimization results.
+
+因此，本文的参数设定应被表述为 Zhang-code aligned and Zhang-tuning-informed，而不是“完整复现 Zhang hyperparameter optimization”。与 Zhang 直接一致或继承的设定包括：rolling lookback 1000、monthly test window 22、learning rate $10^{-3}$、hidden dimension $9$、validation-based model selection、以及 MSE / QLIKE 两类 estimation criteria。与 Zhang 论文主设定不同或需要披露的地方包括：本文使用 one-month validation window 22 而不是主设定中约 one-year validation window；batch size 使用公开代码默认值 128 而不是 Appendix D 中写的 32；正式结果使用 single-network setting，而 Zhang 文中提到 ensemble averaging 可以缓解 stochastic optimizer 的不稳定性；并且本文没有在每个 universe 和 IV-augmented feature set 上重新做 hidden dimension、learning rate、batch size、epoch budget、ensemble size 的完整 grid search。
+
+这个选择是可以解释的：本文的核心比较需要 Dow30、S&P100 和 S&P500 在同一套训练规则下可比，而且 S&P500 的完整 grid search 计算成本很高。固定 Zhang-selected $n_{\mathrm{hid}}=9$ 可以避免在每个 universe 上为 GNNHAR 额外调参后造成不公平比较。但这也留下一个需要在 robustness section 明确提出的问题：当 predictor set 从 RV 扩展到 RV+IV、universe 从 Dow30 扩大到 S&P500 时，Zhang 在原始 RV setting 中选出的 $n_{\mathrm{hid}}=9$ 是否仍然最优？更严格的后续版本应设计 Appendix-D-style robustness table，在每个 universe 上至少比较 hidden dimension $\{3,6,9,16,32\}$，并可进一步比较 batch size $\{32,128\}$、learning rate $\{10^{-3},3\times10^{-4}\}$、one-month vs one-year validation window、以及 single-network vs ensemble averaging。当前正文结论应因此避免把 GNNHAR 的弱表现完全解释为模型本身无效；一部分差异可能来自 fixed hyperparameter protocol。
 
 ### 3.6 Forecast evaluation, MCS, and DM tests
 
@@ -649,12 +684,14 @@ $R_m<1$ 表示模型优于 $HAR_M$，$R_m>1$ 表示模型差于 $HAR_M$。表格
 
 特别要注意表格口径。正文主表中的 ratio 必须统一相对 $HAR_M$，这与 Zhang Table 1 的设置一致。如果在附录或诊断表中按 QLIKE-trained panel 报告相对 $HAR_Q$ 的 ratio，需要明确标注分母。当前 S&P500 中 $HAR_Q$ 的 MSE 极大，因此某些 QLIKE-trained 模型的 `MSE ratio vs HAR_Q` 会看起来很低，但这并不代表它们相对 $HAR_M$ 的 MSE 表现好。正文不能混用这两种分母。
 
-MCS 用于从多个候选模型中识别 statistically indistinguishable best model set（Hansen et al., 2011）。DM test 用于 pairwise forecast comparison（Diebold and Mariano, 1995）。本文 DM 不只做 vs HAR，还要仿照 Zhang et al. (2024a) 做：
+MCS 用于从多个候选模型中识别 statistically indistinguishable best model set（Hansen et al., 2011）。DM test 用于 pairwise forecast comparison（Diebold and Mariano, 1995）。本文 DM 不只做 vs HAR，还要仿照 Zhang et al. (2024a) 做两层比较：
 
-- GHAR vs GHAR2H / GHAR3H；
-- GNNHAR1L vs GNNHAR2L / 3L / 4L / 5L；
-- IV 版本同样做一组；
-- 必要时再放 GHAR vs GNNHAR1L，回答 nonlinear spillover 是否超过 linear graph aggregation。
+- 正文主比较：每个模型 vs $HAR_M$，用于回答 graph / IV extension 是否相对 HAR baseline 改善预测；
+- 正文或主附录比较：GHAR vs GHAR2H / GHAR3H，用于检验 linear multi-hop neighbors 是否提供额外信息；
+- 正文或主附录比较：GNNHAR1L vs GNNHAR2L / 3L / 4L / 5L，用于检验增加 GNN depth 是否带来显著增益或过度平滑；
+- 附录系统比较：GHAR vs GNNHAR1L / 2L / 3L / 4L / 5L，用于回答 nonlinear graph aggregation 是否显著超过 linear graph aggregation；
+- IV 版本同样做一组，即 $GHAR^{IV}$ vs $GNNHAR1L^{IV}$--$GNNHAR5L^{IV}$，以及 $GNNHAR1L^{IV}$ vs deeper IV-GNNHAR versions；
+- 如果篇幅有限，正文只报告核心结论，完整 DM statistics、$p$-values 和 loss differential 放入 Appendix C 或 Appendix D 的 pairwise DM table。
 
 ## 4. Empirical Analysis
 
@@ -672,7 +709,11 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 | S&P100 | 101 | 91 | 234 | 2025-07-07 to 2026-06-09 |
 | S&P500 | 503 | 449 | 223 | 2025-07-14 to 2026-06-01 |
 
-补充说明：这张表现在采用当前日期对齐后的 sample 口径。Dow30 的 aligned rerun 使用 `GNNHAR_Research/data/dow30` 下 2021-06-09 到 2026-06-09 的 RV、IV、returns 面板，生成 2025-07-07 到 2026-06-09 的 234 个 out-of-sample test dates，truth shape 为 $234\times30$。需要单独说明的是，这个 Dow30 aligned rerun 当前覆盖的是 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 预测；旧的 232-date Dow30 full-model run 可以作为历史对照或 archived evidence，但不能再写成当前 out-of-sample 日期口径。
+补充说明：这张表现在采用当前 paper-ready 结果目录中的 sample 口径。`Input raw ticker count` 不是模型实际使用的股票数量，而是初始 universe 列表或指数成分股清单中的 ticker 数量。Dow30 原始清单包含 30 个成分股；S&P100 原始清单为 101 个 ticker，主要是因为指数成分股口径中可能同时包含 share-class tickers 或同一公司不同交易代码；S&P500 原始清单为 503 个 ticker，同样反映了指数清单中的多 share-class 代码，而不是 500 个唯一公司实体。`Model ticker count` 是经过清理后真正进入模型的节点数量。清理步骤包括：统一 ticker 格式；对齐 RV、IV 和 returns 三张面板；剔除 RV / IV / returns 覆盖率不足、缺失日期过多、无法通过 rolling-window 特征构造、或无法进入 GLASSO graph input 的股票。因此 S&P100 从 101 降到 91，S&P500 从 503 降到 449。Dow30 当前样本中 30 个 ticker 均通过覆盖率和面板交集检查，所以 model ticker count 仍为 30。
+
+`Saved test dates` 和 `Current out-of-sample dates` 也需要解释清楚。当前三个 universe 并不是从同一个完全同步的数据快照、同一个 notebook run、同一个最终日期一次性生成的。Dow30 的 aligned rerun 使用 `GNNHAR_Research/data/dow30` 下 2021-06-09 到 2026-06-09 的 RV、IV、returns 面板，生成 2025-07-07 到 2026-06-09 的 234 个 out-of-sample test dates，truth shape 为 $234\times30$。S&P100 当前 paper-ready run 也是 234 个 test dates，日期为 2025-07-07 到 2026-06-09。S&P500 当前正式 run 来自 AutoDL / scale-experiment source，经过 0.99 coverage threshold 和 449 个 ticker 的 common-panel 筛选后，保存的 test period 为 2025-07-14 到 2026-06-01，共 223 个 test dates。也就是说，S&P500 的 current out-of-sample window 与 Dow30 / S&P100 不是完全同长，但它不是完全不同的日期口径：S&P500 的 223 个 dates 是 Dow30 / S&P100 234-date calendar 的子集，缺少的是最前面的 5 个 trading days 和最后面的 6 个 trading days。
+
+这种不完全同长主要来自工程和数据口径，而不是模型定义本身：不同 universe 的原始数据快照更新日期不同，S&P500 的 coverage filtering 更严格，rolling origin 需要先满足 1000-day lookback 和 22-day validation window，且每 22 个 trading days 生成一个 test block；如果最后一个 block 的可用 truth / prediction 文件没有覆盖到 2026-06-09，就会出现 S&P500 结束日期早于 Dow30 / S&P100 的情况。也不能排除早期 Colab / AutoDL pipeline 中存在小的日期截断或 source synchronization issue。因此，正文中必须把这个日期不完全同长作为 sample limitation 披露，但语气不应过重：三个 universe 的结果可以作为 Zhang-style nested-calendar large-universe comparison，严格的 cross-universe equality of test calendar 则需要后续用同一份数据快照和同一套 rolling-origin generator 重新跑一次。需要单独说明的是，Dow30 aligned full-model rerun 当前已经覆盖 HAR/GHAR/GNNHAR1L--5L 及 IV variants，共 28 个模型；Dow30 aligned multi-hop supplement 另外覆盖 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 预测。旧的 232-date Dow30 full-model run 可以作为历史对照，但不能再写成当前 out-of-sample 日期口径。
 
 数据来源要写清楚：
 
@@ -687,7 +728,7 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 - Zhang 使用 LOBSTER 高频 intraday data 构造 5-minute RV，样本为 2007-07-01 到 2021-06-30；
 - 我们使用的是近五年 30-day historical volatility / 30-day implied volatility proxy，不是 LOBSTER 高频 RV；
 - Dow30 当前 aligned rerun 的 raw input span 已更新为 2021-06-09 到 2026-06-09，和 S&P100 / S&P500 scale data 的 raw span 对齐；
-- 旧 Dow30 232-date full-model run 的 input span 是 2021-01-27 到 2026-01-23，因此若引用旧 full-model 表，需要明确标注它不是当前日期对齐后的主 sample；
+- 旧 Dow30 232-date full-model run 的 input span 是 2021-01-27 到 2026-01-23；现在主样本应改用 `20260619T071426Z_aligned_full_model`，若引用旧表只能明确标注为历史对照；
 - S&P500 的 397 vs 449 问题要写清楚：397 是 Google Drive upload 旧 complete-case panel，不是 AutoDL formal run source；正式 S&P500 分析使用 `data/scale_experiment/sp500`，覆盖筛选后得到 449 个 model tickers。
 
 建议 footnote：
@@ -716,6 +757,12 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 这里要放三个完整表格，每个 universe 一个表格，而且都用 LaTeX `[H]` 固定位置。每个表格都必须包含当前 universe 下全部模型，不只放局部对比。
 
 这一节是整篇 empirical analysis 的核心。它不是为了简单报告哪个模型排第一，而是把三个 RQ 放在同一套表格里看。对每个 universe，我们都先看 non-IV panel 中 GHAR / GNNHAR 是否相对 $HAR_M$ 改善，这是 RQ1；再看同一模型加入 IV 后是否进一步降低 MSE 或 QLIKE，这是 RQ2；最后把 Dow30、S&P100、S&P500 的 improvement 放在一起比较，看 $1-R_{m,u}$ 是否随着节点规模扩大而变大，这是 RQ3。
+
+在进入主表前，需要先交代 forecast loss 的解释边界。资产波动率和金融风险本身都是 latent concepts：风险并不是一个可以在现实世界中直接观测、并由某个绝对标准完全标定的物理量。Realized volatility 只是用价格路径事后构造出来的 proxy，implied volatility 也只是从 option prices 中反推出的 market-implied proxy。本文使用 MSE 和 QLIKE 评估预测，并不是说 $v_{i,t}$ 就是真实风险本身，也不是说最小化 MSE 或 QLIKE 就等于最大化风险管理或交易策略的最终收益。更准确地说，本文把 volatility forecasting 当作一个 Zhang-style statistical forecasting problem：给定 VolVue / AlphaQuery-style 数据中已经计算好的 realized-volatility proxy 和 implied-volatility proxy，检验不同模型的 one-day-ahead forecasts 是否更接近下一期 realized-volatility proxy。
+
+因此，out-of-sample MSE / QLIKE comparison 只能回答一个有限但可操作的问题：在本文的数据定义下，哪个模型更好地预测了下一期 realized-volatility proxy。它不能直接回答“哪个模型最真实地度量了风险”，也不能直接回答“用哪个模型做交易或风控会获得最高收益”。从更高层次看，风险预测的最终价值应该由使用该风险度量后的经济结果来检验，例如 portfolio allocation、hedging、option trading、risk budgeting、VaR / expected shortfall backtesting 或 drawdown control。本文当前还没有把 forecasts 放入这些 decision-based tests 中，所以主表结果应理解为 proxy-based forecast accuracy evidence，而不是 final economic utility evidence。
+
+这也是为什么本文同时保留 MSE 和 QLIKE。MSE 把 realized proxy 和 forecast 之间的平方误差当作评价对象，容易受到极端 realized-volatility observations 影响；QLIKE 在 volatility forecast comparison 文献中常用，并且对 noisy volatility proxy 有一定理论吸引力，但它仍然是在给定 proxy 后定义的 statistical loss。两者都是有用的 benchmark，却都不是“真实风险”的最终标尺。正式正文中要把这个边界写清楚，避免读者把 lower QLIKE / lower MSE 误读为模型已经完整捕捉了金融风险本身。
 
 给第一次读这篇 draft 的人，需要先解释主表的读法。每一行是一个模型，每一列不是单独的统计量，而是在回答不同问题：
 
@@ -747,7 +794,7 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 
 `GHAR2H` / `GHAR3H` 不放入正文主表，避免主线过于复杂。它们放在 Appendix C 中作为 Zhang Appendix E-style 的 linear multi-hop diagnostic。当前保存预测的实际情况是：
 
-- Dow30：当前 aligned rerun 已保存 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 版本。它的 test window 是 2025-07-07 到 2026-06-09，共 234 个日期，应作为 Appendix C 的 Dow30 aligned multi-hop table 报告；旧 232-date full-model rows 不应混入当前 aligned sample table；
+- Dow30：当前 aligned full-model rerun 已保存 HAR/GHAR/GNNHAR1L--5L 及 IV variants，共 28 个模型，应作为正文 Dow30 主表；另一个 aligned multi-hop supplement 已保存 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 版本，应作为 Appendix C 的 Dow30 aligned multi-hop table 报告；旧 232-date full-model rows 不应混入当前 aligned sample table；
 - S&P100：现在可以完整报告 $GHAR2H_M,GHAR3H_M,GHAR2H_Q,GHAR3H_Q$ 及其 IV 版本；新增 QLIKE-trained multi-hop GHAR 预测已和 SP100 的 $234\times91$ truth array 对齐；
 - S&P500：可以完整放 $GHAR2H/GHAR3H$ 的 MSE、QLIKE、IV 和 non-IV 版本。
 
@@ -767,7 +814,7 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 
 当前可写的数据驱动结论：
 
-- Dow30：$GNNHAR2L_Q^{IV}$ 是当前 QLIKE 最优，QLIKE ratio 约 0.889，相对 $HAR_M$ 约 11.1% improvement；MSE 下 $GHAR_M^{IV}$ 最优，MSE ratio 约 0.868；
+- Dow30：$GNNHAR2L_Q^{IV}$ 是标准窗口 aligned full-model rerun 的 QLIKE 最优，QLIKE ratio 约 0.923，相对 $HAR_M$ 约 7.7% improvement；MSE 下 $HAR_M^{IV}$ 最优，MSE ratio 约 0.959；
 - S&P100：$HAR_Q^{IV}$ 是当前 QLIKE 最优，QLIKE ratio 约 0.933；MSE 下 $HAR_M^{IV}$ 最优，MSE ratio 约 0.965；IV 的贡献比 GNN depth 更稳定；
 - S&P500：正式 AutoDL 结果使用 449 tickers；$GHAR_M^{IV}$ 是当前 QLIKE 最优，QLIKE ratio 约 0.973；MSE 下 $HAR_M^{IV}$ 最优，MSE ratio 约 0.966；深层 GNN 在大图上没有自动获得优势。
 
@@ -784,32 +831,40 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 
 下面三张表是可以直接进入 Section 4 的当前主结果表。表中所有 MSE ratio 和 QLIKE ratio 都以同一 universe 的 $HAR_M$ 为分母；gain 定义为 $1-\text{ratio}$。`GHAR2H` / `GHAR3H` 不放入正文主表，留到 Appendix C。当前 `loss_table.csv` 尚未合并 MCS membership，因此正文正式排版时若要加入 MCS-MSE / MCS-QL 星号，需要从 MCS 输出表再合并一次。
 
-**Table 4.1. Dow30 out-of-sample loss ratios.** The current date-aligned Dow30 sample uses 30 model tickers and 234 saved one-day-ahead test dates from 2025-07-07 to 2026-06-09. The archived 232-date Dow30 full-model run from 2025-02-21 to 2026-01-23 should not be described as the current out-of-sample date range. If the table reports full HAR/GHAR/GNNHAR rows from the archived run, its caption must explicitly label them as archived full-model evidence; if the table reports the aligned rerun, it should focus on the available $GHAR2H/GHAR3H$ rows and their IV/non-IV variants.
+**Table 4.1. Dow30 out-of-sample loss ratios.** The current date-aligned Dow30 full-model sample uses 30 model tickers and 234 saved one-day-ahead test dates from 2025-07-07 to 2026-06-09. It is the `20260619T071426Z_aligned_full_model` run, with 28 prediction files covering HAR/GHAR/GNNHAR1L--5L and IV variants. ~~The archived 232-date Dow30 full-model run from 2025-02-21 to 2026-01-23 should be used as the current full-model evidence.~~ The archived 232-date run should now be treated only as historical evidence; the aligned rerun is the Dow30 main table source.
 
-读这张 Dow30 表时，重点是小图环境下 graph / GNN / IV 是否能带来比较明显的 improvement。当前结果中，QLIKE 最优模型是 $GNNHAR2L_Q^{IV}$，MSE 最优模型是 $GHAR_M^{IV}$。这说明在 Dow30 这个较小 universe 中，图结构、非线性层和 IV 至少在部分 criterion 下确实可以相对 $HAR_M$ 提供较明显增益。
+读这张 Dow30 表时，重点是小图环境下 graph / GNN / IV 是否能带来比较明显的 improvement。当前标准窗口结果中，QLIKE 最优模型是 $GNNHAR2L_Q^{IV}$，MSE 最优模型是 $HAR_M^{IV}$。这说明在 Dow30 这个较小 universe 中，图结构、非线性层和 IV 至少在部分 criterion 下确实可以相对 $HAR_M$ 提供较明显增益。
 
 | Model | EC | IV | Hop/Layer | MSE ratio | QLIKE ratio | MSE gain | QLIKE gain |
 |---|---|---|---|---:|---:|---:|---:|
 | `HAR_M` | M | no | - | 1.000 | 1.000 | 0.0% | 0.0% |
-| `GHAR_M` | M | no | 1H | 0.927 | 1.140 | 7.3% | -14.0% |
-| `GNNHAR1L_M` | M | no | 1L | 0.945 | 1.007 | 5.5% | -0.7% |
-| `GNNHAR2L_M` | M | no | 2L | 0.983 | 1.222 | 1.7% | -22.2% |
-| `GNNHAR3L_M` | M | no | 3L | 0.982 | 1.058 | 1.8% | -5.8% |
-| `HAR_Q` | Q | no | - | 1.090 | 1.013 | -9.0% | -1.3% |
-| `GHAR_Q` | Q | no | 1H | 0.959 | 1.021 | 4.1% | -2.1% |
-| `GNNHAR1L_Q` | Q | no | 1L | 0.986 | 0.980 | 1.4% | 2.0% |
-| `GNNHAR2L_Q` | Q | no | 2L | 0.967 | 0.957 | 3.3% | 4.3% |
-| `GNNHAR3L_Q` | Q | no | 3L | 0.997 | 0.971 | 0.3% | 2.9% |
-| `HAR_M_IV` | M | yes | - | 0.920 | 1.030 | 8.0% | -3.0% |
-| `GHAR_M_IV` | M | yes | 1H | 0.868 | 1.137 | 13.2% | -13.7% |
-| `GNNHAR1L_M_IV` | M | yes | 1L | 0.935 | 1.076 | 6.5% | -7.6% |
-| `GNNHAR2L_M_IV` | M | yes | 2L | 0.948 | 0.950 | 5.2% | 5.0% |
-| `GNNHAR3L_M_IV` | M | yes | 3L | 0.995 | 1.233 | 0.5% | -23.3% |
-| `HAR_Q_IV` | Q | yes | - | 0.998 | 0.957 | 0.2% | 4.3% |
-| `GHAR_Q_IV` | Q | yes | 1H | 0.908 | 0.909 | 9.2% | 9.1% |
-| `GNNHAR1L_Q_IV` | Q | yes | 1L | 0.924 | 0.914 | 7.6% | 8.6% |
-| `GNNHAR2L_Q_IV` | Q | yes | 2L | 0.892 | 0.889 | 10.8% | 11.1% |
-| `GNNHAR3L_Q_IV` | Q | yes | 3L | 0.916 | 0.912 | 8.4% | 8.8% |
+| `GHAR_M` | M | no | 1H | 1.001 | 0.995 | -0.1% | 0.5% |
+| `GNNHAR1L_M` | M | no | 1L | 1.004 | 1.009 | -0.4% | -0.9% |
+| `GNNHAR2L_M` | M | no | 2L | 1.006 | 1.012 | -0.6% | -1.2% |
+| `GNNHAR3L_M` | M | no | 3L | 1.004 | 1.014 | -0.4% | -1.4% |
+| `GNNHAR4L_M` | M | no | 4L | 1.004 | 1.015 | -0.4% | -1.5% |
+| `GNNHAR5L_M` | M | no | 5L | 1.008 | 1.039 | -0.8% | -3.9% |
+| `HAR_Q` | Q | no | - | 1.007 | 0.983 | -0.7% | 1.7% |
+| `GHAR_Q` | Q | no | 1H | 1.004 | 0.980 | -0.4% | 2.0% |
+| `GNNHAR1L_Q` | Q | no | 1L | 1.005 | 0.980 | -0.5% | 2.0% |
+| `GNNHAR2L_Q` | Q | no | 2L | 1.041 | 1.017 | -4.1% | -1.7% |
+| `GNNHAR3L_Q` | Q | no | 3L | 1.043 | 1.013 | -4.3% | -1.3% |
+| `GNNHAR4L_Q` | Q | no | 4L | 1.005 | 0.982 | -0.5% | 1.8% |
+| `GNNHAR5L_Q` | Q | no | 5L | 1.004 | 0.978 | -0.4% | 2.2% |
+| `HAR_M_IV` | M | yes | - | 0.959 | 0.966 | 4.1% | 3.4% |
+| `GHAR_M_IV` | M | yes | 1H | 0.960 | 0.974 | 4.0% | 2.6% |
+| `GNNHAR1L_M_IV` | M | yes | 1L | 0.968 | 0.986 | 3.2% | 1.4% |
+| `GNNHAR2L_M_IV` | M | yes | 2L | 0.968 | 0.985 | 3.2% | 1.5% |
+| `GNNHAR3L_M_IV` | M | yes | 3L | 0.968 | 0.996 | 3.2% | 0.4% |
+| `GNNHAR4L_M_IV` | M | yes | 4L | 0.968 | 1.005 | 3.2% | -0.5% |
+| `GNNHAR5L_M_IV` | M | yes | 5L | 0.969 | 0.972 | 3.1% | 2.8% |
+| `HAR_Q_IV` | Q | yes | - | 0.981 | 0.927 | 1.9% | 7.3% |
+| `GHAR_Q_IV` | Q | yes | 1H | 0.985 | 0.929 | 1.5% | 7.1% |
+| `GNNHAR1L_Q_IV` | Q | yes | 1L | 0.983 | 0.929 | 1.7% | 7.1% |
+| `GNNHAR2L_Q_IV` | Q | yes | 2L | 0.986 | 0.923 | 1.4% | 7.7% |
+| `GNNHAR3L_Q_IV` | Q | yes | 3L | 0.985 | 0.931 | 1.5% | 6.9% |
+| `GNNHAR4L_Q_IV` | Q | yes | 4L | 0.987 | 0.929 | 1.3% | 7.1% |
+| `GNNHAR5L_Q_IV` | Q | yes | 5L | 0.984 | 0.931 | 1.6% | 6.9% |
 
 **Table 4.2. S&P100 full-model out-of-sample loss ratios.** The table reports the current S&P100 A100 run with 91 model tickers and 234 saved one-day-ahead test dates from 2025-07-07 to 2026-06-09. Ratios are relative to $HAR_M$ in the same S&P100 run. Multi-hop GHAR rows are excluded from this main table and reported in Appendix C.
 
@@ -849,6 +904,8 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 **Table 4.3. S&P500 full-model out-of-sample loss ratios.** The table reports the formal S&P500 AutoDL result with 449 model tickers and 223 saved one-day-ahead test dates from 2025-07-14 to 2026-06-01. Ratios are relative to $HAR_M$ in the same S&P500 run. The large MSE ratios for QLIKE-trained models are retained because they are part of the current diagnostic evidence rather than rows to be filtered out.
 
 读这张 S&P500 表时，不能只把 GNNHAR 的大 loss ratio 当成一个普通排序结果。它同时回答了两个问题：第一，IV-augmented HAR / GHAR 仍然相对稳定，说明 IV contribution 在大 universe 中没有消失；第二，当前 GNNHAR / GNNHAR-IV 在 S&P500 中出现数量级上的失效，需要在 Section 5 和 Section 6 里进一步诊断。换句话说，这张表对 RQ3 的回答是负面的：更大的图没有在当前实现中放大 GNNHAR 的优势，反而暴露了训练稳定性、尺度和低波动股票预测下界的问题。
+
+还要在表下注明：S&P500 中 QLIKE-trained linear rows 的巨大 MSE ratio 主要由少数 extreme stock-date observations 支配，核心案例是 EchoStar (`SATS`) 在 2025-08-26 附近的真实价格跳跃进入 30-day RV rolling window 后，使 `HAR_Q` / `GHAR_Q` 等模型产生极端预测。这个问题在 Section 5.1 和 Appendix E 中用 `SATS` loss-contribution table 展开；它解释的是 QLIKE-trained panel 的 MSE 爆炸，而不是说整个 S&P500 表都是坏数据。
 
 | Model | EC | IV | Hop/Layer | MSE ratio | QLIKE ratio | MSE gain | QLIKE gain |
 |---|---|---|---|---:|---:|---:|---:|
@@ -891,16 +948,19 @@ MCS 用于从多个候选模型中识别 statistically indistinguishable best mo
 
 | Universe | Best QLIKE model | QLIKE ratio vs $HAR_M$ | Gain $1-R^{QL}$ | Best MSE model | MSE ratio vs $HAR_M$ | Gain $1-R^{MSE}$ |
 |---|---|---:|---:|---|---:|---:|
-| Dow30 | $GNNHAR2L_Q^{IV}$ | 0.889 | 11.1% | $GHAR_M^{IV}$ | 0.868 | 13.2% |
+| Dow30 | $GNNHAR2L_Q^{IV}$ | 0.923 | 7.7% | $HAR_M^{IV}$ | 0.959 | 4.1% |
 | S&P100 | $HAR_Q^{IV}$ | 0.933 | 6.7% | $HAR_M^{IV}$ | 0.965 | 3.5% |
 | S&P500 | $GHAR_M^{IV}$ | 0.973 | 2.7% | $HAR_M^{IV}$ | 0.966 | 3.4% |
 
 解释：
 
 - 如果“节点更多、关系更丰富”会带来“提升的提升”，那么从 Dow30 到 S&P500，$1-R_m$ 应该扩大；
-- 当前结果相反：gain 从 Dow30 到 S&P500 变小；
+- 当前结果仍然没有支持该假说：使用标准窗口 Dow30 后，best QLIKE gain 约为 7.7%，S&P100 约为 6.7%，S&P500 约为 2.7%，没有随 universe size 扩大而增加；
 - 因此当前证据不支持“更大的图天然增强 GNNHAR 相对 HAR 的优势”；
 - 更合理的解释是：大图引入更多关系，也引入更多噪声、训练不稳定、尺度问题和 over-smoothing risk。
+- 这些 gain 仍然是 relative to realized-volatility proxy 的 statistical loss gains，不应被写成真实风险度量能力或实际交易收益的最终排序。要回答经济价值问题，需要进一步把 forecasts 放入 portfolio / hedging / risk-control decision tests。
+- S&P500 的 cross-universe 表还应该补一句机制解释：没有 IV 时，`GHAR_M` 只比 `HAR_M` 在 QLIKE 上小幅改善，non-IV GNNHAR 明显失败；加入 IV 后，`HAR_M_IV` / `GHAR_M_IV` 才成为最优。这个对比说明，S&P500 中稳定增益主要来自 options-implied forward-looking state，而不是单纯来自更大的 historical spillover graph。
+- 对 GNNHAR-IV 的解释要克制：它相对 non-IV GNNHAR 有局部改善，说明 IV 中的复杂市场预期信息可能给 nonlinear graph aggregation 提供更好的输入；但当前 S&P500 GNNHAR-IV 的 loss ratio 仍远高于 1，因此它是“信息集改善但实现仍不稳定”的证据，而不是“GNNHAR-IV 已经是大图最优模型”的证据。
 
 ### 4.5 Interim empirical conclusion
 
@@ -908,7 +968,10 @@ Section 4 末尾需要有一个短结论，直接把三个 RQ 和主表对应起
 
 - RQ1：从 Dow30 到 S&P100 再到 S&P500，GHAR/GNNHAR 及其变体并非都稳定优于 HAR。图结构和 GNN depth 在小图中更容易带来明显增益，但在大图中增益不稳定。
 - RQ2：IV 是当前最稳定的新增信息来源。很多 universe 的 winner 或 near-winner 都是 IV version，这支持 Zhang future work 中“options information”方向。
-- RQ3：当前没有看到“节点越多，model/HAR improvement 越大”。相反，best QLIKE gain 从 Dow30 到 S&P500 变小，因此大图可能同时带来更多 spillover information 和更多噪声、训练不稳定、over-smoothing risk。
+- 尤其在 S&P500 上，要明确写出：historical-only 的线性 HAR/GHAR 和 non-IV GNNHAR 都没有给出令人满意的大图优势；加入 IV 后，最好的模型变成 `HAR_M_IV` / `GHAR_M_IV`。这说明 IV 可能压缩了市场对未来风险、新闻、尾部风险和风险偏好的复杂预期，并把这些 forward-looking 信息带入了日度 panel。
+- 同时，GNNHAR-IV 相比 non-IV GNNHAR 的若干 QLIKE 改善可以作为一个中间发现：非线性图模型不是完全不能利用 IV，而是当前大图实现仍受输出尺度、低波动股票高估和训练稳定性制约。正式写作时应把这个点放在 Section 4.5 或 Section 5，而不是只在 appendix 里留作工程诊断。
+- RQ3：当前没有看到“节点越多，model/HAR improvement 越大”。标准窗口 Dow30 的 best QLIKE gain 约 7.7%，S&P100 约 6.7%，S&P500 约 2.7%，因此大图可能同时带来更多 spillover information 和更多噪声、训练不稳定、over-smoothing risk。
+- 同时要补一句边界：Section 4 的结论是基于 realized-volatility proxy 的 forecast accuracy 结论，不是对真实风险、资产配置收益或交易策略收益的最终评价。
 
 这里还要明确一个当前结果层面的发现：S&P500 中 GNNHAR / GNNHAR-IV 的失败不是轻微排序变化，而是数量级上的异常。`GNNHAR` 预测在低波动股票上存在系统性高估，导致 MSE 和 QLIKE 均显著差于 HAR / GHAR。这个现象不能在正文中简单解释为“GNN 无效”，而应在 Section 5 和 Section 6 中作为模型诊断问题讨论。
 
@@ -1113,6 +1176,8 @@ $$
 
 这也是为什么当前结果值得写进正文，而不是只作为“和 Zhang 不一致”的附注。它告诉我们，graph/GNN 结构本身并没有自动带来更大 universe 下的优势；相反，options market 的 forward-looking signal 在多个 universe 里更稳定。这一点会影响后面的 conclusion：我们应该强调 IV 才是本文最稳的新增信息，而不是把重心放在更深 GNN 上。
 
+这里还要加一个对 30-day HV proxy 的主动解释。审稿人可能会问：本文到底是在 forecast realized volatility，还是在 forecast 一个 rolling 30-day historical volatility indicator？我们的回答应该是：本文明确是后者，即 daily variance-scale 30-day close-to-close HV proxy；这不是 intraday RV paper。但是这个目标并不使本文失去意义，因为它更平滑、更有持久性，也更接近 IV30 的期限结构。正因为它平滑，HAR / IV baseline 更强，GNNHAR 更难通过噪声拟合获胜；如果 GNNHAR 在这种更规则的目标上仍然不稳定，这反而支持本文关于 graph neural depth fragility 的主线。未来可以用已下载的 10-day HV / IV 数据做更短窗口 robustness，它会减少 monthly HAR overlap，但当前不能把 10-day 写成已完成主结果。
+
 ## 6. Robustness Tests
 
 这一节仿照 Zhang Section 6，但要按照我们自己的项目情况写。Zhang 做 alternative validation set size 和 larger universe；我们的 larger universe 已经成为主研究问题，因此 robustness 不应只重复 S&P100 / S&P500。
@@ -1130,17 +1195,22 @@ Zhang 用 smaller validation dataset 做 robustness。我们可以设计：
 
 ### 6.2 Date alignment and source consistency
 
-这是我们特别需要的 robustness，因为当前 Dow30 和 SP100/SP500 时间范围不完全一致。
+这是我们特别需要的 robustness，因为当前 Dow30 / S&P100 与 S&P500 的 test calendar 不是完全同长；但 S&P500 不是独立或不兼容 calendar，而是 Dow30 / S&P100 234-date calendar 的 223-date subset。
 
 要写：
 
 - 当前 Dow30 aligned rerun input span 是 2021-06-09 到 2026-06-09；
-- SP100 / SP500 是 2021-06-09 到 2026-06-09；
-- 这会影响 cross-universe comparison；
-- 当前已经补了一个 Dow30 wide-window multi-hop GHAR aligned rerun：输入 span 为 2021-06-09 到 2026-06-09，test window 为 2025-07-07 到 2026-06-09，共 234 个 dates，与 S&P100 的当前 out-of-sample dates 对齐；
-- 但这个 supplement 只包含 $GHAR2H/GHAR3H$ 的 linear multi-hop diagnostics，不包含完整 HAR/GHAR/GNNHAR full-model set，因此它只能支持 Appendix C 的日期对齐 multi-hop 讨论，不能替代 Dow30 主结果；
-- 后续 robustness 应把三个 universe 统一到共同时间区间，重新运行主表；
+- SP100 / SP500 raw span 同样围绕 2021-06-09 到 2026-06-09，但 S&P500 final saved out-of-sample dates 是 2025-07-14 到 2026-06-01；
+- 这会影响 cross-universe comparison 的严格程度，但影响比完全不同 calendar 小，因为 S&P500 dates 嵌套在 Dow30/S&P100 dates 中；
+- ~~当前已经补了一个 Dow30 wide-window multi-hop GHAR aligned rerun：输入 span 为 2021-06-09 到 2026-06-09，test window 为 2025-07-07 到 2026-06-09，共 234 个 dates，与 S&P100 的当前 out-of-sample dates 对齐；~~
+- ~~但这个 supplement 只包含 $GHAR2H/GHAR3H$ 的 linear multi-hop diagnostics，不包含完整 HAR/GHAR/GNNHAR full-model set，因此它只能支持 Appendix C 的日期对齐 multi-hop 讨论，不能替代 Dow30 主结果；~~
+- 已补齐 Dow30 标准窗口 full-model rerun：`20260619T071426Z_aligned_full_model`，输入 span 为 2021-06-09 到 2026-06-09，test window 为 2025-07-07 到 2026-06-09，共 234 个 dates，与 S&P100 当前 out-of-sample dates 对齐；该 run 有 28 个模型预测、`loss_table.csv`、`dm_tests.csv` 和 `fvu.csv`，可以替代旧 Dow30 主结果；
+- Dow30 的 `20260618T075711Z_wide_multihop_ghar` 仍作为 Appendix C 的 multi-hop supplement 使用；
+- Dow30 234-date MCS 已经补齐，MCS 小节应同步写成 Dow30、S&P100、S&P500 三组；
+- 后续 robustness 应优先把 S&P500 统一到 Dow30/S&P100 的完整 234-date calendar，并重算 aligned Dow30 的 regime diagnostics；
 - 在正式投稿前，这一步很重要。
+
+如果暂时不重跑 S&P500，正文中可以写成：current S&P500 evidence is a nested near-calendar scale comparison. This is acceptable for the current draft's research-note stage, but a final submission should either rerun S&P500 on the full 234-date calendar or report the current design explicitly as a nested-calendar robustness result.
 
 ### 6.3 Alternative graph construction
 
@@ -1245,13 +1315,13 @@ $$
 
 结论的语气要像研究笔记，而不是把所有问题都说成已经解决。最好的写法是：先回答每个 RQ 当前数据支持什么，再写当前证据不支持什么，最后写下一步需要什么检验。这样读者会觉得我们对结果是诚实的，也能看出这个项目还有继续推进的空间。
 
-可以用一句总括先定调：本文目前最稳定的发现不是“GNNHAR 在大图上全面胜出”，而是“IV 作为 option-market forward-looking information，在多个 universe 中比单纯增加 GNN 深度更稳定；大图是否能增强 graph / GNN 相对 HAR 的优势，还需要更严格的实现和 robustness 检验”。
+可以用一句总括先定调：本文目前最稳定的发现不是“GNNHAR 在大图上全面胜出”，而是“IV 作为 option-market forward-looking information，在多个 universe 中比单纯增加 GNN 深度更稳定；即便在较平滑的 30-day HV proxy target 上，大图 GNNHAR 也显示出 scale-sensitive instability；大图是否能增强 graph / GNN 相对 HAR 的优势，还需要更严格的实现和 robustness 检验”。
 
 ### 7.1 Answer to RQ1
 
 RQ1：GHAR、GNNHAR 及其变体从 Dow30 扩展到 S&P100 再到 S&P500，是否均能相对 HAR 提高预测准确性？
 
-当前答案应克制。Dow30 中 $GNNHAR2L_Q^{IV}$ 在 QLIKE 下表现最好，说明在小图环境里，Zhang-style graph/GNN framework 加上 IV 可以产生明显增益。但到了 S&P100 和 S&P500，最稳定的 winner 更偏向 IV-augmented HAR / GHAR，而不是深层 GNN。因此我们不能笼统说 GHAR / GNNHAR 在所有 universe 都稳定优于 HAR。
+当前答案应克制。Dow30 中 $GNNHAR2L_Q^{IV}$ 在 QLIKE 下表现最好，说明在小图环境里，Zhang-style graph/GNN framework 加上 IV 可以产生明显增益。但到了 S&P100 和 S&P500，最稳定的 winner 更偏向 IV-augmented HAR / GHAR，而不是深层 GNN。因此我们不能笼统说 GHAR / GNNHAR 在所有 universe 都稳定优于 HAR。更重要的是，这个结论是在 30-day HV proxy 这种相对平滑的目标上得到的；它提示我们，GNNHAR 的弱表现不能简单归因于 intraday RV 噪声过大，而更可能与大图、输出尺度、低波动股票预测和 QLIKE criterion 下的训练稳定性有关。
 
 更准确的说法是：graph framework 在部分 universe 中有预测价值，但它不是自动胜出的机制。模型是否优于 HAR，取决于数据源、图构造、训练稳定性、输出约束、IV 信息以及 evaluation criterion。这个结论比“GNNHAR 一定更好”更弱，但也更符合当前数据。
 
@@ -1259,7 +1329,9 @@ RQ1：GHAR、GNNHAR 及其变体从 Dow30 扩展到 S&P100 再到 S&P500，是�
 
 RQ2：IV 是否有贡献？
 
-当前答案相对明确：IV 是目前最稳定的新增信息来源。三个 universe 中，IV 版本模型普遍进入前列，尤其是 S&P100 和 S&P500 中，IV-augmented HAR / GHAR 比深层 GNN 更稳定。这支持 Zhang future work 中 options information 的方向。
+当前答案相对明确：IV 是目前最稳定的新增信息来源。三个 universe 中，IV 版本模型普遍进入前列，尤其是 S&P100 和 S&P500 中，IV-augmented HAR / GHAR 比深层 GNN 更稳定。这支持 Zhang future work 中 options information 的方向。这里的贡献不应写成“IV 有用”这一句常识性发现，而应写成：在同一套 Zhang-style HAR / GHAR / GNNHAR backbone 中，真正稳定带来 out-of-sample improvement 的是 option-implied forward-looking state，而不是单纯增加 graph neural depth。
+
+S&P500 的结果可以作为 RQ2 的核心例子。不加入 IV 时，模型基本只能依赖 historical volatility lag 和 graph-aggregated historical lag；这种 backward-looking 信息在大 universe 中没有稳定产生优胜模型。加入 IV 后，最优行转向 `HAR_M_IV` / `GHAR_M_IV`，说明 IV 可能把 options market 中关于 future volatility、event risk、tail risk 和 market expectation 的复杂信息压缩成可进入日度 panel 的 forward-looking state。对 GNNHAR 来说，IV 也确实让部分 QLIKE-trained GNNHAR-IV 相对 non-IV GNNHAR 改善；但这些改善不足以使它们超过 IV-augmented HAR/GHAR。因此结论应写成：GNNHAR 最好和 IV 一起使用，因为 IV 提供更有信息含量的节点状态；但当前 S&P500 证据仍显示，大图 GNNHAR 需要 corrected output、normalization 和 robustness 检验后才能被解释为有效的 nonlinear forecasting gain。
 
 但这里不能把 IV 的改善直接写成因果结论。更稳妥的解释是：IV 反映 options market 对未来 volatility、tail risk、news uncertainty 和 risk appetite 的定价，因此它可能包含历史 RV 没有完全吸收的 forward-looking information。同时，加入 IV 也增加了模型可用的状态变量和灵活度，所以后续还需要 $IV\times RV$ interaction、outlier robustness 和更严格的 comparison 来区分“信息增量”和“模型灵活度增量”。
 
@@ -1267,7 +1339,7 @@ RQ2：IV 是否有贡献？
 
 RQ3：节点关系更丰富是否带来“提升的提升”？
 
-当前证据不支持这个假说。Dow30 的 best QLIKE gain 约 11.1%，S&P100 约 6.7%，S&P500 约 2.7%。如果“节点关系更丰富”会自动放大模型相对 HAR 的提升，那么这个 gain 应该随着 universe 扩大而增加；但当前结果正好相反。
+当前证据不支持这个假说。标准窗口 Dow30 的 best QLIKE gain 约 7.7%，S&P100 约 6.7%，S&P500 约 2.7%。如果“节点关系更丰富”会自动放大模型相对 HAR 的提升，那么这个 gain 应该随着 universe 扩大而增加；但当前结果正好相反。这里要注明 S&P500 是 Dow30/S&P100 234-date calendar 的 223-date subset，因此这是 nested near-calendar scale evidence，不是最终 fully common-calendar evidence；但它已经足以说明“更大图自动更好”这一强说法在当前证据下站不住。
 
 所以，本文目前更合理的判断是：更多节点既可能带来更多 spillover information，也会带来更多噪声、训练不稳定、over-smoothing risk、graph estimation error，以及实现层面的 scale sensitivity。S&P500 的 GNNHAR 异常表现尤其提醒我们，大图 GNN 的结果不能只从模型名称解释，还要检查 normalization、final output design、低波动股票预测偏差和极端 stock-date observations。
 
@@ -1281,7 +1353,7 @@ Future work 要回到 Introduction 的逻辑：
 - 后续可以做 causal inference / mediation analysis，研究 news 如何影响 IV，IV 又如何影响 future RV；
 - 也可以把 news sentiment / event surprise 作为协变量，与 IV 一起进入 GNNHAR；
 - 还可以加入 $IV\times RV$ interaction，检验 IV 是否改变历史 RV 的边际预测效应；
-- 最后需要做严格日期对齐、weekly/monthly horizon 和 exact hidden-state MAD，提升与 Zhang article 的可比性。
+- 最后需要做 S&P500 完整 234-date calendar rerun、aligned Dow30 regime diagnostics、10-day HV/IV robustness、weekly/monthly horizon 和 exact hidden-state MAD，提升与 Zhang article 的可比性。Dow30 234-date MCS 已补齐，不应再写成待补 MCS；待补的是 regime 和部分 robustness。
 
 ## Appendix A. Data Audit Tables
 
@@ -1297,7 +1369,7 @@ Future work 要回到 Introduction 的逻辑：
 
 分别放：
 
-- Dow30 full loss table；
+- Dow30 aligned full loss table；
 - S&P100 full loss table；
 - S&P500 full loss table。
 
@@ -1315,7 +1387,7 @@ Future work 要回到 Introduction 的逻辑：
 其中 GHAR2H / GHAR3H 是 Zhang Appendix E-style 的补充诊断，不是正文主结果的一部分。写作重点：
 
 - Zhang 的 GHAR2Hop 结果显示 cross-sectional DM statistic 约为 $-1$，$p$-value 约为 $35\%$，因此不能认为 two-hop linear neighbors 提供了显著额外预测力；
-- Dow30 的 wide-window multi-hop GHAR supplement 现在可作为日期对齐诊断使用。该 supplement 使用 2025-07-07 到 2026-06-09 的 234 个 test dates，truth shape 为 $234\times30$。绝对 loss 显示 IV 版本优于 non-IV 版本，MSE-trained 版本优于 QLIKE-trained 版本：$GHAR2H_M^{IV}$ 的 MSE / QLIKE 约为 0.9165 / 0.01535，$GHAR3H_M^{IV}$ 约为 0.9162 / 0.01537；non-IV $GHAR2H_M$ 与 $GHAR3H_M$ 的 MSE / QLIKE 约为 0.9558 / 0.01574 和 0.9555 / 0.01577。因为这个 supplement 没有同日期的 $HAR_M$ full baseline，不能把这些数写成 ratio vs $HAR_M$；
+- Dow30 的 wide-window multi-hop GHAR supplement 现在可作为日期对齐诊断使用。该 supplement 使用 2025-07-07 到 2026-06-09 的 234 个 test dates，truth shape 为 $234\times30$。绝对 loss 显示 IV 版本优于 non-IV 版本，MSE-trained 版本优于 QLIKE-trained 版本：$GHAR2H_M^{IV}$ 的 MSE / QLIKE 约为 0.9165 / 0.01535，$GHAR3H_M^{IV}$ 约为 0.9162 / 0.01537；non-IV $GHAR2H_M$ 与 $GHAR3H_M$ 的 MSE / QLIKE 约为 0.9558 / 0.01574 和 0.9555 / 0.01577。这个 supplement 现在有同日期 full-model baseline 可参照，但它仍然是独立 artifact；Appendix C 如果报告 absolute losses 应明确分母口径，若报告 ratio vs aligned `HAR_M` 则要从 `20260619T071426Z_aligned_full_model` 中取同日期 baseline；
 - 本文的 S&P100 结果中，non-IV multi-hop GHAR 的 MSE 基本不变，但 QLIKE 没有改善：$GHAR2H_M$ 的 MSE / QLIKE ratio 约为 0.998 / 0.998，$GHAR3H_M$ 约为 0.998 / 1.001。IV 版本在 MSE 下接近当前 S&P100 最优 MSE 模型，但 QLIKE 仍弱于最优 IV HAR：$GHAR2H_M^{IV}$ 的 MSE / QLIKE ratio 约为 0.965 / 0.977，$GHAR3H_M^{IV}$ 约为 0.965 / 0.978。新增 QLIKE-trained multi-hop rows 明显变差，$GHAR2H_Q,GHAR3H_Q,GHAR2H_Q^{IV},GHAR3H_Q^{IV}$ 的 QLIKE ratios 分别约为 1.317、1.309、1.233、1.227；
 - 本文的 S&P500 结果中，MSE-trained multi-hop GHAR 大多变差；QLIKE-trained IV multi-hop GHAR 在 QLIKE 上有改善，但 MSE 明显变差，因此证据是 mixed，不应在正文中解释为稳健提升；
 - 因此附录结论应写为：consistent with Zhang Appendix E, linear multi-hop GHAR does not provide robust additional predictive power.

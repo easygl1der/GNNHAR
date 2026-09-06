@@ -1,0 +1,23 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llllrrrrl}
+\toprule
+Base & Candidate & IV & Loss & $L_B/L_A$ & $\Delta$ & DM & $p$ & Conclusion \\
+\midrule
+GHAR\_M & GHAR2H\_M & No & M & 1.0055 & -0.55\% & -4.0647 & $<10^{-4}$ & significant deterioration \\
+GHAR\_M & GHAR3H\_M & No & M & 1.0082 & -0.82\% & -4.0762 & $<10^{-4}$ & significant deterioration \\
+GNNHAR1L\_M & GNNHAR2L\_M & No & M & 1.0027 & -0.27\% & -1.2066 & 0.2276 & not significant \\
+GNNHAR1L\_Q & GNNHAR2L\_Q & No & Q & 0.9992 & 0.08\% & 0.6368 & 0.5242 & not significant \\
+GNNHAR1L\_Q & GNNHAR5L\_Q & No & Q & 0.9965 & 0.35\% & 2.2236 & 0.0262 & significant improvement \\
+GNNHAR4L\_Q & GNNHAR5L\_Q & No & Q & 0.9983 & 0.17\% & 2.0347 & 0.0419 & significant improvement \\
+GNNHAR2L\_M\_IV & GNNHAR3L\_M\_IV & Yes & M & 0.9781 & 2.19\% & 2.5408 & 0.0111 & significant improvement \\
+GNNHAR1L\_M\_IV & GNNHAR2L\_M\_IV & Yes & M & 1.0257 & -2.57\% & -2.6328 & 0.0085 & significant deterioration \\
+GNNHAR2L\_Q\_IV & GNNHAR3L\_Q\_IV & Yes & Q & 1.0071 & -0.71\% & -2.0867 & 0.0369 & significant deterioration \\
+\bottomrule
+\end{tabular}
+}
+\caption{Current SP100 A100 depth and multi-hop DM tests.  Positive \(\Delta\) means the candidate lowers QLIKE loss.}
+\label{tab:sp100-a100-multihop}
+\end{table}

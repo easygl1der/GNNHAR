@@ -11,3 +11,22 @@ __pycache__/
 *.synctex.gz
 *.xdv
 tmp/
+
+# bulk / local-only
+data/raw/
+data/google_drive_upload/
+data/packages/
+deliverables/
+outputs/**/.trash/
+outputs/**/*smoke*/
+outputs/autodl/
+outputs/gnnhar_iv_fixed_*/
+outputs/gnnhar_iv_relation_*/
+outputs/gnnhar_iv_tuned_*/
+outputs/scale-experiment-smoke/
+outputs/zhang-scale-smoke/
+reports/**/colab_*.png
+reports/**/build/
+Marp Themes/
+*.zip
+references/code/GNNHAR/

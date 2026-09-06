@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llllrrrrl}
+\toprule
+Base & Candidate & IV & EC & \(L_B/L_A\) & \(1-L_B/L_A\) & DM & \(p\) & Result \\
+\midrule
+\(\mathrm{GNNHAR1L}_{M}\) & \(\mathrm{GNNHAR2L}_{M}\) & No & \(M\) & 1.0027 & -0.27\% & -1.2066 & 0.2276 & not significant \\
+\(\mathrm{GNNHAR1L}_{Q}\) & \(\mathrm{GNNHAR2L}_{Q}\) & No & \(Q\) & 0.9992 & 0.08\% & 0.6368 & 0.5242 & not significant \\
+\(\mathrm{GNNHAR1L}_{M}^{IV}\) & \(\mathrm{GNNHAR2L}_{M}^{IV}\) & Yes & \(M\) & 1.0257 & -2.57\% & -2.6328 & 0.0085 & deteriorates \\
+\(\mathrm{GNNHAR2L}_{M}^{IV}\) & \(\mathrm{GNNHAR3L}_{M}^{IV}\) & Yes & \(M\) & 0.9781 & 2.19\% & 2.5408 & 0.0111 & improves \\
+\(\mathrm{GNNHAR2L}_{Q}^{IV}\) & \(\mathrm{GNNHAR3L}_{Q}^{IV}\) & Yes & \(Q\) & 1.0071 & -0.71\% & -2.0867 & 0.0369 & deteriorates \\
+\bottomrule
+\end{tabular}
+}
+\caption{Current SP100 A100 GNN depth DM tests.  Positive \(1-L_B/L_A\) favors the candidate model.}
+\label{tab:sp100-a100-depth-dm}
+\end{table}

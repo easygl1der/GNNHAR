@@ -1,0 +1,20 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrrl}
+\toprule
+Universe & Base & Candidate & $L_B/L_A$ & $\Delta=1-L_B/L_A$ & DM & $p$ & Conclusion \\
+\midrule
+DOW30 & GHAR & GNNHAR1L & 1.0442 & -4.42\% & -1.5033 & 0.1345 & not significant \\
+DOW30 & GHAR+IV & GNNHAR1L-IV & 1.0634 & -6.34\% & -2.1735 & 0.0310 & significant deterioration \\
+SP100 scale & GHAR & GNNHAR1L & 1.0184 & -1.84\% & -4.4868 & $<10^{-4}$ & significant deterioration \\
+SP100 scale & GHAR+IV & GNNHAR1L-IV & 1.1120 & -11.20\% & -13.4857 & 0.0000 & significant deterioration \\
+SP500 scale & GHAR & GNNHAR1L & 1.0339 & -3.39\% & -8.9413 & $<10^{-4}$ & significant deterioration \\
+SP500 scale & GHAR+IV & GNNHAR1L-IV & 1.1459 & -14.59\% & -19.7360 & 0.0000 & significant deterioration \\
+\bottomrule
+\end{tabular}
+}
+\caption{Does a larger graph make GNNHAR improve more?  DM tests use \(A=\) base and \(B=\) candidate; positive \(\Delta\) means the GNN lowers loss.}
+\label{tab:gnn-size-dm}
+\end{table}

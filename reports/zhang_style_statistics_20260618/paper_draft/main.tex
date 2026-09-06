@@ -1,0 +1,794 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=0.9in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{threeparttable}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage[nameinlink,capitalize]{cleveref}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{url}
+
+\geometry{margin=0.92in}
+\onehalfspacing
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist[itemize]{leftmargin=1.4em}
+\setlist[enumerate]{leftmargin=1.6em}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+
+\newcommand{\model}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\fileentry}[1]{\path{#1}}
+\newcommand{\iv}{\mathrm{IV}}
+\newcommand{\rv}{\mathrm{RV}}
+\newcommand{\mse}{\mathrm{MSE}}
+\newcommand{\ql}{\mathrm{QLIKE}}
+\newcommand{\dow}{Dow30}
+\newcommand{\spone}{S\&P100}
+\newcommand{\spfive}{S\&P500}
+\newcommand{\bestmsecell}[1]{\textcolor{red!75!black}{\textbf{#1}}}
+\newcommand{\bestqlratio}[1]{\textcolor{blue!70!black}{\textbf{#1}}}
+\newcommand{\bestqlgain}[1]{\textcolor{blue!70!black}{\textbf{#1}}}
+
+\title{\textbf{Implied Volatility and Graph Neural HAR Forecasts Across Equity Universes}}
+\author{Draft manuscript from local Volatility project outputs}
+\date{June 19, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper develops a Zhang-style extension of graph-based heterogeneous autoregressive volatility forecasting for daily panels of option-linked volatility proxies.  Starting from the HAR, GHAR, and GNNHAR framework of \citet{zhang2025gnnhar}, we ask whether options-implied volatility adds forward-looking information beyond historical volatility and graph spillovers, and whether graph-based gains increase when the equity universe expands from \dow{} to \spone{} and \spfive{}.  The empirical target is a daily variance-scale 30-day close-to-close historical-volatility proxy rather than high-frequency intraday realized volatility; this smoother target is used deliberately to evaluate whether graph neural HAR models remain stable even before moving to less regular high-frequency targets.  The empirical design evaluates HAR, GHAR, GNNHAR, and implied-volatility variants using one-day-ahead forecasts, MSE and QLIKE forecast losses, model confidence sets, pairwise Diebold--Mariano comparisons, regime splits, FVU diagnostics, and multi-hop graph checks.  The current evidence supports implied volatility as the most stable added information channel: the best QLIKE models are IV variants in all three universes.  It does not support a simple ``larger graph implies larger GNN gain'' interpretation.  The S\&P500 dates form a 223-date subset of the 234-date \dow{}/\spone{} calendar, while the current S\&P500 run favors an IV-augmented linear graph model and exposes scale-sensitive GNNHAR failures.  The draft therefore treats options-implied information and the instability of graph neural depth as the main contribution, and treats full S\&P500 calendar alignment as a robustness and implementation question.
+\end{abstract}
+
+\noindent\textbf{Keywords:} realized volatility; implied volatility; HAR; GHAR; GNNHAR; graph neural networks; QLIKE.
+
+\section{Introduction}
+\label{sec:introduction}
+
+Volatility forecasting is a central problem in financial econometrics, risk management, asset allocation, option valuation, and stress testing.  Realized measures summarize the ex post variation of asset prices and provide a practical proxy for latent volatility \citep{andersen2001distribution,barndorff2002econometric}.  The heterogeneous autoregressive model of \citet{corsi2009har} remains a strong benchmark because it represents persistence, clustering, and heterogeneous time scales through daily, weekly, and monthly volatility components.  Its limitation is equally clear: the classical HAR model is essentially asset-by-asset and does not explicitly model cross-sectional volatility spillovers.
+
+\citet{zhang2025gnnhar} address this limitation by embedding HAR features in a graph-based forecasting framework.  GHAR adds graph-aggregated neighbor volatility to HAR, while GNNHAR replaces the linear graph aggregation with graph neural network layers that can capture nonlinear and multi-hop spillover effects.  This framework builds on the broader graph-based HAR and realized-covariance line of work \citep{zhang2024graphcovariance}.  In this paper, we do not claim to reproduce the numerical results of \citet{zhang2025gnnhar}; our data and target construction differ from the LOBSTER intraday realized-volatility setting.  Instead, we reproduce the Zhang-style modeling and evaluation logic and use it to study an explicit predictor-set extension and a large-universe stability question.
+
+A key empirical choice is that the target is a 30-day close-to-close historical-volatility proxy converted to daily variance scale.  This target is smoother and more persistent than intraday realized volatility, and it overlaps mechanically with HAR monthly lag information.  This makes the target less ideal for claiming a pure high-frequency realized-volatility contribution.  At the same time, it is an informative stress test for graph neural HAR stability: if nonlinear graph aggregation is already unstable on a smoothed volatility proxy, then moving to noisier and less regular high-frequency realized measures is unlikely to make the optimization problem easier.  The point is not that high-frequency RV is unimportant, but that the present paper studies whether GNNHAR depth remains useful under a relatively regular volatility target and whether IV adds information beyond that strong smooth benchmark.
+
+The extension is motivated by a direction left open by \citet{zhang2025gnnhar}: expanding the predictor set with information sources such as limit order books, options, and news.  This suggestion is economically meaningful rather than merely technical.  Historical realized volatility, even when constructed from high-frequency prices, remains a backward-looking summary of realized price movements.  Future volatility may instead be driven by information that has not yet appeared in historical RV, including latent liquidity imbalance, news surprises, macroeconomic event risk, or forward-looking risk assessments embedded in derivative prices.
+
+Current prices reflect the current transaction outcome and the current supply-demand balance, but they do not fully reveal the shape of the supply-demand curve.  A stock can appear stable while one side of the limit order book is thin and the other side is thick; in that case, relatively small future order flow can generate disproportionate price movement.  Similarly, concentrated liquidity provision, order cancellation, one-sided liquidity withdrawal, or other microstructure changes may produce abnormal volatility that daily historical RV cannot anticipate well.  News is another channel: earnings announcements, CPI releases, FOMC decisions, labor-market data, and interest-rate decisions can all trigger sharp repricing.  Moreover, markets may begin pricing uncertainty before the information is fully released.
+
+Implied volatility is therefore a natural first extension among the information sources suggested by Zhang et al.  Option prices aggregate the risk assessments, hedging demands, and tail-risk concerns of market participants.  The implied volatility extracted from options can be viewed as a compact market-implied summary of expected uncertainty \citep{busch2011iv,kambouroudis2021hariv,yfanti2021aimheavy,yao2018modelfreeiv}.  Unlike high-frequency order-book data or text-event data, IV can be organized as a daily panel and directly aligned with HAR, GHAR, and GNNHAR features.
+
+This paper studies three research questions:
+\begin{enumerate}
+  \item \textbf{RQ1. Model improvement across universes.} Do GHAR, GNNHAR, and their main variants improve forecast accuracy relative to HAR in \dow{}, \spone{}, and \spfive{}, under both MSE and QLIKE?
+  \item \textbf{RQ2. IV contribution.} Does adding implied volatility reduce forecast loss beyond historical RV and graph spillovers, and is the IV contribution stable across universe size and model family?
+  \item \textbf{RQ3. Improvement of improvement from richer graphs.} As the universe expands from \dow{} to \spone{} and \spfive{}, do graph-based models obtain larger gains relative to HAR?
+\end{enumerate}
+
+The current data-driven answer is mixed but informative.  For \dow{}, the standard-window aligned full-model rerun selects \model{GNNHAR2L_Q_IV} as the best QLIKE model, with a QLIKE ratio of \(0.923\) relative to \model{HAR_M}.  For \spone{}, the best QLIKE model is \model{HAR_Q_IV}, with ratio \(0.933\).  For \spfive{}, the best QLIKE model is \model{GHAR_M_IV}, with ratio \(0.973\).  Thus the most stable finding is not that deeper GNNHAR models dominate, but that IV-augmented models repeatedly enter the best set.  The cross-universe pattern does not support RQ3's simple larger-graph hypothesis: the best QLIKE gain is \(7.7\%\) in the aligned \dow{} run, \(6.7\%\) in \spone{}, and \(2.7\%\) in \spfive{}.  Dow30 and S\&P100 are now directly aligned on the 2025-07-07 to 2026-06-09 test calendar; the remaining calendar caveat is that the current S\&P500 full-model run covers 2025-07-14 to 2026-06-01.
+
+The rest of the paper is organized as follows.  \Cref{sec:preliminaries} reviews the graph notation, GLASSO graph construction, HAR, GHAR, and GNNHAR.  \Cref{sec:methodology} defines the implied-volatility extensions and the evaluation criteria.  \Cref{sec:empirical} reports the data construction and main empirical results.  \Cref{sec:discussion} interprets the results through criterion, MCS, DM, FVU, regime, and smoothing diagnostics.  \Cref{sec:robustness} states robustness tests and implementation diagnostics.  \Cref{sec:conclusion} answers the three RQs and outlines future work.
+
+\subsection{Notation and Empirical Conventions}
+\label{subsec:notation}
+
+Let \(u\in\{\mathrm{Dow30},\mathrm{SP100},\mathrm{SP500}\}\) denote an equity universe and let \(N_u\) be the number of model tickers in that universe.  In the current paper-ready runs, \(N_{\mathrm{Dow30}}=30\), \(N_{\mathrm{SP100}}=91\), and \(N_{\mathrm{SP500}}=449\).  A ticker is indexed by \(i=1,\ldots,N_u\), and a trading day is indexed by \(t\).
+
+Let \(v_{i,t}\) be the daily variance-scale target.  In this project it is constructed from a 30-day close-to-close historical-volatility proxy and converted to daily variance scale.  Throughout the draft, ``RV'' refers to this project-specific 30-day historical-volatility proxy unless explicitly stated otherwise.  This differs from the 5-minute intraday RV used by \citet{zhang2025gnnhar}; the distinction is part of the empirical design and should be read as a proxy-based extension rather than a direct intraday-RV replication.  Let \(IV30_{i,t}\) denote 30-day mean implied volatility, measured as an annualized percentage.  We convert it to a daily variance component by
+\[
+q_{i,t}
+=
+\left(\frac{IV30_{i,t}}{100}\right)^2/252.
+\]
+
+The non-IV HAR feature vector is
+\[
+x_{i,t-1}
+=
+\left(
+v_{i,t-1},
+\bar v_{i,t-5:t-2},
+\bar v_{i,t-22:t-6}
+\right),
+\]
+where \(\bar v\) denotes a window average.  The IV-augmented feature vector is
+\[
+z_{i,t-1}
+=
+\left(
+v_{i,t-1},
+\bar v_{i,t-5:t-2},
+\bar v_{i,t-22:t-6},
+q_{i,t-1}
+\right).
+\]
+Stacking all nodes gives \(X_{t-1}\in\mathbb{R}^{N_u\times 3}\) and \(Z_{t-1}\in\mathbb{R}^{N_u\times 4}\).
+
+For a model \(m\), let \(\widehat v_{i,t}^{(m)}\) be its forecast.  The MSE and QLIKE losses are
+\[
+L^{\mse}_{i,t}(m)
+=
+\left(v_{i,t}-\widehat v_{i,t}^{(m)}\right)^2,
+\]
+and
+\[
+L^{\ql}_{i,t}(m)
+=
+\frac{v_{i,t}}{\widehat v_{i,t}^{(m)}}
+-\log\left(\frac{v_{i,t}}{\widehat v_{i,t}^{(m)}}\right)-1.
+\]
+Main loss ratios are always relative to \model{HAR_M} in the same universe and run:
+\[
+R^{\mse}_{m,u}
+=
+\frac{\sum_{i,t}L^{\mse}_{i,t}(m)}
+{\sum_{i,t}L^{\mse}_{i,t}(\mathrm{HAR}_M)},
+\qquad
+R^{\ql}_{m,u}
+=
+\frac{\sum_{i,t}L^{\ql}_{i,t}(m)}
+{\sum_{i,t}L^{\ql}_{i,t}(\mathrm{HAR}_M)}.
+\]
+A ratio below one is an improvement over \model{HAR_M}; the gain is \(1-R\).
+
+\section{Preliminaries}
+\label{sec:preliminaries}
+
+\subsection{Graph Definitions and Adjacency Matrices}
+\label{subsec:graph}
+
+Let \(\mathcal{G}=(\mathcal{V},\mathcal{E})\) be a graph with \(\mathcal{V}=\{1,\ldots,N\}\).  Each node is a stock, and each edge represents a conditional dependence relation used as a proxy for volatility spillover.  The binary adjacency matrix is \(A\in\{0,1\}^{N\times N}\), with \(A_{ij}=1\) when stocks \(i\) and \(j\) are connected and \(A_{ii}=0\).  The self effect is handled by the HAR component, while graph terms aggregate neighbor information.
+
+Let \(D\) be the degree matrix with \(D_{ii}=\sum_{j=1}^N A_{ij}\).  The normalized propagation matrix is
+\[
+W=D^{-1/2}AD^{-1/2}.
+\]
+A \(K\)-hop neighbor is a node reachable within \(K\) graph steps.  Linear multi-hop GHAR and multi-layer GNNHAR therefore correspond to different ways of using increasingly distant graph neighborhoods.
+
+\subsection{Graph Construction via GLASSO}
+\label{subsec:glasso}
+
+Following Zhang-style graph construction, graphs are estimated from rolling-window daily returns.  Let \(r_t=(r_{1,t},\ldots,r_{N,t})^\top\) be the vector of stock returns in a training window and let \(S\) be its sample covariance matrix.  The graphical lasso estimates a sparse precision matrix \citep{friedman2008glasso}:
+\[
+\widehat{\Theta}
+=
+\arg\min_{\Theta\succ0}
+\left\{
+\operatorname{tr}(S\Theta)-\log\det(\Theta)
++\lambda \sum_{i\neq j}|\Theta_{ij}|
+\right\}.
+\]
+The graph is then defined by
+\[
+A_{ij}
+=
+\mathbf{1}\{\widehat{\Theta}_{ij}\neq 0\},\qquad i\neq j,
+\quad A_{ii}=0.
+\]
+Economically, a nonzero off-diagonal precision entry means that two stocks retain conditional dependence after controlling for the other stocks in the universe.
+
+The current notebooks use rolling training windows and estimate graphs from the return panels used by the same forecasting run.  The S\&P500 paper-ready bundle contains saved graph matrices and therefore supports graph structural diagnostics.  Dow30 and S\&P100 saved forecasts support loss and forecast diagnostics, but the paper-ready tree does not contain all graph matrices needed for a complete structural graph audit.
+
+\subsection{Graph Neural Network Layers}
+\label{subsec:gnn}
+
+A standard GCN layer can be written as \citep{kipf2017gcn}
+\[
+H^{(\ell+1)}
+=
+\sigma\!\left(
+\widetilde{D}^{-1/2}\widetilde{A}\widetilde{D}^{-1/2}
+H^{(\ell)}\Theta^{(\ell)}
+\right),
+\]
+where \(\widetilde A=A+I_N\).  The Zhang-style GNNHAR layer differs because self information is already included through HAR terms.  The graph propagation part is therefore written as
+\[
+H^{(\ell+1)}
+=
+\operatorname{ReLU}\!\left(W H^{(\ell)}\Theta^{(\ell)}\right).
+\]
+In the baseline model \(H^{(0)}=X_{t-1}\); in the IV model \(H^{(0)}=Z_{t-1}\).
+
+\subsection{HAR and GHAR Baselines}
+\label{subsec:har-ghar}
+
+The HAR baseline uses daily, weekly, and monthly lagged realized-variance components:
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + X_{t-1}\beta.
+\]
+The GHAR baseline adds graph-aggregated lag features:
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + X_{t-1}\beta + WX_{t-1}\gamma.
+\]
+GHAR is still linear in the features.  It asks whether one-hop neighbor information improves the HAR forecast.  A multi-hop diagnostic version is
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + X_{t-1}\beta
++WX_{t-1}\gamma_1
++W^2X_{t-1}\gamma_2+\cdots.
+\]
+In the empirical output, \model{GHAR2H} and \model{GHAR3H} denote two-hop and three-hop linear graph-HAR variants.  They are reported as Zhang Appendix E-style diagnostics rather than as the central model family.
+
+\subsection{Baseline GNNHAR}
+\label{subsec:gnnhar}
+
+GNNHAR replaces the linear graph term with nonlinear graph propagation.  A one-layer model is
+\[
+H^{(1)}
+=
+\operatorname{ReLU}\!\left(WX_{t-1}\Theta^{(0)}\right),
+\]
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + X_{t-1}\beta + H^{(1)}\gamma.
+\]
+For \(K\) layers,
+\[
+H^{(\ell+1)}
+=
+\operatorname{ReLU}\!\left(W H^{(\ell)}\Theta^{(\ell)}\right),
+\qquad
+\ell=0,\ldots,K-1,
+\]
+and
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + X_{t-1}\beta + H^{(K)}\gamma.
+\]
+Increasing \(K\) expands the receptive field, but it need not improve forecasts.  Deeper GNNs can over-smooth node representations and can be more sensitive to optimization and scaling \citep{chen2020oversmoothing}.
+
+\section{Proposed Methodology: GNNHAR-IV}
+\label{sec:methodology}
+
+\subsection{Implied Volatility as a Forward-Looking Component}
+\label{subsec:iv-component}
+
+The core extension is to add lagged implied volatility to the HAR-type feature matrix.  Define
+\[
+q_{i,t}^{\mathrm{daily}}
+=
+\frac{(IV30_{i,t}/100)^2}{252},
+\]
+and use \(q_{i,t-1}\) as a lagged feature to avoid look-ahead bias.  The IV-augmented matrix is
+\[
+Z_{t-1}
+=
+\left[
+v_{t-1},\
+\bar v_{t-5:t-2},\
+\bar v_{t-22:t-6},\
+q_{t-1}
+\right].
+\]
+This specification tests whether option-market forward-looking information improves one-day-ahead volatility forecasts beyond historical RV and graph spillovers.
+
+\subsection{HAR-IV and GHAR-IV}
+\label{subsec:hariv-ghariv}
+
+The HAR-IV model is
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + Z_{t-1}\beta.
+\]
+The GHAR-IV model is
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + Z_{t-1}\beta + WZ_{t-1}\gamma.
+\]
+Because \(Z_{t-1}\) includes IV, the graph term \(WZ_{t-1}\) contains graph-aggregated lagged IV.  Thus GHAR-IV is not only a linear IV extension of HAR; it also allows neighboring stocks' option-implied information to enter the forecast.
+
+\subsection{GNNHAR-IV}
+\label{subsec:gnnhariv}
+
+GNNHAR-IV replaces \(H^{(0)}=X_{t-1}\) with \(H^{(0)}=Z_{t-1}\):
+\[
+H^{(0)}=Z_{t-1},
+\]
+\[
+H^{(\ell+1)}
+=
+\operatorname{ReLU}\!\left(W H^{(\ell)}\Theta^{(\ell)}\right),
+\qquad
+\ell=0,\ldots,K-1,
+\]
+and
+\[
+\mathbb{E}(v_t\mid\mathcal{F}_{t-1})
+=
+\alpha + Z_{t-1}\beta + H^{(K)}\gamma.
+\]
+The direct term \(\alpha+Z_{t-1}\beta\) captures own historical RV and own lagged IV, while \(H^{(K)}\gamma\) captures nonlinear graph-propagated spillovers from RV and IV features.
+
+\subsection{Interaction Extension Not Estimated in the Main Run}
+\label{subsec:interaction}
+
+The current estimated models are additive IV models.  They do not include \(IV\times RV\) interactions.  A natural extension is
+\[
+Z^{\mathrm{int}}_{t-1}
+=
+\left[
+X_{t-1},\
+q_{t-1},\
+q_{t-1}\odot v_{t-1},\
+q_{t-1}\odot \bar v_{t-5:t-2},\
+q_{t-1}\odot \bar v_{t-22:t-6}
+\right].
+\]
+This would test whether the predictive meaning of historical RV depends on the option-implied state.  The idea is analogous to allowing covariate interactions in regression adjustment \citep{lin2013agnostic}, but this is a forecasting model rather than a randomized experiment; IV is not a treatment and the interaction should not be given a causal interpretation.
+
+\subsection{Estimation and Forecast Evaluation}
+\label{subsec:evaluation}
+
+Following \citet{zhang2025gnnhar}, estimation criterion and forecast loss are distinct.  A model \(F_M\) is trained under MSE and a model \(F_Q\) is trained under QLIKE.  Both are evaluated out of sample under both losses.  The project uses rolling lookback windows of 1000 trading days, approximately monthly recalibration with 22-day test blocks, Adam optimization for neural and QLIKE-trained models, learning rate \(10^{-3}\), hidden dimension 9, and single-network runs.  MSE-trained linear models use closed-form linear estimation, while QLIKE-trained linear rows and neural rows use numerical optimization.
+
+The main tables report \(R^{\mse}\) and \(R^{\ql}\), both relative to \model{HAR_M}.  Model confidence sets are computed at the 5\% level following \citet{hansen2011mcs}.  Pairwise forecast comparisons use Diebold--Mariano-style tests \citep{diebold1995dm}.  QLIKE is emphasized in the main interpretation because it is widely used for volatility forecast comparison and has theoretical appeal with imperfect volatility proxies \citep{patton2011volatility}.
+
+\section{Empirical Analysis}
+\label{sec:empirical}
+
+\subsection{Data and Sample Construction}
+\label{subsec:data}
+
+The empirical study uses three universes.  RV is based on 30-day close-to-close historical volatility; IV is based on 30-day mean implied volatility; returns used for graph construction are daily return panels.  The volatility and IV series are annualized percentage values converted to daily variance scale before modeling.  The data source differs from \citet{zhang2025gnnhar}, who use intraday realized volatility, so the results should be read as Zhang-style framework evidence rather than direct numerical replication.
+
+The formal repository-level source for the current \spfive{} analysis is \fileentry{data/scale_experiment/sp500}; the paper-ready result entrypoint is \fileentry{outputs/paper_ready_20260617}.  The \spfive{} raw input panels \fileentry{daily_returns.csv}, \fileentry{merged_rv_data_filled.csv}, and \fileentry{merged_iv_data_filled.csv} each contain 1256 trading dates and 503 ticker columns plus a date column, spanning 2021-06-09 to 2026-06-09.  The formal AutoDL model run then retains 449 model tickers after RV, IV, return, coverage, and rolling-window alignment filters.  The reproducibility appendix reports these repository-relative artifacts rather than relying on local absolute paths.
+
+\begin{table}[H]
+\centering
+\caption{Run-level sample summary}
+\label{tab:sample-summary}
+\scriptsize
+\begin{tabular}{lrrrrl}
+\toprule
+Universe & Raw tickers & Model tickers & Test dates & Test window & Current role \\
+\midrule
+Dow30 & 30 & 30 & 234 & 2025-07-07 to 2026-06-09 & current aligned full-model evidence \\
+S\&P100 & 101 & 91 & 234 & 2025-07-07 to 2026-06-09 & current full-model evidence \\
+S\&P500 & 503 & 449 & 223 & 2025-07-14 to 2026-06-01 & current AutoDL full-model evidence \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} Raw tickers refer to the initial constituent or panel count.  Model tickers are the stocks that survive RV, IV, return, coverage, and rolling-window alignment filters.  Dow30 now has a 234-date aligned full-model rerun on the same 2025-07-07 to 2026-06-09 test calendar as S\&P100.  Dow30 also has a separate aligned multi-hop GHAR supplement on the same dates; that supplement is used only for Appendix \ref{app:multihop}.
+\end{minipage}
+\end{table}
+
+The S\&P500 sample uses the formal AutoDL run with 449 tickers.  Older, smaller S\&P500 complete-case upload copies are not the source for the formal S\&P500 analysis.  This distinction matters because the large-universe conclusion is sensitive to the actual ticker set and date coverage.
+
+\subsection{Out-of-Sample Forecasting Design}
+\label{subsec:oos}
+
+Each rolling origin uses up to 1000 prior trading days.  The current run design uses a 22-day validation block and a 22-day test block, so the model is recalibrated approximately monthly.  The saved forecasts are nevertheless one-day-ahead forecasts.  The 22-day block is an evaluation and recalibration block, not a monthly forecast horizon.  Weekly and monthly forecast horizons require horizon-specific targets and fresh runs.
+
+\subsection{Reading the Main Tables}
+\label{subsec:reading-tables}
+
+Each row in the main tables is a model.  \(\mathrm{EC}\) denotes the estimation criterion, \(IV\) indicates whether lagged implied volatility is included, and hop/layer identifies the linear graph hop or GNN depth.  MSE and QLIKE ratios are relative to \model{HAR_M} in the same universe.  A value below one means lower forecast loss than \model{HAR_M}; the gain is \(1-\text{ratio}\), reported in percentage points.
+
+The forecast target is a realized-volatility proxy, not latent risk itself.  Lower MSE or QLIKE means a model is closer to the next-period RV proxy under the chosen loss.  It does not by itself prove a better trading strategy, hedging policy, VaR model, or economic utility result.  Those decision-based tests are future work.
+
+The main tables report the full core model family, the loss ratios, and the corresponding gains.  Color is descriptive rather than inferential: red cells in the MSE columns mark the displayed best MSE ratio and MSE gain, and blue cells in the QLIKE columns mark the displayed best QLIKE ratio and QLIKE gain.  When multiple rows round to the same displayed best value, all such displayed ties are colored.  These color highlights do not mean MCS inclusion.  Appendix \ref{app:stat-evidence} reports the saved 5\% MCS tests for Dow30, S\&P100, and S\&P500.
+
+\subsection{Main Results}
+\label{subsec:main-results}
+
+The three tables in this subsection provide the main run-level evidence for RQ1 and RQ2.  They compare HAR, GHAR, and GNNHAR variants within each universe, and they show directly whether adding IV improves the same model family under MSE and QLIKE.
+
+\begin{table}[H]
+\centering
+\caption{Dow30 aligned full-model out-of-sample loss ratios and gains}
+\label{tab:dow30-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccrrrr}
+\toprule
+Model & Family & EC & IV & Hop/layer & MSE ratio & MSE gain & QLIKE ratio & QLIKE gain \\
+\midrule
+\model{HAR_M} & HAR & M & no & -- & 1.000 & 0.0\% & 1.000 & 0.0\% \\
+\model{GHAR_M} & GHAR & M & no & 1H & 1.001 & -0.1\% & 0.995 & 0.5\% \\
+\model{GNNHAR1L_M} & GNNHAR & M & no & 1L & 1.004 & -0.4\% & 1.009 & -0.9\% \\
+\model{GNNHAR2L_M} & GNNHAR & M & no & 2L & 1.006 & -0.6\% & 1.012 & -1.2\% \\
+\model{GNNHAR3L_M} & GNNHAR & M & no & 3L & 1.004 & -0.4\% & 1.014 & -1.4\% \\
+\model{GNNHAR4L_M} & GNNHAR & M & no & 4L & 1.004 & -0.4\% & 1.015 & -1.5\% \\
+\model{GNNHAR5L_M} & GNNHAR & M & no & 5L & 1.008 & -0.8\% & 1.039 & -3.9\% \\
+\model{HAR_Q} & HAR & Q & no & -- & 1.007 & -0.7\% & 0.983 & 1.7\% \\
+\model{GHAR_Q} & GHAR & Q & no & 1H & 1.004 & -0.4\% & 0.980 & 2.0\% \\
+\model{GNNHAR1L_Q} & GNNHAR & Q & no & 1L & 1.005 & -0.5\% & 0.980 & 2.0\% \\
+\model{GNNHAR2L_Q} & GNNHAR & Q & no & 2L & 1.041 & -4.1\% & 1.017 & -1.7\% \\
+\model{GNNHAR3L_Q} & GNNHAR & Q & no & 3L & 1.043 & -4.3\% & 1.013 & -1.3\% \\
+\model{GNNHAR4L_Q} & GNNHAR & Q & no & 4L & 1.005 & -0.5\% & 0.982 & 1.8\% \\
+\model{GNNHAR5L_Q} & GNNHAR & Q & no & 5L & 1.004 & -0.4\% & 0.978 & 2.2\% \\
+\model{HAR_M_IV} & HAR & M & yes & -- & \bestmsecell{0.959} & \bestmsecell{4.1\%} & 0.966 & 3.4\% \\
+\model{GHAR_M_IV} & GHAR & M & yes & 1H & 0.960 & 4.0\% & 0.974 & 2.6\% \\
+\model{GNNHAR1L_M_IV} & GNNHAR & M & yes & 1L & 0.968 & 3.2\% & 0.986 & 1.4\% \\
+\model{GNNHAR2L_M_IV} & GNNHAR & M & yes & 2L & 0.968 & 3.2\% & 0.985 & 1.5\% \\
+\model{GNNHAR3L_M_IV} & GNNHAR & M & yes & 3L & 0.968 & 3.2\% & 0.996 & 0.4\% \\
+\model{GNNHAR4L_M_IV} & GNNHAR & M & yes & 4L & 0.968 & 3.2\% & 1.005 & -0.5\% \\
+\model{GNNHAR5L_M_IV} & GNNHAR & M & yes & 5L & 0.969 & 3.1\% & 0.972 & 2.8\% \\
+\model{HAR_Q_IV} & HAR & Q & yes & -- & 0.981 & 1.9\% & 0.927 & 7.3\% \\
+\model{GHAR_Q_IV} & GHAR & Q & yes & 1H & 0.985 & 1.5\% & 0.929 & 7.1\% \\
+\model{GNNHAR1L_Q_IV} & GNNHAR & Q & yes & 1L & 0.983 & 1.7\% & 0.929 & 7.1\% \\
+\model{GNNHAR2L_Q_IV} & GNNHAR & Q & yes & 2L & 0.986 & 1.4\% & \bestqlratio{0.923} & \bestqlgain{7.7\%} \\
+\model{GNNHAR3L_Q_IV} & GNNHAR & Q & yes & 3L & 0.985 & 1.5\% & 0.931 & 6.9\% \\
+\model{GNNHAR4L_Q_IV} & GNNHAR & Q & yes & 4L & 0.987 & 1.3\% & 0.929 & 7.1\% \\
+\model{GNNHAR5L_Q_IV} & GNNHAR & Q & yes & 5L & 0.984 & 1.6\% & 0.931 & 6.9\% \\
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} This table answers whether graph and IV variants improve over the Dow30 HAR benchmark on the current aligned full-model rerun.  Ratios are relative to \model{HAR_M} in the 234-date Dow30 run from 2025-07-07 to 2026-06-09; gains equal \(1-\)ratio.  Red cells mark the best MSE ratio and gain.  Blue cells mark the best QLIKE ratio and gain.  These colors mark best displayed losses, not MCS test inclusion.  A separate Dow30 aligned multi-hop supplement is reported in Appendix \ref{app:multihop}.
+\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{S\&P100 current full-model out-of-sample loss ratios and gains}
+\label{tab:sp100-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccrrrr}
+\toprule
+Model & Family & EC & IV & Hop/layer & MSE ratio & MSE gain & QLIKE ratio & QLIKE gain \\
+\midrule
+\model{HAR_M} & HAR & M & no & -- & 1.000 & 0.0\% & 1.000 & 0.0\% \\
+\model{GHAR_M} & GHAR & M & no & 1H & 0.997 & 0.3\% & 0.993 & 0.7\% \\
+\model{GNNHAR1L_M} & GNNHAR & M & no & 1L & 1.000 & 0.0\% & 0.997 & 0.3\% \\
+\model{GNNHAR2L_M} & GNNHAR & M & no & 2L & 1.000 & 0.0\% & 0.999 & 0.1\% \\
+\model{GNNHAR3L_M} & GNNHAR & M & no & 3L & 1.001 & -0.1\% & 1.000 & 0.0\% \\
+\model{GNNHAR4L_M} & GNNHAR & M & no & 4L & 1.004 & -0.4\% & 1.003 & -0.3\% \\
+\model{GNNHAR5L_M} & GNNHAR & M & no & 5L & 1.003 & -0.3\% & 1.010 & -1.0\% \\
+\model{HAR_Q} & HAR & Q & no & -- & 1.006 & -0.6\% & 0.980 & 2.0\% \\
+\model{GHAR_Q} & GHAR & Q & no & 1H & 1.003 & -0.3\% & 0.976 & 2.4\% \\
+\model{GNNHAR1L_Q} & GNNHAR & Q & no & 1L & 1.004 & -0.4\% & 0.980 & 2.0\% \\
+\model{GNNHAR2L_Q} & GNNHAR & Q & no & 2L & 1.004 & -0.4\% & 0.979 & 2.1\% \\
+\model{GNNHAR3L_Q} & GNNHAR & Q & no & 3L & 1.003 & -0.3\% & 0.977 & 2.3\% \\
+\model{GNNHAR4L_Q} & GNNHAR & Q & no & 4L & 1.003 & -0.3\% & 0.978 & 2.2\% \\
+\model{GNNHAR5L_Q} & GNNHAR & Q & no & 5L & 1.003 & -0.3\% & 0.977 & 2.3\% \\
+\model{HAR_M_IV} & HAR & M & yes & -- & \bestmsecell{0.965} & \bestmsecell{3.5\%} & 0.979 & 2.1\% \\
+\model{GHAR_M_IV} & GHAR & M & yes & 1H & \bestmsecell{0.965} & \bestmsecell{3.5\%} & 0.978 & 2.2\% \\
+\model{GNNHAR1L_M_IV} & GNNHAR & M & yes & 1L & 0.972 & 2.8\% & 0.987 & 1.3\% \\
+\model{GNNHAR2L_M_IV} & GNNHAR & M & yes & 2L & 0.989 & 1.1\% & 1.012 & -1.2\% \\
+\model{GNNHAR3L_M_IV} & GNNHAR & M & yes & 3L & 0.968 & 3.2\% & 0.990 & 1.0\% \\
+\model{GNNHAR4L_M_IV} & GNNHAR & M & yes & 4L & 0.979 & 2.1\% & 0.996 & 0.4\% \\
+\model{GNNHAR5L_M_IV} & GNNHAR & M & yes & 5L & 0.980 & 2.0\% & 0.994 & 0.6\% \\
+\model{HAR_Q_IV} & HAR & Q & yes & -- & 0.981 & 1.9\% & \bestqlratio{0.933} & \bestqlgain{6.7\%} \\
+\model{GHAR_Q_IV} & GHAR & Q & yes & 1H & 0.981 & 1.9\% & \bestqlratio{0.933} & \bestqlgain{6.7\%} \\
+\model{GNNHAR1L_Q_IV} & GNNHAR & Q & yes & 1L & 0.981 & 1.9\% & 0.935 & 6.5\% \\
+\model{GNNHAR2L_Q_IV} & GNNHAR & Q & yes & 2L & 0.982 & 1.8\% & \bestqlratio{0.933} & \bestqlgain{6.7\%} \\
+\model{GNNHAR3L_Q_IV} & GNNHAR & Q & yes & 3L & 0.981 & 1.9\% & 0.940 & 6.0\% \\
+\model{GNNHAR4L_Q_IV} & GNNHAR & Q & yes & 4L & 0.986 & 1.4\% & 0.936 & 6.4\% \\
+\model{GNNHAR5L_Q_IV} & GNNHAR & Q & yes & 5L & 0.981 & 1.9\% & 0.934 & 6.6\% \\
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} This table answers whether the IV contribution survives when the universe expands to S\&P100.  Ratios are relative to \model{HAR_M} in the 234-date S\&P100 run; gains equal \(1-\)ratio.  Red MSE cells and blue QLIKE cells mark displayed best values; displayed ties are colored together.  Exact 5\% MCS membership is reported in Appendix \ref{app:stat-evidence}.  Multi-hop GHAR rows are excluded from the main table and reported as diagnostics in Appendix \ref{app:multihop}.
+\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{S\&P500 current AutoDL full-model out-of-sample loss ratios and gains}
+\label{tab:sp500-loss}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccrrrr}
+\toprule
+Model & Family & EC & IV & Hop/layer & MSE ratio & MSE gain & QLIKE ratio & QLIKE gain \\
+\midrule
+\model{HAR_M} & HAR & M & no & -- & 1.000 & 0.0\% & 1.000 & 0.0\% \\
+\model{GHAR_M} & GHAR & M & no & 1H & 1.000 & 0.0\% & 0.998 & 0.2\% \\
+\model{GNNHAR1L_M} & GNNHAR & M & no & 1L & 6.282 & -528.2\% & 10.922 & -992.2\% \\
+\model{GNNHAR2L_M} & GNNHAR & M & no & 2L & 7.040 & -604.0\% & 11.258 & -1025.8\% \\
+\model{GNNHAR3L_M} & GNNHAR & M & no & 3L & 6.466 & -546.6\% & 10.987 & -998.7\% \\
+\model{GNNHAR4L_M} & GNNHAR & M & no & 4L & 6.743 & -574.3\% & 11.098 & -1009.8\% \\
+\model{GNNHAR5L_M} & GNNHAR & M & no & 5L & 6.272 & -527.2\% & 10.919 & -991.9\% \\
+\model{HAR_Q} & HAR & Q & no & -- & 180.880 & -17988.0\% & 2.910 & -191.0\% \\
+\model{GHAR_Q} & GHAR & Q & no & 1H & 161.079 & -16007.9\% & 2.851 & -185.1\% \\
+\model{GNNHAR1L_Q} & GNNHAR & Q & no & 1L & 17.051 & -1605.1\% & 7.857 & -685.7\% \\
+\model{GNNHAR2L_Q} & GNNHAR & Q & no & 2L & 16.106 & -1510.6\% & 8.152 & -715.2\% \\
+\model{GNNHAR3L_Q} & GNNHAR & Q & no & 3L & 17.289 & -1628.9\% & 7.854 & -685.4\% \\
+\model{GNNHAR4L_Q} & GNNHAR & Q & no & 4L & 19.880 & -1888.0\% & 9.965 & -896.5\% \\
+\model{GNNHAR5L_Q} & GNNHAR & Q & no & 5L & 17.652 & -1665.2\% & 7.856 & -685.6\% \\
+\model{HAR_M_IV} & HAR & M & yes & -- & \bestmsecell{0.966} & \bestmsecell{3.4\%} & 0.974 & 2.6\% \\
+\model{GHAR_M_IV} & GHAR & M & yes & 1H & \bestmsecell{0.966} & \bestmsecell{3.4\%} & \bestqlratio{0.973} & \bestqlgain{2.7\%} \\
+\model{GNNHAR1L_M_IV} & GNNHAR & M & yes & 1L & 6.261 & -526.1\% & 10.912 & -991.2\% \\
+\model{GNNHAR2L_M_IV} & GNNHAR & M & yes & 2L & 6.380 & -538.0\% & 10.956 & -995.6\% \\
+\model{GNNHAR3L_M_IV} & GNNHAR & M & yes & 3L & 6.321 & -532.1\% & 10.935 & -993.5\% \\
+\model{GNNHAR4L_M_IV} & GNNHAR & M & yes & 4L & 6.578 & -557.8\% & 11.048 & -1004.8\% \\
+\model{GNNHAR5L_M_IV} & GNNHAR & M & yes & 5L & 6.361 & -536.1\% & 10.951 & -995.1\% \\
+\model{HAR_Q_IV} & HAR & Q & yes & -- & 124.370 & -12337.0\% & 2.677 & -167.7\% \\
+\model{GHAR_Q_IV} & GHAR & Q & yes & 1H & 83.373 & -8237.3\% & 2.698 & -169.8\% \\
+\model{GNNHAR1L_Q_IV} & GNNHAR & Q & yes & 1L & 13.818 & -1281.8\% & 7.823 & -682.3\% \\
+\model{GNNHAR2L_Q_IV} & GNNHAR & Q & yes & 2L & 12.851 & -1185.1\% & 7.802 & -680.2\% \\
+\model{GNNHAR3L_Q_IV} & GNNHAR & Q & yes & 3L & 12.930 & -1193.0\% & 7.824 & -682.4\% \\
+\model{GNNHAR4L_Q_IV} & GNNHAR & Q & yes & 4L & 13.632 & -1263.2\% & 7.808 & -680.8\% \\
+\model{GNNHAR5L_Q_IV} & GNNHAR & Q & yes & 5L & 13.241 & -1224.1\% & 7.826 & -682.6\% \\
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} This table answers whether the graph/GNN gain scales to the 449-ticker S\&P500 run.  Ratios are relative to \model{HAR_M}; gains equal \(1-\)ratio, so large negative gains indicate worse loss than HAR.  Red MSE cells and blue QLIKE cells mark displayed best values; displayed ties are colored together.  Exact 5\% MCS membership is reported in Appendix \ref{app:stat-evidence}.  The large MSE ratios for QLIKE-trained linear rows and the large GNNHAR ratios are retained as diagnostic evidence rather than removed.
+\end{minipage}
+\end{table}
+
+\subsection{Cross-Universe Comparison}
+\label{subsec:cross-universe}
+
+\begin{table}[H]
+\centering
+\caption{Best-model summary across universes}
+\label{tab:best-models}
+\footnotesize
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{p{0.13\textwidth}p{0.12\textwidth}p{0.48\textwidth}rr}
+\toprule
+Universe & Loss & Displayed-best model(s) & Ratio & Gain \\
+\midrule
+Dow30 & QLIKE & \model{GNNHAR2L_Q_IV} & 0.923 & 7.7\% \\
+Dow30 & MSE & \model{HAR_M_IV} & 0.959 & 4.1\% \\
+\addlinespace
+S\&P100 & QLIKE & \model{HAR_Q_IV}; \model{GHAR_Q_IV}; \model{GNNHAR2L_Q_IV} & 0.933 & 6.7\% \\
+S\&P100 & MSE & \model{HAR_M_IV}; \model{GHAR_M_IV} & 0.965 & 3.5\% \\
+\addlinespace
+S\&P500 & QLIKE & \model{GHAR_M_IV} & 0.973 & 2.7\% \\
+S\&P500 & MSE & \model{HAR_M_IV}; \model{GHAR_M_IV} & 0.966 & 3.4\% \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} This table summarizes the displayed best rows from the three main-result tables.  A model is listed when its ratio rounds to the displayed best three-decimal value within that universe and loss criterion; full-precision rank-1 rows remain available in the corresponding diagnostics.  Gains are \(1-R\), with \(R\) computed relative to \model{HAR_M} in each universe.  Dow30 uses the current aligned 234-date full-model run, S\&P100 uses the current 234-date run, and S\&P500 uses the current 223-date subset of the Dow30/S\&P100 calendar.
+\end{minipage}
+\end{table}
+
+This comparison gives the current answer to RQ3, but it should be read with the date-source caveat in the table note.  If richer graphs automatically amplified graph-based forecasting gains, the improvement over HAR should increase with universe size.  The current pattern goes in the opposite direction.  This does not prove that large graphs are unhelpful, but it does show that larger node sets also bring noise, graph-estimation error, optimization sensitivity, output-scaling issues, and possible over-smoothing.  A submission version should align the full model family on a common calendar or explicitly present this comparison as a near-calendar robustness result.
+
+The S\&P500 table also clarifies why IV is not merely an additional control variable.  Without IV, the large-universe historical-only models are weak: \model{GHAR_M} is nearly indistinguishable from \model{HAR_M}, and the non-IV GNNHAR rows are much worse than HAR under both MSE and QLIKE.  Once lagged IV is added, the best S\&P500 rows become \model{HAR_M_IV} and \model{GHAR_M_IV}, with displayed MSE ratios of \(0.966\) and a best displayed QLIKE ratio of \(0.973\).  This is consistent with IV containing forward-looking option-market information that is not summarized by the linear historical HAR lags alone.  At the same time, the GNNHAR-IV rows should be interpreted carefully.  Adding IV improves several QLIKE-trained GNNHAR rows relative to their non-IV counterparts--for example, \model{GNNHAR2L_Q} falls from a QLIKE ratio of \(8.152\) to \(7.802\), and \model{GNNHAR4L_Q} falls from \(9.965\) to \(7.808\).  However, these rows remain far from the best IV-augmented HAR/GHAR models.  The evidence therefore supports a narrower mechanism: IV gives nonlinear graph models a more informative state variable, but in the current S\&P500 implementation it does not by itself resolve the scale and low-volatility over-prediction problems of GNNHAR.
+
+\section{Statistical Analysis and Discussion}
+\label{sec:discussion}
+
+\subsection{Impact of Estimation and Evaluation Criterion}
+\label{subsec:criterion}
+
+MSE and QLIKE emphasize different forecast errors.  MSE squares absolute errors and is therefore dominated by extreme stock-date observations.  QLIKE is a standard volatility-forecast loss and is less explosive under extreme over-prediction, but it still evaluates forecasts relative to a proxy rather than latent risk.
+
+The S\&P500 run illustrates the difference.  QLIKE-trained linear models have very large MSE ratios, while their QLIKE ratios are large but not of the same order.  Project diagnostics traced much of this behavior to EchoStar, \model{SATS}, around a true price jump in late August 2025.  The diagnostics identify a close-to-close return of roughly \(70.25\%\) on 2025-08-26, followed by elevated 30-day RV features for many subsequent dates.  Because the target is a 30-day volatility proxy, the event mechanically remains in rolling lag features.  A high-frequency intraday RV target would likely make this stock-date even more extreme, because the same price jump would be concentrated into intraday variation and could produce a highly irregular loss spike.  This motivates our proxy-based interpretation: the 30-day target is smoother, but even under this smoother target the large-universe GNNHAR rows exhibit substantial instability.  The SATS episode is therefore a useful stress case rather than a row to silently delete; Appendix \ref{app:sp500-diagnostics} reports the corresponding loss-contribution and worst-observation tables.
+
+\subsection{MCS and Pairwise DM Interpretation}
+\label{subsec:mcs-dm}
+
+MCS and DM answer different questions.  MCS identifies a statistically indistinguishable best set among candidate models \citep{hansen2011mcs}; it does not simply mark every model that beats HAR.  DM tests compare a pair of forecast loss sequences \citep{diebold1995dm}.  The current MCS evidence is computed on the saved current runs: the imported 234-date aligned Dow30 full-model run, the 234-date S\&P100 run, and the 223-date S\&P500 AutoDL run:
+\begin{itemize}
+  \item In S\&P100, the QLIKE MCS set is broad and consists of IV models, including \model{HAR_Q_IV}, \model{GHAR_Q_IV}, and IV GNNHAR variants.
+  \item In S\&P500, the QLIKE MCS set contains \model{GHAR_M_IV} and \model{HAR_M_IV}; the current GNNHAR rows are far outside the best set.
+\end{itemize}
+Thus the saved statistical evidence reinforces the main narrative: IV is stable, while nonlinear graph depth is not uniformly stable across universes.  In Dow30, the QLIKE MCS confirms that the descriptive QLIKE winner \model{GNNHAR2L_Q_IV} is in the statistically competitive set, together with other IV QLIKE-trained rows.  Under MSE, the 234-date Dow30 MCS is broader and led by \model{HAR_M_IV}.
+
+Appendix \ref{app:stat-evidence} reports the MCS status table, saved 5\% MCS membership rows for Dow30, S\&P100, and S\&P500, and selected DM/depth comparisons.  The saved DM diagnostics use the sign convention that a positive statistic favors the candidate model, and a candidate/base QLIKE ratio below one indicates lower candidate loss.  This matters for the depth interpretation: several deeper rows have ratios close to one or worse, so a deeper receptive field should not be treated as automatically better.
+
+\subsection{FVU and Nonlinearity}
+\label{subsec:fvu}
+
+Zhang-style FVU diagnostics are useful because they measure how much a model's prediction function moves relative to a baseline.  In this draft, FVU is treated as an effect-size diagnostic rather than a significance test.  It asks whether a graph or IV model produces materially different forecasts from \model{HAR_M}.  In small and medium universes, IV and GNNHAR variants change the forecast function without uniformly improving both losses.  In S\&P500, GNNHAR changes the forecast function substantially, but in the current implementation that change is harmful.  Appendix \ref{app:fvu-smoothing} shows that the largest S\&P500 FVU rows are GNNHAR rows, which is evidence of large forecast-function movement rather than evidence of useful nonlinearity.
+
+\subsection{Predictive Information from Multi-Hop Neighbors}
+\label{subsec:multihop-discussion}
+
+Linear multi-hop GHAR is a diagnostic rather than the main model family.  The current evidence is consistent with the caution in Zhang-style multi-hop analysis: more hops do not robustly add predictive power.  The S\&P100 multi-hop rows show that MSE-trained IV multi-hop GHAR is competitive under MSE but weaker than \model{HAR_Q_IV} under QLIKE.  QLIKE-trained multi-hop GHAR rows deteriorate strongly in S\&P100.  In S\&P500, MSE-trained multi-hop GHAR is close to one-hop GHAR but not better, while QLIKE-trained multi-hop rows are unstable.  Appendix \ref{app:multihop} records the detailed multi-hop evidence.
+
+\subsection{Market Regimes}
+\label{subsec:regimes}
+
+The current regime split uses the cross-sectional mean RV proxy because SPY RV is not part of the saved truth arrays.  Calm dates are the bottom 90\% of this proxy and turbulent dates are the top 10\%.  This is method-aligned with Zhang-style regime analysis but not data-identical to a SPY-based split.  The Dow30 rows below are retained from the older diagnostic bundle until regime diagnostics are recomputed on the aligned 234-date Dow30 run.
+
+\begin{table}[H]
+\centering
+\caption{Best regime-specific models}
+\label{tab:regime-best}
+\scriptsize
+\begin{tabular}{llrrrr}
+\toprule
+Universe & Regime & Best QLIKE model & QLIKE ratio & Best MSE model & MSE ratio \\
+\midrule
+Dow30 & calm bottom 90\% & \model{GNNHAR2L_Q_IV} & 0.947 & \model{GHAR_M_IV} & 0.973 \\
+Dow30 & turbulent top 10\% & \model{GHAR_M_IV} & 0.664 & \model{GHAR_M_IV} & 0.766 \\
+S\&P100 & calm bottom 90\% & \model{GNNHAR2L_Q_IV} & 0.933 & \model{GHAR3H_M_IV} & 0.969 \\
+S\&P100 & turbulent top 10\% & \model{HAR_Q_IV} & 0.921 & \model{HAR_M_IV} & 0.929 \\
+S\&P500 & calm bottom 90\% & \model{GHAR_M_IV} & 0.976 & \model{HAR_M_IV} & 0.968 \\
+S\&P500 & turbulent top 10\% & \model{GHAR_M_IV} & 0.943 & \model{GHAR_M_IV} & 0.944 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The regime results again favor IV variants.  They do not support a simple deeper-GNN story.  IV appears especially useful in turbulent or event-sensitive settings, which is consistent with option-market information reflecting future uncertainty and tail-risk concerns.
+
+\subsection{Smoothing and Large-Universe Diagnostics}
+\label{subsec:smoothing}
+
+The paper-ready bundles contain prediction-level smoothing diagnostics, but the exact hidden-state MAD used in Zhang-style over-smoothing analysis is not available because final hidden representations were not saved.  The available diagnostics should therefore be read as proxies.
+
+The more serious large-universe finding is the S\&P500 GNNHAR failure.  Current GNNHAR forecasts systematically over-predict many low-volatility observations.  One plausible implementation mechanism is a ReLU constraint applied on standardized target scale: if the final standardized output is lower-bounded before inverse transformation, the prediction floor can be close to a training mean, which is too high for low-volatility stocks.  This explanation is a diagnostic hypothesis, not a proven theorem.  It motivates the robustness tests in \Cref{sec:robustness}.
+
+\section{Robustness Tests}
+\label{sec:robustness}
+
+This section separates robustness items into three statuses: \emph{available diagnostic}, \emph{not yet run}, and \emph{submission-required rerun}.  This avoids treating a diagnostic table as if it were a completed robustness design.
+
+\subsection{Alternative Validation Split}
+\label{subsec:validation-robust}
+
+The current runs use a one-month validation block.  Zhang's paper also discusses alternative validation-set designs.  A stronger robustness pass should compare the current 22-day validation design with a longer validation window, at least for Dow30 and S\&P100 before committing to a costly S\&P500 rerun.  The goal is to test whether IV gains and GNN depth conclusions depend on validation length.
+
+\textbf{Status: not yet run.}  This is a planned rerun, not evidence already used in the main tables.
+
+\subsection{Date Alignment and Source Consistency}
+\label{subsec:date-robust}
+
+The date-alignment status has improved relative to the earlier draft.  Dow30 now has a standard-window aligned full-model rerun using raw inputs from 2021-06-09 to 2026-06-09 and out-of-sample dates from 2025-07-07 to 2026-06-09, matching the current S\&P100 full-model calendar.  The separate Dow30 multi-hop supplement uses the same 234-date calendar but remains an Appendix diagnostic.  The current S\&P500 full-model run is not a disjoint or incompatible calendar: its 223 test dates are a subset of the Dow30/S\&P100 234-date calendar, covering 2025-07-14 to 2026-06-01 after the large-universe coverage and rolling-window filters.  The unmatched dates are the first five and last six dates of the 234-date calendar.
+
+\textbf{Status: mostly aligned but not identical.}  The Dow30--S\&P100 comparison now uses a common full-model test calendar.  The S\&P500 evidence is a nested near-calendar comparison rather than a fully separate sample: every S\&P500 test date appears in the Dow30/S\&P100 calendar, but eleven boundary dates are absent from the S\&P500 run.  A submission version can either rerun S\&P500 on the full 234-date calendar or explicitly label the current comparison as a nested-calendar scale result.  The aligned Dow30 run currently supports the main loss table, DM tests, FVU, and 234-date MCS; the remaining Dow30 diagnostic gap is the regime table, which should be recomputed before replacing the older diagnostic appendix rows.
+
+\subsection{Alternative Graph Construction}
+\label{subsec:graph-robust}
+
+The main graph is built with GLASSO.  Robustness checks should compare correlation-threshold graphs, sector graphs, and possibly supply-chain or analyst-coverage graphs if such data become available.  This would help separate the value of IV itself from the value of a particular graph estimator.
+
+\textbf{Status: not yet run.}  The current draft only reports the GLASSO graph design.
+
+\subsection{Large-Universe GNN Stability}
+\label{subsec:large-gnn}
+
+The S\&P500 result requires corrected-output diagnostics.  A follow-up run should retain ReLU in hidden layers but use an unconstrained final output layer, or alternatively train on log-volatility and transform forecasts back with an exponential map.  Per-ticker normalization or fixed effects should also be evaluated.  If corrected-output GNNHAR remains worse than HAR/GHAR-IV, the evidence against nonlinear graph aggregation in the current S\&P500 data will be much stronger.
+
+\textbf{Status: available diagnostic plus submission-required rerun.}  The available diagnostic is the low-volatility over-prediction and prediction-floor evidence in Appendix \ref{app:sp500-diagnostics}.  The corrected-output GNNHAR run has not yet been completed.
+
+\subsection{IV Interaction and Nonlinear IV Effects}
+\label{subsec:iv-interaction-robust}
+
+The additive IV specification should be compared with \(IV\times RV\) interaction models.  In HAR and GHAR, this is a standard regression interaction.  In GNNHAR, it is a richer node-feature input.  Improvement from interaction terms would mean that IV changes the marginal predictive meaning of historical RV; no improvement would support the simpler additive specification.
+
+\textbf{Status: not yet run.}  Current results estimate additive IV models only.
+
+\subsection{Forecast Horizon Robustness}
+\label{subsec:horizon}
+
+Zhang-style tables include one-day, one-week, and one-month horizons.  The current saved forecasts are one-day forecasts.  To test horizon robustness, define
+\[
+v_{i,t:t+h}
+=
+\frac{1}{h}\sum_{k=0}^{h-1}v_{i,t+k},
+\qquad h\in\{5,22\},
+\]
+and rerun the model family on \(h=5\) and \(h=22\) targets.
+
+\textbf{Status: not yet run.}  The saved arrays support the one-day horizon only.
+
+\subsection{Exact Hidden-State MAD}
+\label{subsec:mad}
+
+Exact MAD requires saved final hidden representations \(H^{(K)}\), the graph matrix, model name, rolling origin, and ticker.  Future runs should save these tensors so that the over-smoothing analysis can reproduce Zhang-style Figure 7 rather than relying on prediction-level proxies.
+
+\textbf{Status: prediction proxy available; exact hidden-state diagnostic not yet run.}  Appendix \ref{app:fvu-smoothing} reports the available prediction-level smoothing and FVU evidence.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper extends a Zhang-style HAR/GHAR/GNNHAR volatility forecasting framework by adding options-implied volatility and by comparing Dow30, S\&P100, and S\&P500 universes.  The current evidence is best summarized as follows: IV is the most stable added information channel; graph and GNN structure can help, especially in smaller universes, but larger graphs do not automatically amplify the gain over HAR.
+
+\textbf{Answer to RQ1.} GHAR and GNNHAR do not uniformly improve on HAR across all universes.  In the aligned Dow30 run, \model{GNNHAR2L_Q_IV} achieves the best QLIKE ratio, while the MSE winner is the simpler \model{HAR_M_IV}.  S\&P100 and S\&P500 are also more favorable to IV-augmented HAR or GHAR than to deeper GNNHAR.  The graph framework has predictive value in some settings, but it is not an automatic dominance result.
+
+\textbf{Answer to RQ2.} IV contributes the most stable improvement.  In all three universes, the best QLIKE model is an IV model.  This supports the economic idea that options-implied information contains forward-looking volatility information not fully summarized by historical RV.  The S\&P500 results make this point especially clearly: historical-only linear graph models add little over \model{HAR_M}, while IV-augmented HAR/GHAR become the best rows.  IV also improves some GNNHAR-IV rows relative to their non-IV counterparts, which suggests that nonlinear graph aggregation is more meaningful when the node state includes option-implied forward-looking information rather than only backward-looking historical volatility lags.  Nevertheless, the same S\&P500 evidence also shows the limit of this claim: IV improves the information set, but it does not make the current large-universe GNNHAR implementation competitive with \model{HAR_M_IV} or \model{GHAR_M_IV}.  The result should not be read as causal proof.  IV may represent genuine option-market expectations, additional model flexibility, or both; interaction and placebo robustness checks are needed to separate those channels.
+
+\textbf{Answer to RQ3.} The current evidence does not support an ``improvement of improvement'' from richer graphs.  Best QLIKE gains decrease from Dow30 to S\&P100 to S\&P500 even after replacing the old Dow30 run with the standard-window aligned full-model rerun.  A larger graph brings more potential spillover information but also more noise, graph-estimation difficulty, over-smoothing risk, and scale-sensitive optimization.  This answer should be revisited after an S\&P500 full-model rerun on the Dow30/S\&P100 calendar.
+
+Future work should return to the information sources emphasized by Zhang et al.: limit order books, options, and news.  Limit order books can expose latent depth and liquidity imbalance.  News data can identify earnings, CPI, FOMC, labor-market, and interest-rate event risk.  IV can be combined with these sources to study how markets price not-yet-realized uncertainty.  On the modeling side, the next version should align the S\&P500 calendar, recompute the aligned Dow30 regime diagnostics, add weekly and monthly horizons, test alternative graphs, estimate IV interaction terms, run corrected-output GNNHAR, and save exact hidden-state MAD.
+
+\appendix
+
+\section{Data Audit and Reproducibility}
+\label{app:data-audit}
+
+The stable result entrypoint for the current draft is the repository-relative bundle \fileentry{outputs/paper_ready_20260617}.  The formal \spfive{} raw input source is \fileentry{data/scale_experiment/sp500}, and the formal \spfive{} model output uses 449 model tickers.  Older upload copies and local scratch paths are not treated as source-of-truth artifacts in this paper draft.
+
+\input{tables/repo_artifacts.tex}
+\input{tables/appendix_data_audit.tex}
+
+The core result files are \fileentry{loss_table.csv}, \fileentry{dm_tests.csv}, and \fileentry{fvu.csv} under each universe's \fileentry{tables/} directory when available.  S\&P100 additionally contains \fileentry{multi_hop_dm_tests.csv} and \fileentry{incremental_fvu.csv}; S\&P500 additionally contains \fileentry{dm_depth_tests.csv}.  Diagnostic files are stored under each universe's \fileentry{diagnostics/} directory in the paper-ready bundle.
+
+\section{MCS, DM, and Depth Comparisons}
+\label{app:stat-evidence}
+
+The tables below report statistical-test evidence only.  They do not duplicate the run-level loss-ratio tables in Section \ref{subsec:main-results}.  MCS settings are alpha \(0.05\), bootstrap \(10000\), block size 2, and SQ algorithm in the paper-ready diagnostics.  Dow30 MCS inclusion is computed from the imported 234-date aligned full-model run under \fileentry{outputs/paper_ready_20260617/universes/dow30/aligned_full_model_20260619/diagnostics/}.  S\&P100 and S\&P500 MCS inclusion is taken from the saved \fileentry{mcs_mse.csv}, \fileentry{mcs_qlike.csv}, and \fileentry{mcs_summary.csv} files in each universe's diagnostics directory.  The red MSE cells and blue QLIKE cells in Section \ref{subsec:main-results} mark descriptive rank-1 mean-loss rows; the MCS rows here mark the 5\% model confidence sets.  The DM/depth table uses the saved diagnostic convention: positive DM statistics favor the candidate, while a candidate/base QLIKE ratio below one means the candidate has lower QLIKE loss.  These tables support the main interpretation that IV rows are statistically competitive across universes, whereas deeper GNNHAR rows are not robustly dominant.
+
+\input{tables/mcs_membership.tex}
+\input{tables/selected_dm_depth.tex}
+
+\section{Multi-Hop GHAR Diagnostics}
+\label{app:multihop}
+
+Dow30 has a date-aligned multi-hop supplement using 30 tickers and 234 dates from 2025-07-07 to 2026-06-09.  It contains \model{GHAR2H} and \model{GHAR3H} variants only.  Because it does not include the full HAR/GHAR/GNNHAR family on the same test calendar, the losses below are absolute losses, not ratios relative to a same-run \model{HAR_M}.
+
+\begin{table}[H]
+\centering
+\caption{Dow30 aligned multi-hop GHAR supplement}
+\label{tab:dow30-multihop}
+\scriptsize
+\begin{tabular}{lrr}
+\toprule
+Model & MSE & QLIKE \\
+\midrule
+\model{GHAR2H_M} & 0.9558 & 0.01574 \\
+\model{GHAR3H_M} & 0.9555 & 0.01577 \\
+\model{GHAR2H_M_IV} & 0.9165 & 0.01535 \\
+\model{GHAR3H_M_IV} & 0.9162 & 0.01537 \\
+\model{GHAR2H_Q} & 1.5830 & 0.01946 \\
+\model{GHAR3H_Q} & 1.5883 & 0.01946 \\
+\model{GHAR2H_Q_IV} & 1.5181 & 0.01840 \\
+\model{GHAR3H_Q_IV} & 1.5203 & 0.01837 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In S\&P100, MSE-trained IV multi-hop GHAR is competitive under MSE but not the best QLIKE model; QLIKE-trained multi-hop rows deteriorate sharply.  In S\&P500, one-hop \model{GHAR_M_IV} remains better than multi-hop MSE-trained variants, and QLIKE-trained multi-hop rows are unstable.  Thus the current multi-hop evidence does not justify making multi-hop GHAR a main result.  The same conclusion is visible in the selected DM/depth comparisons above.
+
+\section{FVU, Regime, and Smoothing Diagnostics}
+\label{app:fvu-smoothing}
+
+FVU is computed as an effect-size measure relative to \model{HAR_M}.  It measures how far a forecast surface moves from the baseline; it is not itself a loss improvement statistic.  The largest S\&P500 FVU rows are GNNHAR rows, consistent with the low-volatility over-prediction diagnostics in Appendix \ref{app:sp500-diagnostics}.  Exact hidden-state MAD is not available because final hidden representations were not saved in these runs; prediction-level smoothing proxies are stored in \model{mad_smoothing_diagnostics.csv} and \model{oversmoothing_depth_summary.csv}.
+
+\input{tables/fvu_largest.tex}
+\input{tables/appendix_regime_best.tex}
+
+\section{S\&P500 Diagnostic Notes}
+\label{app:sp500-diagnostics}
+
+Two S\&P500 facts require care.  First, QLIKE-trained linear models produce extreme MSE values concentrated in a small number of stock-date observations, especially \model{SATS} around the late-August 2025 price jump.  Second, GNNHAR predictions in the current S\&P500 run show low-volatility over-prediction.  The draft treats these as diagnostic findings, not as evidence to remove.  A corrected-output GNNHAR rerun is required before concluding that nonlinear graph aggregation is intrinsically poor in large universes.
+
+\input{tables/sats_loss_contribution.tex}
+\input{tables/sp500_topk_sse.tex}
+\input{tables/wst_har_q.tex}
+\input{tables/wst_ghar3h_q_iv.tex}
+\input{tables/wst_gnnhar2l_q_iv.tex}
+\input{tables/sp500_pred_quantiles.tex}
+\input{tables/sp500_lowvol_buckets.tex}
+
+\section{Reference Map}
+\label{app:reference-map}
+
+The core references are \citet{corsi2009har} for HAR, \citet{zhang2025gnnhar} for GNNHAR, \citet{zhang2024graphcovariance} for graph-based HAR/covariance forecasting, \citet{friedman2008glasso} for GLASSO, \citet{patton2011volatility} for QLIKE with imperfect volatility proxies, \citet{hansen2011mcs} for MCS, and \citet{diebold1995dm} for pairwise predictive accuracy tests.  IV motivation is supported by \citet{busch2011iv}, \citet{kambouroudis2021hariv}, \citet{yfanti2021aimheavy}, and related option-implied volatility references in the bibliography.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

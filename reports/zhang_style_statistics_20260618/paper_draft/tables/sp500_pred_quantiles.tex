@@ -1,0 +1,20 @@
+
+\begin{table}[H]
+\centering
+\caption{S\&P500 truth and prediction quantiles}
+\label{tab:sp500-pred-quantiles}
+\scriptsize
+\begin{tabular}{lrrrrrrr}
+\toprule
+Series & Min & P10 & P25 & Median & P75 & P90 & Max \\
+\midrule
+\model{truth} & 1.58 & 16.35 & 20.27 & 26.60 & 36.36 & 49.49 & 205.66 \\
+\model{HAR_M} & 8.22 & 16.87 & 20.64 & 26.70 & 36.06 & 48.64 & 198.62 \\
+\model{GHAR_M_IV} & 8.22 & 16.83 & 20.70 & 26.97 & 36.49 & 49.29 & 192.27 \\
+\model{GNNHAR1L_M} & 29.69 & 29.81 & 29.93 & 30.08 & 36.53 & 48.88 & 195.03 \\
+\model{GNNHAR1L_M_IV} & 29.69 & 29.81 & 29.93 & 30.08 & 36.62 & 49.33 & 191.44 \\
+\model{GNNHAR2L_Q_IV} & 26.70 & 26.85 & 27.03 & 28.51 & 35.02 & 45.65 & 746.90 \\
+
+\bottomrule
+\end{tabular}
+\end{table}

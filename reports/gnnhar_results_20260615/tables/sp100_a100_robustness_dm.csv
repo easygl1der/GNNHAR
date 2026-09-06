@@ -1,0 +1,5 @@
+Base,Candidate,IV,EC,\(L_B/L_A\),\(1-L_B/L_A\),DM,\(p\),Result
+linear GHAR 1-hop,linear GHAR 1+2-hop,No,\(M\),1.005537,-0.005537,-4.06474,4.8e-05,deteriorates
+linear GHAR 1-hop,linear GHAR 1+2+3-hop,No,\(M\),1.008175,-0.008175,-4.076247,4.6e-05,deteriorates
+\(\mathrm{GNNHAR1L}_{Q}\),\(\mathrm{GNNHAR5L}_{Q}\),No,\(Q\),0.996524,0.003476,2.223569,0.026177,improves
+\(\mathrm{GNNHAR4L}_{Q}\),\(\mathrm{GNNHAR5L}_{Q}\),No,\(Q\),0.998253,0.001747,2.03475,0.041876,improves

@@ -1,0 +1,58 @@
+[
+  {
+    "key": "2025-tail-gan",
+    "title": "Tail-GAN: Learning to Simulate Tail Risk Scenarios",
+    "authors": "Rama Cont, Mihai Cucuringu, Renyuan Xu, Chao Zhang",
+    "venue": "Management Science",
+    "date": "2025-08-11 published online; 2026-04 print per Crossref",
+    "doi": "10.1287/mnsc.2023.00936",
+    "local_pdf": "/Users/yitwah/Projects/Volatility/references/papers/zhang-chao-recent/2025-tail-gan.pdf",
+    "download_status": "downloaded_arxiv_preprint",
+    "download_url": "https://arxiv.org/pdf/2203.01664"
+  },
+  {
+    "key": "2025-alpha-go-everywhere",
+    "title": "Alpha Go Everywhere: Machine Learning and International Stock Returns",
+    "authors": "Darwin Choi, Wenxi Jiang, Chao Zhang",
+    "venue": "The Review of Asset Pricing Studies",
+    "date": "2025-06-21/24 online; 2025-11 print",
+    "doi": "10.1093/rapstu/raaf005",
+    "local_pdf": "/Users/yitwah/Projects/Volatility/references/papers/zhang-chao-recent/2025-alpha-go-everywhere.pdf",
+    "download_status": "downloaded_abfer_conference_pdf",
+    "download_url": "https://abfer.org/media/abfer-events-2023/annual-conference/papers-investment/AC23P3084-Alpha-Go-Everywhere-Machine-Learning-and-International-Stock-Returns.pdf"
+  },
+  {
+    "key": "2025-forecasting-realized-volatility-spillover-gnn",
+    "title": "Forecasting realized volatility with spillover effects: Perspectives from graph neural networks",
+    "authors": "Chao Zhang, Xingyue Pu, Mihai Cucuringu, Xiaowen Dong",
+    "venue": "International Journal of Forecasting",
+    "date": "2024-10-07 online; 2025-01 print",
+    "doi": "10.1016/j.ijforecast.2024.09.002",
+    "local_pdf": "/Users/yitwah/Projects/Volatility/references/papers/zhang-chao-recent/2025-forecasting-realized-volatility-spillover-gnn.pdf",
+    "download_status": "copied_existing_local_pdf",
+    "download_url": "/Users/yitwah/Projects/Volatility/references/papers/zhang-forecasting-realized-volatility-gnn-ijf-2025.pdf"
+  },
+  {
+    "key": "2024-volatility-forecasting-ml-intraday-commonality",
+    "title": "Volatility Forecasting with Machine Learning and Intraday Commonality",
+    "authors": "Chao Zhang, Yihuang Zhang, Mihai Cucuringu, Zhongmin Qian",
+    "venue": "Journal of Financial Econometrics",
+    "date": "2024-03-22 print; 2023-03-20 online",
+    "doi": "10.1093/jjfinec/nbad005",
+    "local_pdf": "/Users/yitwah/Projects/Volatility/references/papers/zhang-chao-recent/2024-volatility-forecasting-ml-intraday-commonality.pdf",
+    "download_status": "downloaded_oxford_research_archive_pdf",
+    "download_url": "https://ora.ox.ac.uk/objects/uuid:09619aca-a61b-465a-931f-feaacf50e880/files/rh415pb63b"
+  },
+  {
+    "key": "2025-graph-based-realized-covariances",
+    "title": "Graph-Based Methods for Forecasting Realized Covariances",
+    "authors": "Chao Zhang, Xingyue Pu, Mihai Cucuringu, Xiaowen Dong",
+    "venue": "Journal of Financial Econometrics",
+    "date": "2024-11-09 online; 2025-01-31 print",
+    "doi": "10.1093/jjfinec/nbae026",
+    "local_pdf": null,
+    "download_status": "not_downloaded_oup_and_ssrn_blocked_by_403_cloudflare",
+    "doi_url": "https://doi.org/10.1093/jjfinec/nbae026",
+    "ssrn_url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4274989"
+  }
+]

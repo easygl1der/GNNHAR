@@ -1,0 +1,473 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{float}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\title{Forecasting VolVue Volatility Proxies with Spillover Effects:\\
+\large A Zhang-Style GNNHAR Replication and Extension}
+\author{Volatility Project}
+\date{June 15, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report rewrites the current Dow30, SP100, and SP500 evidence in the style of Zhang, Pu, Cucuringu, and Dong's GNNHAR framework.
+The central questions are whether graph information improves the heterogeneous autoregressive benchmark, whether nonlinear graph neural aggregation improves on the linear graph HAR model, and whether QLIKE-trained forecasts improve out-of-sample volatility prediction.
+Our target is not Zhang's high-frequency realized variance.
+Instead, we use a daily-scaled VolVue 30-day historical-volatility proxy and, in extensions, a daily-scaled 30-day implied-volatility proxy.
+Under this target, QLIKE training and implied-volatility features are the most stable sources of improvement.
+The current evidence does not show the same nonlinear GNN gain reported by Zhang et al.; matched DM tests generally do not support GNNHAR1L over GHAR in our completed artifacts, and the larger scale runs show significant deterioration.
+\end{abstract}
+
+\section{Introduction}
+
+Zhang et al. study realized-volatility forecasting from the perspective of volatility spillovers on a financial graph.
+Their starting point is the heterogeneous autoregressive model, which captures daily, weekly, and monthly persistence in realized volatility but does not directly use cross-sectional spillover information.
+They then compare the linear graph HAR model with a customized GNNHAR architecture in which graph neural layers replace the linear one-hop neighborhood aggregation.
+This gives a natural empirical sequence:
+\[
+  \mathrm{HAR}
+  \quad \longrightarrow \quad
+  \mathrm{GHAR}
+  \quad \longrightarrow \quad
+  \mathrm{GNNHAR}.
+\]
+The paper's main empirical emphasis is not only model ranking.
+It asks whether graph information is useful, whether nonlinear spillovers add predictive power over linear graph aggregation, whether multi-hop neighbors are necessary, and whether QLIKE is a better estimation criterion than MSE for volatility forecasting.
+
+We follow that ordering in this report.
+The main text therefore focuses on the strict Zhang-core models:
+\[
+  \mathrm{HAR}_M,\ \mathrm{GHAR}_M,\ \mathrm{GNNHAR1L}_M,\ \mathrm{GNNHAR2L}_M,\ \mathrm{GNNHAR3L}_M
+\]
+and their QLIKE-trained counterparts where available.
+Implied-volatility features, four- and five-layer GNNHAR models, and linear multi-hop GHAR variants are reported as extensions.
+This distinction matters.
+In Zhang et al., linear GHAR2Hop is an appendix-style diagnostic for the multi-hop question, not the primary competitor to GNNHAR.
+Accordingly, we do not treat \(\mathrm{GHAR2H}_M\) or \(\mathrm{GHAR3H}_M\) as core models in the main comparison.
+
+\subsection{Notation}
+
+Throughout the report, \(i=1,\ldots,N\) indexes assets and \(t\) indexes trading days.
+The vector \(v_t=(RV_{1,t},\ldots,RV_{N,t})^\top\) denotes the cross-section of volatility targets.
+In Zhang et al., \(RV_{i,t}\) is high-frequency realized variance.
+In our current data, \(RV_{i,t}\) denotes the daily-scaled VolVue historical-volatility proxy unless explicitly stated otherwise.
+
+The graph is \(\mathcal{G}=(\mathcal{V},\mathcal{E})\), with binary adjacency matrix \(A\).
+The normalized spillover matrix is
+\[
+  W = D^{-1/2} A D^{-1/2},
+\]
+where \(D\) is the degree matrix.
+The HAR feature matrix \(V_{:t-1}\) contains daily, weekly, and monthly lag components.
+For model names, the subscript \(M\) means that the model is trained with MSE as estimation criterion, while \(Q\) means that it is trained with QLIKE.
+The superscript \(IV\) denotes the implied-volatility extension.
+
+Loss ratios are written as
+\[
+  \rho_M(m)=\frac{L_M(m)}{L_M(\mathrm{HAR}_M)},
+  \qquad
+  \rho_Q(m)=\frac{L_Q(m)}{L_Q(\mathrm{HAR}_M)}.
+\]
+For older Dow30 and SP500 artifacts whose stored baseline is labeled simply as HAR, the same notation means the ratio relative to that artifact's HAR baseline.
+The column \(1-\rho_Q\) is the QLIKE gain relative to the relevant HAR baseline; positive values indicate lower QLIKE loss.
+For pairwise DM tests, \(A\) and \(B\) denote the first and second models in the comparison, and \(1-L_B/L_A>0\) favors the second model.
+The MCS column reports the model confidence set at the \(5\%\) level where available.
+
+\section{Data and Forecasting Design}
+
+Table~\ref{tab:run-metadata} summarizes the result artifacts used here.
+The latest completed long-run notebook result is the SP100 A100 run.
+Dow30 is a completed earlier full-stack result.
+The SP500 evidence is a short-budget scale artifact rather than a matched A100 long run, so it should be interpreted as preliminary scale evidence.
+
+\input{tables/run_metadata_summary.tex}
+
+Zhang et al. construct the daily realized variance of stock \(i\) on day \(t\) from intraday returns:
+\[
+  RV_{i,t} = \sum_{\ell=1}^{M} r_{i,t,\ell}^{2}.
+\]
+Their empirical implementation uses five-minute intraday returns from LOBSTER.
+Our available VolVue data are different.
+The current package contains 30-day historical volatility and 30-day mean implied volatility in percentage-point units.
+To keep the target on a daily variance scale, the notebook applies
+\[
+  RV^{\mathrm{proxy}}_{i,t}
+  =
+  \frac{HV30_{i,t}^{2}}{252},
+  \qquad
+  IV^{\mathrm{proxy}}_{i,t}
+  =
+  \frac{IV30_{i,t}^{2}}{252}.
+\]
+This scaling is consistent with a daily percent-squared variance convention, but it is not definition-identical to high-frequency realized variance.
+The VolVue target is smoother because it is already a rolling 30-day volatility measure.
+For that reason, differences from Zhang et al.'s reported performance should not be read mechanically as implementation errors.
+They may reflect a materially different forecasting target.
+
+\section{Differences from Zhang et al. and Their Implications}
+
+This section is included to prevent a misleading interpretation of the empirical results.
+We inspected Zhang et al.'s article through the MinerU Markdown extraction and checked the public GitHub implementation cloned under \texttt{references/code/GNNHAR}.
+The source inspection covered volatility construction, HAR/GHAR estimation, GNNHAR training, MCS/DM summaries, regime analysis, and forecast-error plots.
+The local clone is aligned with the public repository at commit \texttt{98a85b0}.
+The conclusion is that our notebook is Zhang-style in model architecture and evaluation logic, but it is not a definition-identical replication of the published empirical design.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.13\textwidth}
+>{\raggedright\arraybackslash}p{0.26\textwidth}
+>{\raggedright\arraybackslash}p{0.27\textwidth}
+>{\raggedright\arraybackslash}p{0.24\textwidth}}
+\toprule
+Dimension & Zhang et al. paper and code & Current notebook and report & Effect on interpretation \\
+\midrule
+Volatility target
+& Daily realized variance from five-minute intraday returns,
+\(RV_{i,t}=\sum_{\ell} r_{i,t,\ell}^{2}\).  The public \(\texttt{compute\_vol.py}\) multiplies five-minute returns by \(100\), winsorizes each return column at the \(0.5\%\) and \(99.5\%\) percentiles, and sums squared intraday returns by day.
+& Daily-scaled VolVue 30-day historical-volatility proxy,
+\(RV^{\mathrm{proxy}}_{i,t}=HV30_{i,t}^{2}/252\), with \(IV30_{i,t}^{2}/252\) used as an extension feature.
+& This is the most consequential difference.  A rolling \(HV30\) proxy is smoother and mechanically more persistent than high-frequency RV.  HAR and IV baselines become harder to beat, and nonlinear daily spillover effects can be attenuated.  Therefore weaker GNNHAR gains are not by themselves evidence that the implementation is wrong. \\
+\addlinespace
+Data source and period
+& LOBSTER intraday data from July 1, 2007 to June 30, 2021, with an out-of-sample period from July 1, 2011 to June 30, 2021.  The DJIA sample keeps 27 continuously traded stocks; S\&P 100 is used as a robustness universe.
+& VolVue/Yahoo/Drive panels over the recent five-year window, reported for Dow30, SP100, and SP500-scale universes.  The SP100 A100 run is the closest current long run; SP500 remains a short-budget scale artifact.
+& The market regime, crisis coverage, and graph structure are different.  Zhang et al. include the 2008 crisis, 2015--2016 stress, and March 2020; our sample is shorter and concentrated in the post-2021 market.  Numerical ratios should not be compared one-for-one across papers. \\
+\addlinespace
+Forecast horizons
+& Main tables report one-day, one-week, and one-month horizons.  In \(\texttt{compute\_vol.py}\), horizon targets are formed by summing future daily variance over the horizon.
+& The current report is mainly a one-step daily-style evaluation of the available VolVue proxy outputs.  Complete one-week and one-month Zhang-style tables have not yet been produced.
+& We cannot yet reproduce Zhang et al.'s horizon conclusion that nonlinear spillovers are strongest at short horizons and weaker at longer horizons.  The current evidence only supports claims for the completed daily-style artifacts. \\
+\addlinespace
+Rolling design
+& Monthly recalibration with a past-1000-day rolling window.  The article describes roughly 36 months for training and the most recent 12 months for validation; the public \(\texttt{GNNHAR.py}\) also exposes a one-month default validation length through \(\texttt{valid\_len=22}\), matching the robustness split.
+& The SP100 A100 run uses the Zhang-style 1000-day lookback, 22-day test window, hidden dimension \(9\), learning rate \(10^{-3}\), and one-month validation setup.  Some older Dow30 and SP500 artifacts used shorter budgets or legacy settings.
+& SP100 A100 is the cleanest current comparison.  Older Dow30 and SP500 scale artifacts are useful diagnostics, but they should not be treated as fully matched protocol evidence. \\
+\bottomrule
+\end{tabular}
+\caption{Data and protocol differences between Zhang et al.'s design and the current VolVue notebook/report.}
+\label{tab:zhang-data-differences}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.13\textwidth}
+>{\raggedright\arraybackslash}p{0.26\textwidth}
+>{\raggedright\arraybackslash}p{0.27\textwidth}
+>{\raggedright\arraybackslash}p{0.24\textwidth}}
+\toprule
+Dimension & Zhang et al. paper and code & Current notebook and report & Effect on interpretation \\
+\midrule
+Graph construction
+& \(\texttt{GHAR.py}\) and \(\texttt{GNNHAR.py}\) estimate a Graphical Lasso precision matrix on pre-origin daily returns.  Edges are the nonzero off-diagonal precision entries, symmetrically degree-normalized as \(D^{-1/2}AD^{-1/2}\), with no self-loops.
+& The notebook and scale pipeline implement the same core GLASSO precision nonzero pattern and symmetric degree normalization.  The scale pipeline also contains fallbacks for numerical stability in large panels.
+& When GLASSO succeeds, the graph-design alignment is strong.  If a fallback graph is used, that block should be described as a numerical-stability extension rather than a clean Zhang GLASSO replication. \\
+\addlinespace
+Model set
+& Core models are \(\mathrm{HAR}\), \(\mathrm{GHAR}\), and \(\mathrm{GNNHAR1L}\)--\(\mathrm{GNNHAR3L}\), each under MSE and QLIKE estimation criteria.  The S\&P 100 robustness section adds four- and five-layer GNNHAR models because the graph diameter can be larger.  GHAR2Hop is an appendix diagnostic, not a main benchmark.
+& We report the strict core separately, then add IV-augmented HAR/GHAR/GNNHAR models, four- and five-layer SP100 extensions, linear multi-hop GHAR diagnostics, and placebo/random-graph checks where available.
+& IV rows answer a new research question and should not be mixed into the Zhang-core ranking.  GHAR2H/GHAR3H are useful for the multi-hop question but should be read as diagnostics, not as replacements for the main HAR--GHAR--GNNHAR sequence. \\
+\addlinespace
+Hyperparameter tuning
+& The article sets Adam learning rate \(10^{-3}\), batch size \(32\), early stopping, and grid-searches hidden dimension \(D^{(\ell)}\in\{3,6,9,16,32\}\), selecting \(9\).  The public \(\texttt{GNNHAR.py}\) default uses \(\texttt{batch\_size=128}\), \(\texttt{n\_epochs=5000}\), \(\texttt{n\_hid=9}\), and validation checkpoints.
+& The latest SP100 A100 run fixes the Zhang-selected hidden dimension \(9\) and learning rate \(10^{-3}\) with a long training budget.  The scale pipeline supports hidden/lr grids, but the current report does not contain a full archived Appendix-D-style tuning table for every universe.
+& We can say the main SP100 A100 setting follows Zhang's selected hyperparameter point, but we should not claim that every reported artifact has reproduced the full hyperparameter-search appendix.  Some GNN underperformance could still be affected by tuning and ensemble choices. \\
+\addlinespace
+Evaluation outputs
+& \(\texttt{Summary\_Results.py}\) computes MSE and QLIKE by ticker, normalizes loss ratios, and runs MCS with 10,000 bootstraps.  \(\texttt{Summary\_Regime.py}\) splits low/high volatility periods using SPY RV percentiles.  \(\texttt{BoxPlot\_Error.py}\) creates forecast-error and forecast-ratio boxplots.  The article also reports FVU and DM tests, with QLIKE emphasized for power.
+& This report includes loss ratios, MCS summaries, matched QLIKE DM tests, SP100 depth DM tests, and linear multi-hop diagnostics.  It does not yet include a full SPY-regime section, full forecast-error/ratio figures, MAD over-smoothing figures, or complete multi-horizon FVU tables.
+& The report is sufficient for a preliminary Zhang-style empirical extension, but it is not yet publication-complete relative to the article's full evidence package.  The missing outputs mostly affect explanatory support, not the raw fact that the completed QLIKE DM tests are unfavorable to GNNHAR1L versus GHAR in our current proxy data. \\
+\bottomrule
+\end{tabular}
+\caption{Modeling, tuning, and evaluation differences between Zhang et al.'s design and the current VolVue notebook/report.}
+\label{tab:zhang-model-differences}
+\end{table}
+
+The strongest implication is about the dependent variable.
+Zhang et al. forecast high-frequency realized variance, while our current \(RV^{\mathrm{proxy}}\) is a daily scaling of a 30-day historical-volatility series.
+Because \(HV30\) is itself a rolling statistic, it embeds information from recent returns before the model sees the HAR lags.
+This makes the baseline persistence structure unusually strong.
+It also means that option-implied volatility can dominate the strict graph contribution because \(IV30\) is a forward-looking market price of volatility risk, whereas Zhang et al.'s baseline experiment deliberately asks what can be learned from realized-volatility and return-based graph information alone.
+
+The second implication is about the meaning of the negative GNNHAR evidence.
+In Zhang et al., the main empirical statement is that \(\mathrm{GHAR}\) improves over \(\mathrm{HAR}\), \(\mathrm{GNNHAR1L}\) improves over \(\mathrm{GHAR}\) at short horizons, deeper GNNs do not monotonically improve forecasts, and QLIKE training improves performance.
+In our completed artifacts, the QLIKE point transfers most clearly.
+The nonlinear-spillover point does not: matched QLIKE DM tests are not favorable to \(\mathrm{GNNHAR1L}\) relative to \(\mathrm{GHAR}\), especially once IV is added.
+Given Tables~\ref{tab:zhang-data-differences} and~\ref{tab:zhang-model-differences}, the correct interpretation is not that Zhang et al.'s result is contradicted.
+The correct interpretation is that, for recent VolVue \(HV30/IV30\) proxies, QLIKE and implied volatility are more robust sources of predictive improvement than nonlinear one-hop graph aggregation.
+
+The third implication is about how to write the project going forward.
+A strict replication claim would require reconstructing true daily realized variance from intraday returns, running one-day, one-week, and one-month horizons, preserving the same rolling forecast calendar, archiving the full hidden-dimension tuning record, and reproducing regime, FVU, DM, MCS, forecast-error, forecast-ratio, and over-smoothing outputs.
+If we keep the current data source, the manuscript should be framed as a Zhang-style extension to 30-day historical- and implied-volatility proxies.
+That framing is still meaningful, but its economic question is different: whether graph spillovers and neural aggregation add value after a smooth volatility proxy and option-implied information are already available.
+
+\section{Methodology}
+
+For each asset \(i\), the HAR benchmark uses lagged daily, weekly, and monthly volatility features:
+\[
+  x^{(d)}_{i,t}=RV_{i,t-1}, \qquad
+  x^{(w)}_{i,t}=\frac{1}{5}\sum_{\ell=1}^{5}RV_{i,t-\ell}, \qquad
+  x^{(m)}_{i,t}=\frac{1}{22}\sum_{\ell=1}^{22}RV_{i,t-\ell}.
+\]
+The exact averaging convention in the code is the one used by the current notebook pipeline; the role of the three features is the same as in the HAR literature.
+
+The linear graph model augments HAR with neighborhood-aggregated features:
+\[
+  \mathbb{E}(v_t\mid \mathcal{F}_{t-1})
+  =
+  \alpha
+  +
+  V_{:t-1}\beta
+  +
+  W V_{:t-1}\gamma,
+\]
+where \(W=D^{-1/2}AD^{-1/2}\) is the symmetrically normalized adjacency matrix without self-loops.
+Following Zhang et al.'s graph-construction choice, the graph is estimated from pre-origin returns through Graphical Lasso and is then fixed within the corresponding rolling forecast origin.
+
+The GNNHAR model replaces the linear neighborhood term with a nonlinear graph convolution:
+\[
+  H^{(\ell+1)}
+  =
+  \mathrm{ReLU}\!\left(W H^{(\ell)}\Theta^{(\ell)}\right),
+  \qquad
+  H^{(0)} = V_{:t-1}.
+\]
+The one-layer model is
+\[
+  \mathbb{E}(v_t\mid \mathcal{F}_{t-1})
+  =
+  \alpha + V_{:t-1}\beta + H^{(1)}\gamma,
+\]
+and the two- and three-layer models replace \(H^{(1)}\) by \(H^{(2)}\) or \(H^{(3)}\).
+This is the Zhang-style interpretation: one layer tests nonlinear one-hop spillovers; additional layers test whether a larger receptive field adds useful multi-hop information.
+
+The main losses are
+\[
+  \mathrm{MSE}
+  =
+  \frac{1}{TN}\sum_{t,i}
+  \bigl(\widehat{RV}_{i,t}-RV_{i,t}\bigr)^2
+\]
+and
+\[
+  \mathrm{QLIKE}
+  =
+  \frac{1}{TN}\sum_{t,i}
+  \left[
+    \frac{RV_{i,t}}{\widehat{RV}_{i,t}}
+    -
+    \log\!\left(\frac{RV_{i,t}}{\widehat{RV}_{i,t}}\right)
+    -
+    1
+  \right].
+\]
+As in Zhang et al., we distinguish the estimation criterion from the forecast loss.
+\(\mathrm{HAR}_M\) and \(\mathrm{GHAR}_M\) are OLS-style MSE-estimated linear models.
+QLIKE-trained linear models and GNNHAR models are optimized by Adam when the closed-form OLS estimator is unavailable.
+The latest SP100 A100 run uses the Zhang hyperparameter reference point most relevant to the paper's Appendix D: hidden dimension \(9\), learning rate \(10^{-3}\), and the same hidden dimension across deeper layers.
+
+\section{Empirical Results}
+
+\subsection{Dow30}
+
+The Dow30 result is useful as a small-universe check of the reporting stack.
+Table~\ref{tab:dow30-full-loss} first gives the complete model comparison available in the Dow30 artifact.
+It includes the strict core, the IV extension, QLIKE-trained extension rows, and diagnostic placebo/random-graph rows.
+The diagnostic rows are kept in the full table so that the empirical record is complete, but they are not used as Zhang-core evidence.
+Table~\ref{tab:dow30-core-loss} then reports the strict core, excluding IV and random-graph diagnostics.
+The linear graph model improves on HAR under QLIKE, with \(\rho_Q=0.9868\), but the one-, two-, and three-layer GNNHAR rows are worse than HAR in this artifact.
+This is the opposite of Zhang et al.'s main DJIA finding, where GNNHAR1L improves on GHAR at the daily horizon.
+
+\input{tables/dow30_full_loss_summary.tex}
+
+\input{tables/dow30_core_loss_summary.tex}
+
+Table~\ref{tab:dow30-iv-loss} reports the IV extension for the same universe.
+Here the strongest rows are \(\mathrm{GHAR}^{IV}\) and \(\mathrm{GNNHAR3L}^{IV}\), with QLIKE gains of \(4.51\%\) and \(4.45\%\) relative to HAR.
+The improvement therefore comes mainly from the additional option-implied volatility information and not from a clean one-layer nonlinear spillover effect.
+
+\input{tables/dow30_iv_loss_summary.tex}
+
+\subsection{Current SP100 A100 Run}
+
+Table~\ref{tab:sp100-a100-full-loss} is the cleanest current long-run evidence because it comes from the latest SP100 A100 notebook run.
+It contains the full available SP100 A100 comparison: strict Zhang-core models, IV extensions, and four-/five-layer depth extensions.
+Table~\ref{tab:sp100-a100-core-loss} isolates the strict core.
+The strict-core results show three facts.
+First, \(\mathrm{GHAR}_M\) modestly improves on \(\mathrm{HAR}_M\), with \(\rho_Q=0.9925\).
+Second, the MSE-trained GNNHAR rows do not improve on \(\mathrm{GHAR}_M\).
+Third, QLIKE-trained models are uniformly stronger under QLIKE forecast loss.
+\(\mathrm{GHAR}_Q\), \(\mathrm{GNNHAR2L}_Q\), and \(\mathrm{GNNHAR3L}_Q\) all achieve QLIKE ratios around \(0.976\) to \(0.979\).
+
+\input{tables/sp100_a100_full_loss_summary.tex}
+
+\input{tables/sp100_a100_core_loss_summary.tex}
+
+This pattern is close to Zhang et al. on the QLIKE point but not on the nonlinear-spillover point.
+The current SP100 result supports QLIKE training, while it does not give a clean dominance of \(\mathrm{GNNHAR1L}\) over \(\mathrm{GHAR}\).
+The best strict-core QLIKE row is \(\mathrm{GHAR}_Q\) or a deeper QLIKE GNN row by a very small margin depending on the exact loss considered.
+Those differences are economically small relative to the gap between MSE-trained and QLIKE-trained specifications.
+
+Table~\ref{tab:sp100-a100-iv-loss} gives the IV-augmented extension.
+The IV extension is substantially stronger than the strict core.
+\(\mathrm{HAR}^{IV}_Q\), \(\mathrm{GHAR}^{IV}_Q\), and \(\mathrm{GNNHAR2L}^{IV}_Q\) all reduce QLIKE loss by roughly \(6.6\%\) to \(6.7\%\) relative to \(\mathrm{HAR}_M\).
+This is the most stable empirical gain in the current long run.
+It should, however, be described as an extension to Zhang's setup rather than a direct replication of the paper.
+
+\input{tables/sp100_a100_iv_loss_summary.tex}
+
+\subsection{SP500 Scale Evidence}
+
+The SP500 artifact in Table~\ref{tab:sp500-full-loss} is not a completed A100 long run.
+It is included because it answers whether the existing pipeline can be pushed to a much larger graph.
+Table~\ref{tab:sp500-full-loss} gives the full available SP500 scale comparison, including diagnostics.
+Table~\ref{tab:sp500-core-loss} gives the strict core.
+Under the short-budget scale protocol, \(\mathrm{GHAR}\) is nearly tied with HAR, while GNNHAR1L and deeper GNNHAR models are worse under QLIKE.
+This artifact therefore does not support the claim that increasing the number of nodes strengthens the GNNHAR gain.
+
+\input{tables/sp500_full_loss_summary.tex}
+
+\input{tables/sp500_core_loss_summary.tex}
+
+The IV extension in Table~\ref{tab:sp500-iv-loss} again improves the linear benchmarks but does not rescue the GNN rows in this short-budget run.
+\(\mathrm{HAR}^{IV}\) and \(\mathrm{GHAR}^{IV}\) reduce QLIKE loss by about \(2.7\%\), while IV-augmented GNNHAR rows are worse than HAR.
+This result should be treated cautiously until an SP500 A100 long run is completed.
+
+\input{tables/sp500_iv_loss_summary.tex}
+
+\section{Forecast Evaluation and DM Tests}
+
+Zhang et al. use MCS to identify a set of statistically competitive models and DM tests to compare forecast losses, with special emphasis on QLIKE because it has stronger power for volatility forecast comparison.
+Table~\ref{tab:mcs-summary} reports the MCS summaries available in our completed artifacts after excluding diagnostic fake-IV and random-graph rows.
+The Dow30 MCS set remains broad, including IV, HAR, GHAR, and some GNN variants.
+The SP100 and SP500 scale MCS sets are narrow and dominated by \(\mathrm{HAR}^{IV}\) and \(\mathrm{GHAR}^{IV}\).
+
+\input{tables/mcs_set_summary.tex}
+
+Table~\ref{tab:matched-dm} gives matched QLIKE DM tests for the main questions.
+The sign convention is that \(B\) is the second model in the comparison, and \(1-L_B/L_A>0\) favors \(B\).
+The graph-linearity comparison \(\mathrm{HAR}\rightarrow\mathrm{GHAR}\) is positive but not statistically significant in the completed Dow30, SP100-scale, and SP500-scale artifacts.
+The nonlinear comparison \(\mathrm{GHAR}\rightarrow\mathrm{GNNHAR1L}\) is not significant on Dow30 and is significantly negative in the scale artifacts.
+The IV-matched comparison \(\mathrm{GHAR}^{IV}\rightarrow\mathrm{GNNHAR1L}^{IV}\) is significantly negative in all three available artifacts.
+
+\input{tables/matched_dm_summary.tex}
+
+This is where our conclusion necessarily diverges from Zhang et al.
+Their paper reports that nonlinear GNNHAR improves on linear GHAR, especially for short horizons, and that QLIKE training improves performance.
+Our current evidence supports the QLIKE point and supports IV as a valuable extension, but it does not support the nonlinear GNN gain over GHAR under the VolVue 30-day target.
+
+\section{Discussion: Large Graphs, Depth, and Multi-Hop Information}
+
+The natural large-graph question is not whether the SP100 or SP500 raw loss level is lower than the Dow30 loss level.
+Those losses are computed on different assets and different volatility distributions.
+The better question is whether the marginal gain from nonlinear graph aggregation increases when the graph has more nodes:
+\[
+  \Delta_{\mathrm{GNN}}
+  =
+  1-\frac{L(\mathrm{GNNHAR})}{L(\mathrm{GHAR})}.
+\]
+The matched DM tests do not support such a claim at present.
+The larger scale artifacts show a more negative GNNHAR1L-vs-GHAR comparison, not a stronger positive one.
+Therefore, in the current report we should not argue that larger \(N\) improves the GNN contribution.
+At most, we can say that the question remains open pending a matched SP500 A100 long run.
+
+Table~\ref{tab:sp100-a100-depth-dm} reports the current SP100 A100 depth comparisons.
+The Zhang-style core comparison \(\mathrm{GNNHAR1L}_Q\rightarrow\mathrm{GNNHAR2L}_Q\) is slightly positive but not statistically significant.
+The MSE-trained core comparison is slightly negative and not significant.
+In the IV extension, the direction varies by layer and criterion.
+Thus, we do not find a monotone depth improvement.
+
+\input{tables/sp100_a100_depth_dm_core.tex}
+
+Zhang et al. explicitly warn that too many GNN layers may lead to over-smoothing.
+Our current SP100 result is consistent with that caution: deeper GNNs are not uniformly better, and any five-layer improvement should be treated as an extension result rather than the core replication result.
+
+\section{Robustness and Extensions}
+
+The additional models in Table~\ref{tab:sp100-a100-depth-loss} and Table~\ref{tab:sp100-a100-robustness-dm} are useful for robustness, but they should not be mixed into the main Zhang-core table.
+The four- and five-layer models follow Zhang et al.'s larger-universe logic for S\&P 100, where the graph diameter may require more layers to cover all nodes.
+The linear multi-hop GHAR variants correspond to the same question as Zhang et al.'s Appendix E: do explicit two-hop linear neighbors add predictive power beyond one-hop GHAR?
+
+\input{tables/sp100_a100_depth_extension_loss_summary.tex}
+
+\input{tables/sp100_a100_robustness_dm.tex}
+
+In our SP100 A100 run, the linear multi-hop GHAR extension is significantly worse than one-hop GHAR.
+The two-hop linear candidate has \(L_B/L_A=1.0055\), and the three-hop linear candidate has \(L_B/L_A=1.0082\).
+Both are statistically negative at conventional levels.
+This is directionally consistent with Zhang et al.'s conclusion that multi-hop neighbors do not provide clear additional predictive power once zero-hop and one-hop information are included.
+The stronger difference is that our multi-hop extension is significantly worse, whereas Zhang et al.'s appendix-style GHAR2Hop DM result is not statistically significant.
+
+\section{Conclusion}
+
+The Zhang-style reading of our current results is precise.
+First, the pipeline now implements the intended HAR--GHAR--GNNHAR comparison and records loss ratios, MCS summaries, and DM tests in a form that can be reported.
+Second, the current VolVue target is not Zhang's high-frequency realized variance, so weaker GNN results are not automatically evidence of a code failure.
+The 30-day historical-volatility proxy is smoother and already embeds lagged information.
+
+Third, QLIKE training is the part of Zhang et al.'s empirical message that transfers most clearly to our current SP100 long run.
+QLIKE-trained strict-core models have much lower QLIKE ratios than their MSE-trained counterparts.
+Fourth, implied volatility is the strongest extension in our data: IV-augmented HAR/GHAR/GNNHAR rows dominate many strict-core rows, especially in the SP100 A100 run.
+
+Fifth, the nonlinear GNNHAR gain over GHAR is not supported by the current evidence.
+The completed DM tests are not favorable to \(\mathrm{GNNHAR1L}\) relative to \(\mathrm{GHAR}\), and the IV-matched GNN comparisons are significantly negative.
+We therefore should not write the paper as if our results replicate Zhang et al.'s nonlinear-spillover finding.
+A more accurate framing is that we conduct a Zhang-style extension to VolVue 30-day HV/IV proxies and find that QLIKE and IV information matter more robustly than nonlinear graph depth under the current target.
+
+For a publication-quality next pass, the most important improvement is data construction.
+Either build a daily close-to-close squared-return target
+\[
+  RV^{cc}_{i,t}
+  =
+  \left(100\log\frac{P_{i,t}}{P_{i,t-1}}\right)^2
+\]
+from adjusted closes, or obtain high-frequency intraday data to construct true realized variance.
+Then rerun the same Zhang-style rolling protocol for Dow30, SP100, and SP500.
+If we keep the VolVue target, the manuscript should explicitly call the study an extension to 30-day volatility proxies, not a direct realized-volatility replication.
+
+\appendix
+\section{Artifacts}
+
+The report source is
+\[
+  \texttt{reports/gnnhar\_results\_20260615/gnnhar\_results\_report.tex}.
+\]
+Generated report tables are under
+\[
+  \texttt{reports/gnnhar\_results\_20260615/tables/}.
+\]
+The local notebook backup is
+\[
+  \texttt{notebooks/snapshots/GNNHAR\_Colab\_Full\_Run\_local\_backup\_20260615.ipynb}.
+\]
+The Zhang paper was read through MinerU Markdown extraction at
+\[
+  \texttt{references/papers/zhang-chao-recent/mineru-verify/gnnhar-ijf-2025/}.
+\]
+
+\end{document}

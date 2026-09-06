@@ -1,0 +1,42 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrr}
+\toprule
+Model & Block & EC & \(\rho_M\) & \(\rho_Q\) & \(1-\rho_Q\) \\
+\midrule
+\(\mathrm{GHAR}_{M}\) & strict core & \(M\) & 0.9975 & 0.9925 & 0.75\% \\
+\(\mathrm{GNNHAR1L}_{M}\) & strict core & \(M\) & 1.0000 & 0.9968 & 0.32\% \\
+\(\mathrm{GNNHAR2L}_{M}\) & strict core & \(M\) & 1.0001 & 0.9995 & 0.05\% \\
+\(\mathrm{GNNHAR3L}_{M}\) & strict core & \(M\) & 1.0011 & 0.9996 & 0.04\% \\
+\(\mathrm{HAR}_{M}\) & strict core & \(M\) & 1.0000 & 1.0000 & 0.00\% \\
+\(\mathrm{GHAR}_{Q}\) & strict core & \(Q\) & 1.0028 & 0.9764 & 2.36\% \\
+\(\mathrm{GNNHAR1L}_{Q}\) & strict core & \(Q\) & 1.0039 & 0.9802 & 1.98\% \\
+\(\mathrm{GNNHAR2L}_{Q}\) & strict core & \(Q\) & 1.0035 & 0.9795 & 2.05\% \\
+\(\mathrm{GNNHAR3L}_{Q}\) & strict core & \(Q\) & 1.0030 & 0.9774 & 2.26\% \\
+\(\mathrm{HAR}_{Q}\) & strict core & \(Q\) & 1.0056 & 0.9801 & 1.99\% \\
+\(\mathrm{GHAR}_{M}^{IV}\) & IV extension & \(M\) & 0.9649 & 0.9778 & 2.22\% \\
+\(\mathrm{GNNHAR1L}_{M}^{IV}\) & IV extension & \(M\) & 0.9716 & 0.9868 & 1.32\% \\
+\(\mathrm{GNNHAR2L}_{M}^{IV}\) & IV extension & \(M\) & 0.9888 & 1.0122 & -1.22\% \\
+\(\mathrm{GNNHAR3L}_{M}^{IV}\) & IV extension & \(M\) & 0.9676 & 0.9900 & 1.00\% \\
+\(\mathrm{HAR}_{M}^{IV}\) & IV extension & \(M\) & 0.9648 & 0.9792 & 2.08\% \\
+\(\mathrm{GHAR}_{Q}^{IV}\) & IV extension & \(Q\) & 0.9812 & 0.9335 & 6.65\% \\
+\(\mathrm{GNNHAR1L}_{Q}^{IV}\) & IV extension & \(Q\) & 0.9814 & 0.9349 & 6.51\% \\
+\(\mathrm{GNNHAR2L}_{Q}^{IV}\) & IV extension & \(Q\) & 0.9823 & 0.9335 & 6.65\% \\
+\(\mathrm{GNNHAR3L}_{Q}^{IV}\) & IV extension & \(Q\) & 0.9815 & 0.9401 & 5.99\% \\
+\(\mathrm{HAR}_{Q}^{IV}\) & IV extension & \(Q\) & 0.9807 & 0.9328 & 6.72\% \\
+\(\mathrm{GNNHAR4L}_{M}\) & depth extension & \(M\) & 1.0040 & 1.0032 & -0.32\% \\
+\(\mathrm{GNNHAR4L}_{M}^{IV}\) & depth extension & \(M\) & 0.9789 & 0.9955 & 0.45\% \\
+\(\mathrm{GNNHAR5L}_{M}\) & depth extension & \(M\) & 1.0030 & 1.0105 & -1.05\% \\
+\(\mathrm{GNNHAR5L}_{M}^{IV}\) & depth extension & \(M\) & 0.9796 & 0.9936 & 0.64\% \\
+\(\mathrm{GNNHAR4L}_{Q}\) & depth extension & \(Q\) & 1.0026 & 0.9785 & 2.15\% \\
+\(\mathrm{GNNHAR4L}_{Q}^{IV}\) & depth extension & \(Q\) & 0.9858 & 0.9361 & 6.39\% \\
+\(\mathrm{GNNHAR5L}_{Q}\) & depth extension & \(Q\) & 1.0033 & 0.9768 & 2.32\% \\
+\(\mathrm{GNNHAR5L}_{Q}^{IV}\) & depth extension & \(Q\) & 0.9809 & 0.9342 & 6.58\% \\
+\bottomrule
+\end{tabular}
+}
+\caption{Current SP100 A100 full available model comparison.  Ratios are relative to \(HAR_M\).}
+\label{tab:sp100-a100-full-loss}
+\end{table}

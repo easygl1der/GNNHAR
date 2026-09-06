@@ -1,0 +1,53 @@
+with traditional economic models. Gu, Kelly, and Xiu (2020) have pointed out the superior performance of ML models for empirical asset pricing. Recently, Xiong, Nichols, and Shen (2015) have applied LSTMs to forecast S&P 500 volatility, with Google domestic trends as predictors, and Bucci (2020) has demonstrated that recurrent NNs (RNNs) are able to out perform all the traditional econometric methods in forecasting monthly volatility of the S&P index. Rahimikia and Poon (2020) have compared ML models with HAR models for forecasting daily RV by using variables extracted from limit order books and news. Li and Tang (2020) have proposed a simple average ensemble model combining multiple ML algo rithms for forecasting daily (and monthly) RV and Christensen, Siggaard, and Veliyev (2021) have examined the performance of ML models in forecasting 1-day-ahead RV with firm-specific characteristics and macroeconomic indicators.
+
+## 2 Data and RV
+
+## 2.1. Data
+
+We use the Nasdaq ITCH data from $\mathrm { L O B S T E R } ^ { 1 }$ to compute intraday returns via midprices. We select the top 100 components of S&P 500 index, for the period between July 1, 2011 and June 30, 2021. After filtering out the stocks for which the dataset does not span the entire sample period, we are left with 93 stocks. Table 1 presents the number of stocks in each sector, according to the Global Industry Classification Standard (GICS) sector division.2
+
+## 2.2. Realized Volatility
+
+In a general form, $P _ { i , t }$ denotes the price process of a financial asset i and it follows:
+
+$$
+\mathrm{d} \log P _ {i, t} = \mu_ {i} \mathrm{d} t + \sigma_ {i, t} \mathrm{d} W _ {t}, \tag {1}
+$$
+
+where $\mu _ { i }$ is the drift, $\sigma _ { i , t }$ is the instantaneous volatility, and $\mathbb { W } _ { t }$ is the standard Brownian motion. The theoretical integrated variance (IV) of stock i during $( t - b , t ]$ is estimated as
+
+$$
+\mathrm{IV} _ {i, t} (b) = \int_ {t - b} ^ {t} \sigma_ {i, s} ^ {2} \mathrm{d} s, \tag {2}
+$$
+
+where h is the look-back horizon, such as 10 min, 30 min, 1 day, etc.
+
+In this article, we consider the minutely logarithmic mid-price return for asset i during $( t - 1 , t ]$ as
+
+$$
+r _ {i, t} := \log \left(\frac {P _ {i , t}}{P _ {i , t - 1}}\right). \tag {3}
+$$
+
+Here, $P _ { i , t }$ is the mid-price at time t, that is, $\begin{array} { r } { P _ { i , t } = \frac { P _ { i , t } ^ { b } + P _ { i , t } ^ { s } } { 2 } } \end{array}$ and $P _ { i , t } ^ { b }$ (respectively, $P _ { i , t } ^ { a } )$ ) represents the best bid (respectively, ask) price.
+
+Andersen et al. (2001) and Barndorff-Nielsen and Shephard (2002) showed that the sum of squared intraday returns is a consistent estimator of the unobservable IV. Because of the availability of high-frequency intraday data, we choose to compute RV as a proxy for the unobserved IV (see Andersen et al. 2001; Bollen and Inder 2002; Hansen and Lunde 2006).
+
+Table 1. Components in each sector
+
+<table><tr><td>Sector</td><td>Number</td><td>Tickers</td></tr><tr><td>Information Technology</td><td>20</td><td>AAPL ACN ADBE ADP AVGO CRM CSCO FIS FISV IBM INTC INTU MA MSFT MU NVDA ORCL QCOM TXN V</td></tr><tr><td>Health Care</td><td>19</td><td>ABT AMGN BDX BMY BSX CI CVS DHR GILD ISRG JNJ LLY MDT MRK PFE SYK TMO UNH VRTX</td></tr><tr><td>Financials</td><td>15</td><td>AXP BAC BLK BRK.B C CB CME GS JPM MMC MS PNC SCHW USB WFC</td></tr><tr><td>Industrials</td><td>9</td><td>BA CAT CSX GE HON LMT MMM UNP UPS</td></tr><tr><td>Consumer Discretionary</td><td>8</td><td>AMZN HD LOW MCD NKE SBUX TGT TJX</td></tr><tr><td>Consumer Staples</td><td>8</td><td>CL COST KO MO PEP PG PM WMT</td></tr><tr><td>Communication Services</td><td>6</td><td>CMCSA DIS GOOG NFLX T VZ</td></tr><tr><td>Others</td><td>8</td><td>AMT CCI COP CVX D DUK SO XOM</td></tr></table>
+
+To reduce the impact of extreme values, we consider the logarithm, in line with Andersen et al. (2003), Bucci (2020) and Herskovic et al. (2016). Specifically, during a period ðt - h; t, the RV is defined as follows3 :
+
+$$
+\mathrm{RV} _ {i, t} ^ {(b)} := \log \left[ \sum_ {s = t - b + 1} ^ {t} r _ {i, s} ^ {2} \right]. \tag {4}
+$$
+
+As pointed out by Pascalau and Poirier (2021), there are no conclusive methods to in corporate the overnight session’s information content into the daily volatility. In line with Engle and Sokalska (2012), overnight information is excluded from our empirical analysis of daily volatility. For simplicity, we refer to this daily scenario (excluding the overnight) as the “1-day” scenario, throughout the rest of this article.
+
+## 2.3. Summary Statistics
+
+To mitigate the effect of possibly spurious data errors, for each stock, we set the values of return/volatility below the 0.5 percentile equal to the respective 0.5 percentile, and the val ues above the 99.5 percentile is set equal to the 99.5 percentile, a process commonly referred to as winsorization. Figure 1 illustrates the pairwise Pearson and Spearman correla tions of returns and realized volatilities. This figure depicts the empirical distribution of pairwise correlation coefficients over the entire sample period. We generally observe highe correlations in RV than the counterparts in return. Figure 1 also reveals that, on average, as the horizon gets longer, RV’s correlations increase from 0.598 (10-min) to 0.731 (30-min) to 0.766 (65-min). However, when turning to daily RV, correlations in RVs become weaker, with an average of 0.514. This indicates that the connections between stocks in terms of intraday volatility may be more stable and tight than the ones in daily volatility.
+
+Figure 2 plots the daily RV over time. Stocks demonstrate similar time-series patterns, consistent with Herskovic et al. (2016) and Bollersley et al. (2018). Additionally, the width shrinks
+
+3 Liu, Patton, and Sheppard (2015) demonstrate that no sub-sampling frequency significantly outper forms a 5-min interval in terms of forecasting daily RVs, making it a widely accepted time interva in the literature. In this article, we use 1-min returns since our main focus is intraday RVs, such as 10-min RVs.

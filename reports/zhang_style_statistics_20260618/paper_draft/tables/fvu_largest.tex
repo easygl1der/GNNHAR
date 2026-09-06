@@ -1,0 +1,42 @@
+
+\begin{table}[H]
+\centering
+\caption{FVU diagnostic: largest forecast-function movements from HAR\_M}
+\label{tab:fvu-largest}
+\scriptsize
+\begin{tabular}{llr}
+\toprule
+Universe & Model & Mean FVU \\
+\midrule
+Dow30 & \model{GNNHAR3L_M_IV} & 0.0040 \\
+Dow30 & \model{GHAR_M_IV} & 0.0035 \\
+Dow30 & \model{GNNHAR1L_M_IV} & 0.0031 \\
+Dow30 & \model{GNNHAR2L_M_IV} & 0.0027 \\
+Dow30 & \model{GNNHAR2L_M} & 0.0026 \\
+Dow30 & \model{GNNHAR2L_Q_IV} & 0.0024 \\
+Dow30 & \model{HAR_M_IV} & 0.0023 \\
+Dow30 & \model{GNNHAR3L_Q_IV} & 0.0022 \\
+S\&P100 & \model{GHAR2H_Q_IV} & 0.0235 \\
+S\&P100 & \model{GHAR3H_Q_IV} & 0.0230 \\
+S\&P100 & \model{GHAR2H_Q} & 0.0199 \\
+S\&P100 & \model{GHAR3H_Q} & 0.0194 \\
+S\&P100 & \model{GNNHAR2L_M_IV} & 0.0039 \\
+S\&P100 & \model{HAR_M_IV} & 0.0031 \\
+S\&P100 & \model{GHAR3H_M_IV} & 0.0031 \\
+S\&P100 & \model{GHAR2H_M_IV} & 0.0031 \\
+S\&P500 & \model{GNNHAR2L_M} & 2.0997 \\
+S\&P500 & \model{GNNHAR4L_M} & 0.9539 \\
+S\&P500 & \model{GNNHAR4L_Q} & 0.7629 \\
+S\&P500 & \model{GNNHAR4L_M_IV} & 0.6466 \\
+S\&P500 & \model{GNNHAR3L_M} & 0.6311 \\
+S\&P500 & \model{GNNHAR2L_M_IV} & 0.5974 \\
+S\&P500 & \model{GNNHAR5L_M_IV} & 0.5879 \\
+S\&P500 & \model{GNNHAR3L_M_IV} & 0.5846 \\
+
+\bottomrule
+\end{tabular}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} FVU is an effect-size diagnostic.  A large value means the model forecast surface moved far from HAR\_M; it does not imply lower loss.
+\end{minipage}
+\end{table}

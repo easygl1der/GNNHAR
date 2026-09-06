@@ -1,0 +1,10 @@
+Base,Candidate,IV,Loss,$L_B/L_A$,$\Delta$,DM,$p$,Conclusion
+GHAR_M,GHAR2H_M,No,M,1.005537,-0.005537,-4.06474,4.8e-05,significant deterioration
+GHAR_M,GHAR3H_M,No,M,1.008175,-0.008175,-4.076247,4.6e-05,significant deterioration
+GNNHAR1L_M,GNNHAR2L_M,No,M,1.002679,-0.002679,-1.2066,0.227586,not significant
+GNNHAR1L_Q,GNNHAR2L_Q,No,Q,0.999244,0.000756,0.63682,0.524242,not significant
+GNNHAR1L_Q,GNNHAR5L_Q,No,Q,0.996524,0.003476,2.223569,0.026177,significant improvement
+GNNHAR4L_Q,GNNHAR5L_Q,No,Q,0.998253,0.001747,2.03475,0.041876,significant improvement
+GNNHAR2L_M_IV,GNNHAR3L_M_IV,Yes,M,0.978127,0.021873,2.540777,0.011061,significant improvement
+GNNHAR1L_M_IV,GNNHAR2L_M_IV,Yes,M,1.02572,-0.02572,-2.63284,0.008468,significant deterioration
+GNNHAR2L_Q_IV,GNNHAR3L_Q_IV,Yes,Q,1.00708,-0.00708,-2.08668,0.036917,significant deterioration

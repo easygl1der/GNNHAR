@@ -1,0 +1,61 @@
+\begin{table}[H]
+\centering
+\caption{5\% MCS status and boundary summary}
+\label{tab:mcs-membership}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llllllll}
+\toprule
+Universe & Metric & MCS status & Models in 5\% MCS & Best model & Best rank & Last included model & First excluded model \\
+\midrule
+Dow30 & MSE & saved current & 14/28 & \model{HAR_M_IV} & 1 & \model{GNNHAR4L_Q_IV} & \model{HAR_M} \\
+Dow30 & QLIKE & saved current & 7/28 & \model{GNNHAR2L_Q_IV} & 1 & \model{GNNHAR5L_Q_IV} & \model{HAR_M_IV} \\
+S\&P100 & MSE & saved current & 6/32 & \model{HAR_M_IV} & 1 & \model{GNNHAR1L_M_IV} & \model{GNNHAR4L_M_IV} \\
+S\&P100 & QLIKE & saved current & 7/32 & \model{HAR_Q_IV} & 1 & \model{GNNHAR3L_Q_IV} & \model{GHAR_Q} \\
+S\&P500 & MSE & saved current & 2/36 & \model{HAR_M_IV} & 1 & \model{GHAR_M_IV} & \model{GHAR2H_M_IV} \\
+S\&P500 & QLIKE & saved current & 2/36 & \model{GHAR_M_IV} & 1 & \model{HAR_M_IV} & \model{GHAR2H_M_IV} \\
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} The MCS test is run separately by universe and loss metric.  ``Models in 5\% MCS'' is the number of rows with \(\texttt{mcs\_included}=\texttt{True}\) in the saved current diagnostics.  Dow30 uses the imported 234-date aligned full-model run, not the archived 232-date artifact.  This table is inferential; it should not be confused with the red MSE and blue QLIKE descriptive rank-1 cells in Section \ref{subsec:main-results}.
+\end{minipage}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Selected saved 5\% MCS membership rows}
+\label{tab:mcs-membership-selected}
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrr}
+\toprule
+Universe & Metric & Model & Rank & MCS p-value & Included at 5\% \\
+\midrule
+Dow30 & MSE & \model{HAR_M_IV} & 1 & 1.0000 & Yes \\
+Dow30 & MSE & \model{GNNHAR4L_Q_IV} & 14 & 0.0717 & Yes \\
+Dow30 & MSE & \model{HAR_M} & 15 & 0.0479 & No \\
+Dow30 & QLIKE & \model{GNNHAR2L_Q_IV} & 1 & 1.0000 & Yes \\
+Dow30 & QLIKE & \model{GNNHAR5L_Q_IV} & 7 & 0.3764 & Yes \\
+Dow30 & QLIKE & \model{HAR_M_IV} & 8 & 0.0011 & No \\
+S\&P100 & MSE & \model{HAR_M_IV} & 1 & 1.0000 & Yes \\
+S\&P100 & MSE & \model{GNNHAR1L_M_IV} & 6 & 0.1660 & Yes \\
+S\&P100 & MSE & \model{GNNHAR4L_M_IV} & 7 & 0.0393 & No \\
+S\&P100 & QLIKE & \model{HAR_Q_IV} & 1 & 1.0000 & Yes \\
+S\&P100 & QLIKE & \model{GNNHAR3L_Q_IV} & 7 & 0.2890 & Yes \\
+S\&P100 & QLIKE & \model{GHAR_Q} & 8 & 0.0004 & No \\
+S\&P500 & MSE & \model{HAR_M_IV} & 1 & 1.0000 & Yes \\
+S\&P500 & MSE & \model{GHAR_M_IV} & 2 & 0.7952 & Yes \\
+S\&P500 & MSE & \model{GHAR2H_M_IV} & 3 & 0.0127 & No \\
+S\&P500 & QLIKE & \model{GHAR_M_IV} & 1 & 1.0000 & Yes \\
+S\&P500 & QLIKE & \model{HAR_M_IV} & 2 & 0.1121 & Yes \\
+S\&P500 & QLIKE & \model{GHAR2H_M_IV} & 3 & 0.0152 & No \\
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} This table reports the best row, the final included row, and the first excluded row when an exclusion boundary exists.  The ranks are full-precision mean-loss ranks from \fileentry{mcs_mse.csv} and \fileentry{mcs_qlike.csv}; they are not rounded display ranks from Section \ref{subsec:main-results}.  Dow30 rows are computed from the 234-date aligned full-model run.
+\end{minipage}
+\end{table}

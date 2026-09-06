@@ -1,0 +1,25 @@
+
+\begin{table}[H]
+\centering
+\caption{S\&P500 SATS contribution to selected forecast losses}
+\label{tab:sats-loss-contribution}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+Model & Total MSE & SATS MSE & SATS SSE share & Total QLIKE & SATS QLIKE & SATS QLIKE share & Max pred. \\
+\midrule
+\model{HAR_Q} & 1923.30 & 493833.41 & 57.2\% & 0.0132 & 0.1836 & 3.1\% & 2887.2 \\
+\model{GHAR3H_Q_IV} & 938.39 & 221631.06 & 52.6\% & 0.0119 & 0.1442 & 2.7\% & 2026.4 \\
+\model{GNNHAR2L_Q_IV} & 136.64 & 20131.81 & 32.8\% & 0.0355 & 0.0607 & 0.4\% & 746.9 \\
+\model{HAR_M} & 10.63 & 169.46 & 3.5\% & 0.0046 & 0.0081 & 0.4\% & 198.6 \\
+\model{GHAR_M_IV} & 10.27 & 163.37 & 3.5\% & 0.0044 & 0.0078 & 0.4\% & 192.3 \\
+
+\bottomrule
+\end{tabular}
+}
+\begin{minipage}{0.96\textwidth}
+\footnotesize
+\emph{Notes.} Total losses average over all S\&P500 stock-date observations.  SATS losses average over SATS dates only.  Share columns use sums, not ratios of the displayed means.
+\end{minipage}
+\end{table}

@@ -1,0 +1,22 @@
+
+\begin{table}[H]
+\centering
+\caption{Regime-specific best models and date counts}
+\label{tab:appendix-regime-best}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrlrlr}
+\toprule
+Universe & Regime & Dates & Best QLIKE model & QLIKE ratio & Best MSE model & MSE ratio \\
+\midrule
+Dow30 & calm\_bottom\_90pct & 208 & \model{GNNHAR2L_Q_IV} & 0.947 & \model{GHAR_M_IV} & 0.973 \\
+Dow30 & turbulent\_top\_10pct & 24 & \model{GHAR_M_IV} & 0.664 & \model{GHAR_M_IV} & 0.766 \\
+S\&P100 & calm\_bottom\_90pct & 210 & \model{GNNHAR2L_Q_IV} & 0.933 & \model{GHAR3H_M_IV} & 0.969 \\
+S\&P100 & turbulent\_top\_10pct & 24 & \model{HAR_Q_IV} & 0.921 & \model{HAR_M_IV} & 0.929 \\
+S\&P500 & calm\_bottom\_90pct & 200 & \model{GHAR_M_IV} & 0.976 & \model{HAR_M_IV} & 0.968 \\
+S\&P500 & turbulent\_top\_10pct & 23 & \model{GHAR_M_IV} & 0.943 & \model{GHAR_M_IV} & 0.944 \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table}

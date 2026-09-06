@@ -1,0 +1,1290 @@
+ QUT Digital Repository:
+ http://eprints.qut.edu.au/
+
+
+
+
+This is the author version published as:
+
+This is the accepted version of this article. To be published as :
+This is the author version published as:
+
+ Becker, Ralf and Clements, Adam and McClelland, Andrew (2009) The jump
+ component of S&P 500 volatility and the VIX index. Journal of Banking and
+ Finance, 33(6). pp. 1033-1038.
+
+
+
+
+        Copyright 2009 Elsevier
+The Jump component of S&P 500 volatility and the VIX index.
+
+Ralf Beckera, Adam E. Clementsb,* and Andrew McClellandb
+a
+Economics, School of Social Sciences, University of Manchester
+b
+School of Economics and Finance, Queensland University of Technology
+
+                            This version: 19 October 2008
+
+
+Abstract
+
+         Much research has investigated the differences between option implied
+volatilities and econometric model-based forecasts. Implied volatility is a market
+determined forecast, in contrast to model-based forecasts that employ some degree of
+smoothing of past volatility to generate forecasts. Implied volatility has the potential
+to reflect information that a model-based forecast could not. This paper considers two
+issues relating to the informational content of the S&P 500 VIX implied volatility
+index. First, whether it subsumes information on how historical jump activity
+contributed to the price volatility, followed by whether the VIX reflects any
+incremental information pertaining to future jump activity relative to model based
+forecasts. It is found that the VIX index both subsumes information relating to past
+jump contributions to total volatility and reflects incremental information pertaining
+to future jump activity. This issue has not been examined previously and expands our
+understanding of how option markets form their volatility forecasts.
+
+
+JEL Classification: C12; C22; G00; G14
+Keywords: Implied volatility; VIX; volatility forecasts; informational efficiency;
+jumps.
+
+
+* Corresponding author. Tel.: +61 7 3138 2525; fax: +61 7 3138 1500.
+E-mail addresses: ralf.becker@manchester.ac.uk (Ralf Becker),
+a.clements@qut.edu.au (Adam Clements), a.mcclelland@qut.edu.au (Andrew
+McClelland).
+
+
+
+
+                                           1
+1. Introduction
+
+
+
+Forecasts of asset return volatility are crucial inputs into numerous investment
+
+decisions. Broadly speaking there are two approaches for obtaining forecasts. There
+
+are many econometric model based forecasts (MBF) designed for such purposes along
+
+with market determined option implied volatilities (IV). Given the importance of
+
+volatility forecasts, the forecast accuracy and informational efficiency of IV relative
+
+to MBF has been considered by numerous authors.
+
+
+
+Fleming (1998), Jiang and Tian (2003) and Becker, Clements and White (2006),
+
+amongst others have examined whether various IV measures subsume historical
+
+information (predominantly return data) commonly used when forecasting volatility.
+
+While Fleming (1998) and Jiang and Tian (2003) find that IV is efficient with respect
+
+to such information, Becker, Clements and White (2006) find that S&P 500 IV does
+
+not completely subsume a diverse set of information including MBF. Becker,
+
+Clements and White (2007) find that IV contains no information beyond volatility
+
+persistence as captured by MBF relevant for forecasting the level of total volatility.
+
+
+
+These previous studies considered the relationship between IV and forecasts of the
+
+level of total volatility. In doing so, these studies ignored the fact that volatility may
+
+be generated from both continuous diffusion and discontinuous jump processes in
+
+price, see Barndorff-Nielsen and Sheppard (2004) and Andersen, Bollerslev and
+
+Diebold (2007). Here we extract the component of volatility due to the jump process
+
+in price and investigate whether IV contains any information relating to this.
+
+Commonly used MBF generate volatility forecasts based on smoothing historical data
+
+
+
+                                            2
+(often daily squared returns or realised volatility) without any distinction between the
+
+diffusion and jump components of volatility1. Only very recent developments have
+
+sought to redress this issue. In contrast, as IV is market determined, and not
+
+constrained to a fixed mapping of such historical data, it may utilise both of the
+
+components of total volatility. This may be important as it has been shown to have
+
+important implications for volatility forecasting (Andersen et al., 2007).
+
+
+
+This article considers two issues relating to the relationship between IV and jump
+
+activity. First, it will be examined whether IV subsumes historical measures of how
+
+jumps contributed to spot market volatility. This will determine how option markets
+
+react to, or incorporate jump activity in the S&P500 price process in their IV forecasts
+
+and extends the work of Fleming (1998), Jiang and Tian (2003) and Becker, Clements
+
+and White (2006). Second, it will be investigated whether IV reflects information
+
+beyond that reflected in MBF in relation to future jump activity and extends the work
+
+of Becker, Clements and White (2007). In combination, these research questions
+
+reveal further insights into the manner in which option markets form their volatility
+
+forecasts.
+
+
+
+It is found that IV subsumes information relating to historical jump activity meaning
+
+that option markets react to volatility due to both the continuous diffusion and
+
+discontinuous jump processes in price. It is also shown that IV contains incremental
+
+information relative to MBF in relation to future jump activity. This result differs
+
+
+
+
+1
+  It is important to note that the jumps referred to here are jumps in the price process itself. A different
+line of research attempts to devise a diffusion process for the process driving volatility. Jumps in such a
+process are not necessarily the same as jumps in the price process itself (see Dotsis et al., 2007, and
+Branger et al., 2008, as examples for this research).
+
+
+                                                     3
+from that of Becker, Clements and White (2007) in that they found that IV contained
+
+no information incremental to that of MBF in relation to the total level of volatility.
+
+
+
+This paper proceeds as follows. Section 2 presents a description of the required data.
+
+Section 3 outlines the estimates of the various volatility components. Section 4
+
+discusses the empirical methodology employed to address each of the research
+
+questions. Sections 5 and 6 present the results and concluding comments respectively.
+
+
+
+2. Data
+
+
+
+To address the research questions at hand, four different sets of data are required.
+
+Equity returns, an estimate of IV, realisations of total equity volatility and the
+
+volatility component due to jumps in prices. The study is based on data pertaining to
+
+the S&P 500 index, from 2 January 1990 to 17 October 2003 (3481 daily return
+
+observations). The implied volatility measure utilised here is that provided by the
+
+Chicago Board of Options Exchange, the VIX2. The VIX is an implied volatility
+
+index derived from a number of put and call options on the S&P 500 index with
+
+maturities close to the target of 22 trading days and is derived without reference to a
+
+restrictive option pricing model3. For technical details relating to the construction of
+
+the VIX index, see Chicago Board of Options Exchange (2003). The VIX is
+
+
+2
+    The VIX index used here is the most recent version of the index, introduced on September 22, 2003.
+
+VIX data for this study was downloaded from the CBOE website.
+3
+    The daily volatility implied by the VIX can be calculated when recognising that the VIX quote is
+
+                                                                                                2
+equivalent to 100 times the annualised return standard deviation. Hence (VIX /(100 252 ))
+
+represents the daily volatility measure (see CBOE, 2003).
+
+
+
+                                                     4
+constructed to be a general measure of the market's estimate of average S&P 500
+
+volatility over the subsequent 22 trading days (Blair, Poon and Taylor 2001, and
+
+Christensen and Prabhala, 1998)4.
+
+
+
+3. Measuring the components of volatility
+
+
+
+This section outlines the methodology used to measure both the diffusion and jump
+
+components of total volatility. Following from Barndorff-Nielsen and Sheppard
+
+(2004) and Andersen et al. (2007) we start from the premise that returns are generated
+
+by the stochastic process
+
+
+
+                              dp( )   ( ) dt   ( ) dW ( )   ( ) dq( )               (1)
+
+
+
+where p( ) is the logarithm of the S&P 500 index at time  ,  ( ) the drift,  ( )
+
+the stochastic volatility process and W ( ) a standard Brownian motion. The
+
+discontinuous jump process is described by the jump size  ( ) and the counting
+
+process q( ) where dq( )  1 whenever a jump occurs. The probability of such
+
+events is governed by the intensity parameter,  ( ) .
+
+
+
+Given the specification in equation (1), we now describe how we measure the various
+
+components of total volatility of the price process. It is well known (Barndorff-
+
+Nielsen and Sheppard, 2004, 2006) that realized volatility
+
+
+
+4
+    Quoting from the CBOE White paper (2003) on the VIX, "VIX [...] provide[s] a minute-by-minute
+
+snapshot of expected stock market volatility over the next 30 calendar days."
+
+
+
+                                                    5
+                                                  M
+                                         RVt   rt 2,i              t 1    t                        (2)
+                                                  i 1
+
+
+
+
+where rt ,i is the ith intraday return on day t, captures the continuous and discontinuous
+
+components of volatility. On the other hand, bipower variation
+
+
+
+                                                                 M 1
+                                             BPVt   2  ri ri 1                                      (3)
+                                                                     i 1
+
+
+                                                                      1
+                                                   21 / 2
+                                                                     1 / 2
+
+
+
+captures the continuous component of volatility only5. As a result, the difference of
+
+the two, J t  RVt  BPVt , is an estimate of the contribution from the jump process to
+
+observed price volatility on day t 6:
+
+
+                                                           s  .
+                                                    t 1 s t
+                                                                 2
+                                                                                                         (4)
+
+
+
+
+This sum is over the discrete number of jumps observed on day t. As such it captures
+
+both the jump size and the intensity with which they occur. Hence, a large value of J t
+
+5
+    The definition of BPV presented above is the simplest definition originally proposed by Barndorff-
+
+Nielsen and Sheppard (2004, 2006). Here, we implement the definition proposed by Andersen,
+
+Bollerslev and Diebold (2007) and Huang and Tauchen (2005) which is robust to the presence of
+
+microstructure noise. For specific details see page 711 of Andersen, Bollerslev and Diebold (2007).
+6
+    It is, of course, well known that the above arguments are valid in the limit as sampling intervals
+
+decrease to 0. The above discussion is meant to convey the general concepts involved. For further
+
+details refer to, amongst others, Barndorff-Nielsen and Sheppard (2004, 2006) or Andersen, Bollerslev
+
+and Diebold (2007).
+
+
+
+                                                          6
+may be due to either a large number of relatively small jumps, or a small number of
+
+relatively large jumps.
+
+
+
+To obtain estimates of RVt and BPVt from equations (2) and (3) we use 30 minute
+
+S&P 500 index returns. This choice is guided by the volatility signature plot
+
+methodology of Andersen et al. (1999). As J t is an estimate of the non-negative jump
+
+component in (4), all subsequent empirical analysis is based on values for J t  0
+
+being truncated at 0. Such an adjustment was proposed by Barndorff-Nielsen and
+
+Sheppard (2004) and Andersen et al. (2007). The subsequent analysis was repeated
+
+with alternative estimates of the jump component, in particular, using the data-
+
+dependent truncation proposed by Andersen et al. (2007) for selecting significant
+
+jumps. As the results remain qualitatively unchanged they are not reported here.
+
+
+
+Figure 1 plots both the daily returns and the VIX index, where it is clear that the VIX
+
+(bottom panel) broadly tracks changes in the level of volatility of the returns. Figure 2
+
+plots both the daily RV and the estimated jump component of volatility ( J t  0 being
+
+truncated at 0). This truncation results in jump activity being observed on 73% of the
+
+days in the sample. Of these, half contribute relatively little (less than 30%) to the
+
+total volatility measured on that day7. Comparing the RV (Figure 1, upper panel) and
+
+VIX (Figure 2, lower panel) series, it is clear that the daily RV has higher peaks than
+
+the VIX. As the VIX is an expectation of average volatility over a 22 day horizon, the
+
+7
+    The data-dependent truncation methods proposed by Andersen et al. (2007) essentially eliminates
+
+such jumps that contribute less than a given amount to the total variance on a given day. As discussed
+
+above, utilising such measures of jump activity do not alter the conclusions drawn below. Results are
+
+available upon request.
+
+
+
+                                                    7
+increased smoothness of the VIX as compared to the RV series is of little surprise.
+
+From Figure 2, it appears as though the majority of jump activity occurs when the
+
+overall level of volatility is relatively high. This is to be expected as larger
+
+discontinuous jumps in the S&P500 index usually occur when the market is relatively
+
+volatile.
+
+
+
+INSERT FIGURES 1 and 2 ABOUT HERE
+
+
+
+4. Methodology
+
+
+
+This section describes the empirical methodology used to address the research
+
+questions at hand. We begin by outlining the MBF utilised. The methodology
+
+employed to determine whether the VIX subsumes the historical price jump
+
+component of volatility is described, followed by that used to ascertain whether it
+
+contains any incremental information relevant to future volatility.
+
+
+
+4.1. Model Based Forecasts
+
+
+
+While the true process underlying volatility is not known, we utilise a range of
+
+commonly applied econometric models to generate volatility forecasts. In doing so,
+
+we adopt those employed by Blair, Poon and Taylor (2001) and Becker, Clements and
+
+White (2006, 2007).
+
+
+
+The first is the asymmetric GJR-GARCH model of Glosten, Jagannathan and Runkle
+
+(1993) where the conditional variance, ht of returns follows
+
+
+
+                                           8
+                               ht     ht 1   t21   Dt 1 t21                  (5)
+
+
+
+
+where  t21 is the lagged squared innovation in returns and Dt is an indicator variable
+
+which equals 1 if  t <0, and 0 otherwise. Following Blair, Poon and Taylor (2001) the
+
+GJR-GARCH model of equation (5) is augmented by the inclusion of realised
+
+volatility, RVt in the following manner and is denoted below as the GJR-RV model,
+
+
+
+                               ht  h1t  h2t                                              (6)
+
+                               h1t     h1t 1   t21   Dt 1 t21
+
+                               h2t   h2t 1   RVt 1 .
+
+
+
+A simple stochastic volatility (SV) model given by
+
+
+
+                               rt     t                                                (7)
+
+                                t   t t
+
+                               log  t2     log  t21   t
+
+
+
+where  t is a standard normal innovation to returns and  t is the volatility
+
+innovation. An SV+RV model,
+
+
+
+                log  t2     log  t21   (log RVt 1  Et 1 [log  t21 ])   t    (8)
+
+
+
+
+                                                 9
+which is augmented with RV in the spirit of the GJR-RV model is included. The RV
+
+term enters the equation for the volatility process through the log RVt  Et 1 [log  t21 ]
+
+term. The rationale behind this is that the realised volatility series will inevitably be
+
+highly correlated with the stochastic volatility series. Hence, proceeding in the
+
+manner above allows the incremental information content of the RVt series to be
+
+incorporated into the model.
+
+
+
+Following Pong et al. (2004), Koopman et al. (2005) and Becker et al. (2007),
+
+forecasts of volatility based on time series models of RV are also used. Forecasts are
+
+generated using ARMA (2,1) and ARFIMA (1,d,0) models of RV.
+
+
+
+It should be noted that none of the models considered thus far distinguish between the
+
+continuous and jump components of volatility. A very recent development attributable
+
+to Andersen et al. (2007) allows for forecasts of total volatility to be a function of
+
+both components of volatility. This approach utilises the forecasting framework of
+
+Corsi (2003) and will be denoted here as the BPV-J model and takes the following
+
+form,
+
+
+
+                RVt ,t h   0  1 BPVt   2 BPVt 5,t   3 BPVt 22,t
+                                                                             .           (9)
+                  4 J t   5 J t 5,t   6 J t 22,t   t ,t  h
+
+
+
+Under the BPV-J model, a forecast of average RV over the ensuing h days (set to 22
+
+in this case) is a function of average BPV and J on the preceding day, week (t-5,t) and
+
+month (t-22,t). The inclusion of this model is important as its forecasts have the
+
+potential to reflect information regarding jump activity directly. In essence, it should
+
+
+
+                                                          10
+represent a superior benchmark relative to the models described above that do not
+
+utilize jumps directly, given the research question at hand.
+
+
+
+The vector  t is denoted to contain the stacked volatility forecasts and thus reflect
+
+the information contained in MBF.
+
+
+
+                                              GJR t 
+                                                         
+                                              GJR  RVt 
+                                              SVt        
+                                        Ψt 
+                                              SV  RV  t
+                                                                                    (10)
+                                              ARMA 
+                                                     t
+                                                          
+                                              ARFIMAt 
+                                              BPV  J 
+                                                     t 
+
+
+
+
+As the VIX is designed as a fixed 22 day ahead forecast, each of the models are used
+
+to produce forecasts of average 22 day-ahead volatility. Forecasts are based on
+
+parameters estimated from a rolling window of 1000 observations. This procedure
+
+results in 2460 22 day ahead forecasts.
+
+
+
+4.2. VIX and the historical jump component
+
+
+
+To determine whether the VIX subsumes information relating to jumps in the S&P
+
+500 price process, the testing strategy employed by Fleming (1998) and Becker,
+
+Clements and White (2006) is used. This entails testing whether the VIX forecast
+
+error is orthogonal to a set of available information, z t . In this instance, the target to
+
+be forecast is average realised volatility observed over the ensuing 22 trading days,
+
+RV t 1t  22 . The forecast error is defined as
+
+
+
+                                               11
+                               vt  RV t 1t  22  (   VIX t )                 (11)
+
+
+
+The incorporation of the parameters,  and  , in the tradition of Mincer-Zarnowitz
+
+(1969) regressions, acknowledges that the VIX forecast is not necessarily unbiased.
+
+The inclusion of an intercept allows for the presence of a constant volatility risk
+
+premium in the VIX. This results in positive estimates of  in equation (11). To
+
+capture a potentially time-varying volatility risk premium, as suggested by Chernov
+
+(2007), equation (11) is augmented by the inclusion of RVt ,
+
+
+
+
+                          vt  RV t 1t  22  (   VIX t   RVt ) .            (12)
+
+
+
+Results will be report for both equations (11) and (12).
+
+
+
+If the sequence of zero-mean forecast errors             v̂t  are unrelated to any other
+conditioning information, observations of the jump component of volatility in this
+
+case, then the VIX can be said to subsume this information. A direct way of testing
+
+the orthogonality of v̂t  is proposed by Fleming (1998), and used by Becker,
+
+Clements and White (2006), which employs the Generalized Method of Moments
+
+(GMM) framework. Parameter estimates for equations (11) and (12) are obtained by
+
+minimising
+
+
+
+                                  V  g ( ,  )' H g ( ,  ) ,                    (13)
+
+
+
+
+                                             12
+where
+
+
+
+                                                            1 T
+                                             g ( ,  )       vt z t .
+                                                            T t 1
+                                                                                 (14)
+
+
+
+
+The weighting matrix H is chosen to be the variance-covariance matrix of the moment
+
+conditions in g ( ,  ) , where allowance is made for residual correlation (see Hansen
+
+and Hodrick, 1980).
+
+
+
+The instrument vector z t contains a constant, VIX t (and RVt if vt is defined as in
+
+equation (12)) as well as information relating to historical observations of the
+
+volatility jump component. The analysis is conducted based on the average jump
+
+component over the preceeding 1, 2 and 3 days. These will be denoted below as J t 1 ,
+
+J t  2,t 1 and J t 3,t 1 respectively.
+
+
+
+4.3. VIX and the future jump component
+
+
+
+To determine whether the VIX contains any incremental information relative to MBF
+
+that is relevant for explaining future jump activity, the empirical approach of Becker,
+
+Clements and White (2007) is employed.
+
+
+
+It is first necessary to extract the information in VIX that cannot simply be attributed
+
+to the information contained in the MBF in the vector  t (equation (10)). This is
+
+achieved by the following regression
+
+
+
+
+                                                     13
+                                       VIX t     '  t   t                              (15)
+
+
+
+where  t reflects such information. If the ˆt  series is orthogonal to the contents of
+
+an instrument vector z t , it can be concluded that the VIX contains no incremental
+
+information relative to MBF relevant for explaining the contents of z t . Similar to the
+
+modification in equation (12) we allow for a time-varying risk premium by adding the
+
+current level of volatility to the vector of explanatory variables in equation (15),
+
+ ~t  RVt  t'  ' (see Chernov, 2007). Results using  t and ~t will be reported
+
+below.
+
+
+
+To test this orthogonality condition, the GMM framework is used once again with the
+
+moment condition in equation (14) redefined as
+
+
+
+                                              1 T
+                               g ( ,  )       (VIX t     ' t ) zt
+                                              T t 1
+                                                                                              (16)
+
+
+
+
+To address the research question, the elements of z t are defined as a constant,  t (or
+
+~t ) and the average volatility jump component over the subsequent 1, 5, 10 or 22
+
+days. While the VIX forecast horizon is 22 days, it is an interesting issue to consider
+
+whether the VIX contains information for near term jumps only.
+
+
+
+Following the notation presented in the previous section, these will be denoted as
+
+J t 1 , J t 1,t 5 , J t 1,t 10 , J t 1,t  22 . It should be noted, that the above analysis was
+
+repeated with alternative definitions of the jump component, namely using the
+
+
+
+                                                   14
+Andersen et. al. (2007) approach to isolate larger jumps only. All results presented
+
+below, remain qualitatively unaltered8.
+
+
+
+5. Results
+
+
+
+Section 5.1 presents the empirical results relating to whether the VIX subsumes
+
+historical contribution of jumps to historical volatility, with Section 5.2 presenting
+
+those relating to whether the VIX contains any incremental information relevant for
+
+explaining the future jump activity in volatility.
+
+
+
+5.1. VIX and the historical jump component
+
+
+
+Table 1 contains results of the test for overidentifying restrictions to test whether the
+
+VIX subsumes historical jumps activity in volatility9. The tests relate to the moment
+
+conditions in equation (14) with instrument sets containing various measures of
+
+historical jump activity. Results in the top panel of Table 1 relate to equation (11) in
+
+which allowance is made for the VIX to reflect a constant volatility risk premium,
+
+whereas a time-varying volatility risk premium is catered for in the bottom panel.
+
+Clearly, the null hypothesis of orthogonality between the forecast errors and historical
+
+estimates of the jump component cannot be rejected, irrespective of how the risk
+
+premium is catered for.
+
+
+
+
+8
+    Results are available upon request.
+9
+    Individual parameter estimates are not reported as they are not central to the research question at
+
+hand.
+
+
+
+                                                      15
+On the basis of these results, a market determined forecast of volatility, the VIX, is
+
+efficient with respect to the degree of price volatility contributed by the jump process.
+
+This is a new result that extends the findings of Fleming (1998) and Becker, Clements
+
+and White (2006) neither of whom considered jump activity.
+
+
+
+INSERT TABLE 1 ABOUT HERE
+
+
+
+5.2. VIX and the future jump component
+
+
+
+Table 2 presents results for the overidentifying tests to determine whether the VIX
+
+contains information that is incremental to MBF relating to the future jump
+
+component in volatility. These tests relate to the moment conditions in equation (16).
+
+Before interpreting the results it should be reiterated that the jump measure utilized,
+
+J t  h , is an estimator of
+
+
+
+
+                                      s 
+                                   1                  2
+                                                          for h  1, 5, 10, 22
+                                      t  s t  h
+
+
+
+
+for  s  as defined in equations (1) and (4). As discussed previously, this measure
+
+captures the intensity of the jump process as well as the average size of the jumps
+
+occurring. Any finding relating to the VIX containing information at time t about J t  h
+
+is clearly information on the parameters of the jump process, jump intensity and
+
+average jump size, and not the timing of actual jumps themselves10.
+
+
+
+10
+     We thank an anonymous referee for clarifying this.
+
+
+
+                                                          16
+Results reported in the top panel of Table 2 indicate whether information in the VIX,
+
+not attributable to MBF, is orthogonal to the future volatility jump component when
+
+allowing for a constant volatility risk premium. This hypothesis can be rejected at any
+
+reasonable level of significance at all forecast horizons (h = 1, 5, 10 and 22). The
+
+strength of the rejection increases with the forecast horizon and may be explained in
+
+two ways. First, the VIX is a volatility forecast for the upcoming 22 business days
+
+and, second, the jump component is measured with increasing precision as the
+
+forecast horizon is increased. These results are mirrored in the bottom panel of Table
+
+2 (allowing for a time-varying volatility risk premium), although the rejection at h = 1
+
+is somewhat weaker.
+
+
+
+It is interesting to note the correlations between  t and the measure of jump activity
+
+over the next h days, J t  h , which are reported in the last row of the two panels in
+
+Table 2. The correlation is always positive and increases in strength as τ increases.
+
+Thus, a greater difference between VIX and MBF, on average signals a period with
+
+increased jump activity, meaning increased jump intensity and/or average jump size.
+
+This result is noteworthy as we have included a model, BPV-J model that explicitly
+
+includes jumps. This may be due to the BPV-J model having an inadequate
+
+specification in terms of jumps dynamics. A model that goes beyond relatively simply
+
+linear dependence may be required. Importantly, this result however does not imply
+
+that the VIX forecast can predict the timing of jumps, which is consistent with market
+
+efficiency.
+
+
+
+Considering these results, together with those of the previous section, it is clear that as
+
+a market determined forecast, the VIX has the ability to react to and anticipate the
+
+
+                                            17
+impact of non-continuous price movements in the S&P500 index on overall volatility.
+
+This sheds a new light on the results of Becker, Clements and White (2007) which
+
+highlighted that the VIX does not deliver any improvements (relative to MBF) when
+
+forecasting total price volatility, as measured by realized variance. However, as
+
+established here, it does indeed provide information with regards to the source of
+
+future price variation, as differences between MBF and the VIX hint at the importance
+
+of jumps relative to continuous price movements.
+
+
+
+INSERT TABLE 2 ABOUT HERE
+
+
+
+6. Concluding remarks
+
+
+
+The behavior of option implied volatility (IV) has attracted a great deal of research
+
+attention. This research has focused on both the forecasting performance and
+
+informational content of IV relative to econometric model-based forecasts (MBF).
+
+However, as most common MBF simply smooth historical estimates of total volatility
+
+when generating forecasts, and IV is a market determined forecast, IV forecasts have
+
+the potential to behave differently to MBF when non-smooth price changes (jumps)
+
+contribute to the spot market volatility.
+
+
+
+This paper has considered two issues relating to the informational content of the S&P
+
+500 VIX implied volatility index. First, whether it subsumes historical information on
+
+the contribution of price jumps to volatility. Second, whether the VIX reflects any
+
+incremental information relative to model based forecasts pertaining to future jump
+
+activity. This differs from previous studies that have considered these issues in the
+
+
+
+                                            18
+context of forecasts of the level of future volatility, not considering whether this
+
+volatility is caused by continuous or non-continuous price changes.
+
+
+
+Results presented here show that the VIX does reflect (or react to) past jump activity
+
+in the S&P 500. VIX forecast errors are indeed uncorrelated to past available
+
+information relating to jump activity. It has also been shown that the VIX reflects
+
+incremental information, relative to MBF, for explaining future jump activity. It
+
+appears as if the VIX anticipates jump activity in the S&P500 share price index, thus
+
+an interesting avenue for future research would be to formally incorporate this
+
+information into a volatility forecasting model. Overall these results confirm the
+
+potential for a market determined forecast to react to volatility changes in a way that
+
+standard econometric models, even those that directly incorporate jumps cannot.
+
+
+
+
+                                          19
+References
+
+
+
+Andersen T.G., Bollerslev T. and Diebold F.X., 2007. Roughing it up: Including jump
+
+   components in the measurement, modeling, and forecasting of return volatility.
+
+   Review of Economics and Statistics 89, 701-720.
+
+Andersen, T.G., Bollerslev, T., and Diebold, F.X., and Labys, P., 1999.
+
+   Understanding, Optimizing, Using and Forecasting Realized Volatility and
+
+   Correlation, Working Paper FIN-99-061, Department of Finance, Stern School of
+
+   Business, New York University.
+
+Barndorff-Nielsen, O. E. and Shephard, N., 2004. Power and bi-power variation with
+
+   stochastic volatility and jumps. Journal of Financial Econometrics 2, 1-37.
+
+Barndorff-Nielsen, O. E. and Shephard, N., 2006. Econometrics of testing for jumps
+
+   in financial economics using bipower variation. Journal of Financial Econometrics
+
+   4, 1-30.
+
+Becker R. and Clements A. and White S., 2006. On the informational efficiency of
+
+   S&P500 implied volatility. North American Journal of Economics and Finance
+
+   17, 139-153.
+
+Becker R. and Clements A. and White S., 2007. Does implied volatility provide any
+
+   information beyond that captured in model-based volatility forecasts? Journal of
+
+   Banking and Finance 31, 2535-2549.
+
+Blair B.J., Poon S-H. and Taylor S.J., 2001. Forecasting S&P 100 volatility: the
+
+   incremental information content of implied volatilities and high-frequency index
+
+   returns. Journal of Econometrics 105, 5-26.
+
+Branger, N., Schlag, C. and Schneider, E., 2008. Optimal portfolio when volatility can
+
+   jump. Journal of Banking & Finance 32, 1087-1097.
+
+
+
+                                          20
+Chicago Board of Options Exchange, 2003. White Paper, VIX, CBOE Volatility
+
+   Index, accessible from: http://www.cboe.com/micro/vix/introduction.aspx.
+
+Chernov M., 2007. On the role of risk premia in volatility forecasting. Journal of
+
+   Business & Economic Statistics 25. 411-426.
+
+Christensen B.J. and Prabhala N.R., 1998. The relation between implied and realized
+
+   volatility. Journal of Financial Economics 50, 125-150.
+
+Corsi F., 2003. A simple long memory model of realized volatility. Manuscript,
+
+   University of Southern Switzerland.
+
+Dotsis G., Psychoyios, D. and Skiadopoulos, G. 2007. An empirical comparison of
+
+   continuous-time models of implied volatility indices. Journal of Banking &
+
+   Finance 31, 3584-3603.
+
+Fleming J., 1998. The quality of market volatility forecasts implied by S&P 100 index
+
+   option prices. Journal of Empirical Finance 5, 317-345.
+
+Glosten, L., R. Jagannathan, and Runkle, D., 1993. On the relation between the
+
+   expected value and the volatility of the nominal excess return on stocks. Journal of
+
+   Finance 48, 1779-1801.
+
+Hansen L.P. and Hodrick R.J., 1980. Forward exchange rates as optimal predictors of
+
+   future spot rates: An econometric analysis. Journal of Political Economy 88, 839-
+
+   853.
+
+Huang, X. and Tauchen, G., 2005. The relative contribution of jumps to total price
+
+   variance. Journal of Financial Econometrics 3, 456-499.
+
+Jiang, G.J. and Tian, Y.S., 2003. Model-free implied volatility and its information
+
+   content. Unpublished manuscript.
+
+Koopman, S. J. B. Jungnacker and Hol, E., 2004. Forecasting daily variability of the
+
+   S&P100 stock index using historical, realised and implied volatility
+
+
+
+                                          21
+   measurements. Journal of Empirical Finance 12, 445-475.
+
+Mincer, J. and Zarnowitz, V., 1969. The evaluation of economic forecasts. In: Mincer,
+
+   J. (ed.), Economic Forecasts and Expectations. New York: National Bureau of
+
+   Economic Research.
+
+Pong, S., Shackelton, M. B., Taylor S. J. and Xu, X. (2004). Forecasting currency
+
+   volatility: A comparison of implied volatilities and AR(FI)MA models. Journal of
+
+   Banking & Finance 28, 2541-2563.
+
+
+
+
+                                         22
+         0.1
+
+       0.05
+
+r2t          0
+
+      -0.05
+
+        -0.1
+                         1991   1993     1995       1997      1999       2001      2003
+
+                    -3
+                 x 10
+             3
+
+
+             2
+      VIXt
+             1
+
+
+             0
+                         1991   1993     1995       1997      1999       2001      2003
+
+
+        Figure 1: Daily S&P 500 returns (top panel) and daily VIX index (bottom panel).
+
+
+
+
+                                              23
+                      -3
+                   x 10
+             2.5
+
+
+
+              2
+
+
+
+             1.5
+
+       RVt
+
+              1
+
+
+
+             0.5
+
+
+
+              0
+                           1991   1993     1995        1997      1999       2001      2003
+
+
+
+
+                      -3
+                   x 10
+             2.5
+
+
+
+              2
+
+
+
+             1.5
+
+       Jt
+
+              1
+
+
+
+             0.5
+
+
+
+              0
+                           1991   1993     1995        1997      1999       2001      2003
+
+
+
+
+Figure 2: Daily realised volatility (top panel) and jump component in volatility (bottom panel).
+
+
+
+
+                                                  24
+vt  RV t 1t  22  (   VIX t )
+
+zt                    {1, VIX t , J t 1 }         {1, VIX t , J t  2,t 1 }         {1, VIX t , J t 3,t 1 }
+
+J-stat                1.3029                       0.9017                             0.6728
+
+p-value               0.2537                       0.3423                             0.4121
+
+R-squared             0.7693                       0.7693                             0.7693
+
+
+
+vt  RV t 1t  22  (   VIX t   RVt )
+
+zt                    {1, VIX t , RVt , J t 1 }   {1, VIX t , RVt , J t  2,t 1 }   {1, VIX t , RVt , J t 3,t 1 }
+
+J-stat                1.4449                       0.8231                             0.6833
+
+p-value               0.2293                       0.3643                             0.4084
+
+R-squared             0.7722                       0.7723                             0.7723
+Table 1: GMM results of the tests of over-identifying restrictions testing whether the
+VIX subsumes historical jump information. Results pertain to instrument vectors
+containing the jump component of volatility. Results in the top panel are for a
+constant volatility risk premium. Results in the bottom panel allow for a time varying
+volatility risk premium.
+
+
+
+
+                                                   25
+ t  VIX t     ' t
+
+zt                      {1, t , J t 1 }   {1, t , J t 1,t 5 }   {1, t , J t 1,t 10 }   {1, t , J t 1,t  22 }
+
+J-stat                  14.4723             21.4002                  21.5947                   19.357
+
+p-value                 0.0001              0.0000                   0.0000                    0.000
+
+R-squared               0.3538              0.9368                   0.9360                    0.9356
+
+Corr(  t , J t  h )   0.0496              0.1524                   0.2241                    0.2938
+
+ t  VIX t     '~t
+
+zt                      {1,~t , J t 1 }   {1,~t , J t 1,t 5 }   {1,~t , J t 1,t 10 }   {1,~t , J t 1,t  22 }
+
+J-stat                  6.1008              18.0399                  18.9445                   17.2860
+
+p-value                 0.0135              0.0000                   0.0000                    0.0000
+
+R-squared               0.9388              0.9390                   0.9383                    0.9380
+
+Corr(  t , J t  h )   0.0287              0.1371                   0.2070                    0.2742
+
+Table 2: GMM results of the tests of over-identifying restrictions testing whether the
+VIX contains incremental information relevant for explaining future jump activity.
+Results pertain to instrument vectors containing the jump component of volatility.
+Results in the top panel are for a constant volatility risk premium. Results in the
+bottom panel allow for a time varying volatility risk premium.
+
+
+
+
+                                                    26
+

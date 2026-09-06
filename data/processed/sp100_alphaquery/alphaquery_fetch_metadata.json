@@ -1,0 +1,23 @@
+{
+  "tickers_file": "/Users/yitwah/Projects/Volatility/data/processed/sp100/tickers.txt",
+  "n_tickers_requested": 101,
+  "per_type": "30-Day",
+  "indicators": [
+    "iv-mean",
+    "historical-volatility"
+  ],
+  "note": "Unauthenticated AlphaQuery chart endpoint currently returns the free recent chart window only.",
+  "failures": [],
+  "counts": {
+    "iv-mean": {
+      "tickers_succeeded": 101,
+      "min_rows": 12,
+      "max_rows": 64
+    },
+    "historical-volatility": {
+      "tickers_succeeded": 101,
+      "min_rows": 12,
+      "max_rows": 64
+    }
+  }
+}

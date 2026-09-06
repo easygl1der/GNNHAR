@@ -1,0 +1,23 @@
+{
+  "created_utc": "2026-06-20T03:35:04.403317+00:00",
+  "run_dir": "/Users/yitwah/Projects/Volatility/outputs/paper_ready_20260617/universes/dow30/aligned_full_model_20260619",
+  "n_dates": 234,
+  "n_tickers": 30,
+  "n_models": 28,
+  "test_start": "2025-07-07 00:00:00",
+  "test_end": "2026-06-09 00:00:00",
+  "baseline": "HAR_M",
+  "mcs_alpha": 0.05,
+  "mcs_bootstrap": 10000,
+  "mcs_block_size": 2,
+  "mcs_algorithm": "SQ",
+  "files": [
+    "data_integrity_checks.csv",
+    "diagnostic_loss_summary.csv",
+    "mcs_mse.csv",
+    "mcs_qlike.csv",
+    "mcs_summary.csv",
+    "per_date_mse_losses.csv",
+    "per_date_qlike_losses.csv"
+  ]
+}

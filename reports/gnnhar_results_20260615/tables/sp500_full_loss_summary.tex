@@ -1,0 +1,30 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrr}
+\toprule
+Model & Block & Est. & \(\rho_M\) & \(\rho_Q\) & \(1-\rho_Q\) & \(\rho_Q^{IV}\) \\
+\midrule
+GHAR & strict core & MSE & 0.9985 & 0.9993 & 0.07\% & 1.0271 \\
+HAR & strict core & MSE & 1.0000 & 1.0000 & 0.00\% & 1.0278 \\
+GNNHAR1L & strict core & MSE & 1.0085 & 1.0331 & -3.31\% & 1.0618 \\
+GNNHAR2L & strict core & MSE & 1.1022 & 1.1374 & -13.74\% & 1.1690 \\
+GNNHAR3L & strict core & MSE & 1.2913 & 1.3972 & -39.72\% & 1.4361 \\
+GHAR+IV & IV extension & MSE & 0.9635 & 0.9727 & 2.73\% & 0.9998 \\
+HAR+IV & IV extension & MSE & 0.9639 & 0.9729 & 2.71\% & 1.0000 \\
+GNNHAR3L-IV & IV extension & MSE & 1.0820 & 1.1144 & -11.44\% & 1.1454 \\
+GNNHAR1L-IV & IV extension & MSE & 1.0654 & 1.1147 & -11.47\% & 1.1457 \\
+GNNHAR2L-IV & IV extension & MSE & 1.1760 & 1.2686 & -26.86\% & 1.3039 \\
+GHAR+fakeIV & diagnostic placebo & MSE & 0.9904 & 0.9947 & 0.53\% & 1.0223 \\
+HAR+fakeIV & diagnostic placebo & MSE & 0.9935 & 0.9960 & 0.40\% & 1.0237 \\
+GNNHAR1L-IV+fakeIV & diagnostic placebo & MSE & 1.3553 & 1.4775 & -47.75\% & 1.5186 \\
+GHAR+IV-random & diagnostic random graph & MSE & 0.9638 & 0.9733 & 2.67\% & 1.0003 \\
+GHAR\_RANDOM & diagnostic random graph & MSE & 0.9982 & 0.9978 & 0.22\% & 1.0255 \\
+GNNHAR3L-IV-random & diagnostic random graph & MSE & 1.2192 & 1.3049 & -30.49\% & 1.3412 \\
+\bottomrule
+\end{tabular}
+}
+\caption{SP500 scale-run full available model comparison.  Diagnostic placebo and random-graph rows are included for completeness.}
+\label{tab:sp500-full-loss}
+\end{table}

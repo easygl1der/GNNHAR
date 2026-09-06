@@ -1,70 +1,96 @@
 # GNNHAR Paper-Ready Results
 
-Created UTC: 2026-06-18T08:23:24.381590+00:00
+This folder is the structured analysis entrypoint for the Zhang-style paper draft.
+It separates current paper evidence from archived runs whose calendars no longer match the manuscript.
 
-This folder is the structured analysis entrypoint for Colab and report generation.
-It is a copy of selected run outputs; the original Colab and AutoDL result folders are unchanged.
+## Current Status
+
+| Universe | Main evidence status | Model tickers | Test dates | Test window | Notes |
+|---|---:|---:|---:|---|---|
+| Dow30 | current aligned full-model evidence | 30 | 234 | 2025-07-07 to 2026-06-09 | Imported from `20260619T071426Z_aligned_full_model`; 234-date MCS has been recomputed. |
+| S&P100 | current full-model evidence | 91 | 234 | 2025-07-07 to 2026-06-09 | Current saved diagnostics and MCS are retained. |
+| S&P500 | current AutoDL full-model evidence | 449 | 223 | 2025-07-14 to 2026-06-01 | Current saved diagnostics and MCS are retained; calendar is near-aligned, not identical. |
+
+The older Dow30 232-date full-model run has been moved to:
+
+```text
+universes/dow30/.trash/legacy_232date_full_model_20260614/
+```
+
+Do not use that folder for current paper MCS tables. It is kept only for provenance.
 
 ## Layout
 
-- `universes/<universe>/arrays/`: `truth.npy`, `tickers.npy`, and `test_dates.npy`.
-- `universes/<universe>/predictions/`: one `pred_*.npy` file per model.
-- `universes/<universe>/tables/`: main loss, DM, FVU, and multi-hop tables.
-- `universes/<universe>/diagnostics/`: MCS, market-regime, data-integrity, and smoothing diagnostics.
-- `universes/<universe>/graphs/`: exported GLASSO adjacency matrices when available.
-- `universes/<universe>/zhang_source/`: loss-specific Zhang-style source tables when available.
-- `universes/<universe>/supplements/`: date-aligned supplemental runs that should not be silently merged into arrays with a different test-date index.
-- `manifest.json`: machine-readable inventory.
-- `checksums_sha256.txt`: checksum audit for every copied file.
+- `universes/dow30/aligned_full_model_20260619/`: corrected 234-date Dow30 full-model run and recomputed diagnostics.
+- `universes/dow30/supplements/wide_multihop_ghar_20260618/`: 234-date GHAR2H/GHAR3H supplement only; it is not a full HAR/GHAR/GNNHAR model family.
+- `universes/dow30/.trash/`: archived incompatible Dow30 artifacts.
+- `universes/sp100/`: current S&P100 full-model paper-ready artifacts.
+- `universes/sp500/`: current S&P500 AutoDL full-model paper-ready artifacts.
 
-## Universe Summary
+For each current full-model run, use this structure:
 
-| Universe | Truth shape | Predictions | Tables | Diagnostics | Graph matrices | Source |
-|---|---:|---:|---:|---:|---:|---|
-| dow30 | [232, 30] | 20 | 3 | 12 | 0 | Colab-style Dow30 full run written to Google Drive. |
-| sp100 | [234, 91] | 36 | 5 | 12 | 0 | Colab-style SP100 full run written to Google Drive. |
-| sp500 | [223, 449] | 36 | 4 | 12 | 22 | AutoDL A100 SP500 full run, converted to Colab-style outputs. |
-
-## Colab Loading
-
-Use this folder as the stable entrypoint after mounting Google Drive in Colab:
-
-```python
-from pathlib import Path
-import json
-import numpy as np
-import pandas as pd
-
-RESULT_ROOT = Path('/content/drive/MyDrive/GNNHAR_Research/results/paper_ready_20260617')
-
-def load_universe(universe):
-    root = RESULT_ROOT / 'universes' / universe
-    truth = np.load(root / 'arrays' / 'truth.npy')
-    tickers = np.load(root / 'arrays' / 'tickers.npy', allow_pickle=True)
-    test_dates = np.load(root / 'arrays' / 'test_dates.npy', allow_pickle=True)
-    predictions = {p.stem.removeprefix('pred_'): np.load(p) for p in sorted((root / 'predictions').glob('pred_*.npy'))}
-    tables = {p.stem: pd.read_csv(p) for p in sorted((root / 'tables').glob('*.csv'))}
-    diagnostics = {p.stem: pd.read_csv(p) for p in sorted((root / 'diagnostics').glob('*.csv')) if p.stat().st_size > 0}
-    manifest = json.loads((root / 'universe_manifest.json').read_text())
-    return truth, tickers, test_dates, predictions, tables, diagnostics, manifest
-
-truth, tickers, test_dates, predictions, tables, diagnostics, manifest = load_universe('sp500')
-print(truth.shape, len(predictions), sorted(tables))
+```text
+RUN_DIR/
+  arrays/
+    truth.npy
+    tickers.npy
+    test_dates.npy
+  predictions/
+    pred_HAR_M.npy
+    pred_HAR_M_IV.npy
+    pred_GHAR_M.npy
+    ...
+  tables/
+    loss_table.csv
+    dm_tests.csv
+    fvu.csv
+  diagnostics/
+    mcs_mse.csv
+    mcs_qlike.csv
+    mcs_summary.csv
 ```
 
-For SP500 GLASSO matrices:
+## Recompute Diagnostics and MCS
 
-```python
-graph_files = sorted((RESULT_ROOT / 'universes' / 'sp500' / 'graphs').rglob('*.npz'))
-graph = np.load(graph_files[0], allow_pickle=True)
-W = graph['adjacency']
-info = json.loads(str(graph['info_json']))
-print(len(graph_files), W.shape, info.keys())
+To recompute paper diagnostics after changing aligned truth or prediction arrays, run:
+
+```bash
+python scripts/paper_ready/recompute_diagnostics.py \
+  --run-dir outputs/paper_ready_20260617/universes/dow30/aligned_full_model_20260619 \
+  --bootstrap 10000 \
+  --block-size 2 \
+  --algorithm SQ \
+  --seed 0
 ```
 
-The model names are encoded in prediction filenames. For example, `pred_GNNHAR5L_QLIKE_IV.npy` is the SP500 prediction array for the 5-layer IV GNNHAR trained under QLIKE.
+This writes per-date MSE/QLIKE losses, `mcs_mse.csv`, `mcs_qlike.csv`, `mcs_summary.csv`, loss summaries, and integrity checks under `RUN_DIR/diagnostics/`.
 
-## Notes
+## Colab Reproduction
 
-- `hidden_state_mad.csv` may be empty for runs that did not save hidden representations; use `mad_smoothing_diagnostics.csv` and `oversmoothing_depth_summary.csv` as prediction-level smoothing diagnostics.
-- SP500 graph matrices are normalized adjacency matrices used by the models, not raw precision matrices.
+Use the notebook:
+
+```text
+notebooks/paper_ready_reproduction_colab.ipynb
+```
+
+The notebook is organized as:
+
+1. Mount Google Drive and clone the repository branch.
+2. Verify data paths and GPU.
+3. Run a smoke test.
+4. Run Dow30/S&P100 full-model Colab jobs.
+5. Run or import the S&P500 AutoDL output.
+6. Export arrays into this paper-ready layout.
+7. Recompute diagnostics and MCS.
+
+The notebook is intended to be run top-to-bottom after the data folders are present. Long full-model cells are separated from smoke-test cells so that a reviewer can verify the code path before launching expensive training.
+
+## Paper Draft
+
+The manuscript lives at:
+
+```text
+reports/zhang_style_statistics_20260618/paper_draft/main.tex
+```
+
+The Dow30 MCS source is `universes/dow30/aligned_full_model_20260619/diagnostics/mcs_summary.csv`, which reports 234 test dates.

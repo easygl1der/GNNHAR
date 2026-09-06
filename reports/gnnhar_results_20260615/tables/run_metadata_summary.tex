@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrlrll}
+\toprule
+Universe & \(N\) & Dates & Test days & Training budget & Status \\
+\midrule
+Dow30 & 30 & 2021-02-26--2026-01-26 & 186 & epochs=250, hidden=16 & completed earlier full stack \\
+SP100 scale & 99 & 2021-07-12--2026-06-01 & 161 & epochs=80, hidden=16 & short-budget scale artifact \\
+SP500 scale & 449 & 2021-07-19--2026-06-01 & 184 & epochs=60, hidden=16 & short-budget scale artifact \\
+SP100 A100 & 91 & 2021-06-09--2026-06-09 & 234 & epochs=5000, hidden=9 & current Colab long run \\
+\bottomrule
+\end{tabular}
+}
+\caption{Available runs.  The SP100 A100 run is the latest long-run notebook result; SP500 is not yet a matched A100 long run.}
+\label{tab:run-metadata}
+\end{table}

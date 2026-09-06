@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{llrrrr}
+\toprule
+Model & Class & $\rho_M$ & $\rho_Q$ & $\Delta_Q$ & $\rho_Q^{IV}$ \\
+\midrule
+GHAR+IV & GHAR+IV & 0.9114 & 0.9549 & 4.51\% & 0.9901 \\
+GNNHAR3L-IV & GNNHAR+IV & 0.8519 & 0.9555 & 4.45\% & 0.9906 \\
+HAR+IV & HAR+IV & 0.9285 & 0.9645 & 3.55\% & 1.0000 \\
+GHAR & GHAR & 0.9626 & 0.9868 & 1.32\% & 1.0230 \\
+GNNHAR2L-IV & GNNHAR+IV & 0.8833 & 0.9993 & 0.07\% & 1.0360 \\
+HAR & HAR & 1.0000 & 1.0000 & 0.00\% & 1.0368 \\
+GNNHAR1L-IV & GNNHAR+IV & 0.9199 & 1.0155 & -1.55\% & 1.0529 \\
+GNNHAR1L & GNNHAR & 1.0183 & 1.0304 & -3.04\% & 1.0683 \\
+GNNHAR2L & GNNHAR & 1.0039 & 1.0464 & -4.64\% & 1.0849 \\
+GNNHAR3L & GNNHAR & 1.0575 & 1.0947 & -9.47\% & 1.1350 \\
+GNNHAR1L-IV-QLIKE & GNNHAR+IV & 2.2778 & 1.1360 & -13.60\% & 1.1778 \\
+GNNHAR1L-QLIKE & GNNHAR & 2.3467 & 1.2320 & -23.20\% & 1.2773 \\
+\bottomrule
+\end{tabular}
+\caption{Dow30 loss ratios.  \(\rho_Q<1\) and \(\Delta_Q>0\) mean lower QLIKE loss than HAR.}
+\label{tab:dow30-loss}
+\end{table}

@@ -1,0 +1,1395 @@
+      Journal of the Operational Research Society
+
+
+
+
+      ISSN: (Print) (Online) Journal homepage: https://www.tandfonline.com/loi/tjor20
+
+
+
+
+Financial volatility modeling with option-implied
+information and important macro-factors
+
+Stavroula Yfanti & Menelaos Karanasos
+
+To cite this article: Stavroula Yfanti & Menelaos Karanasos (2021): Financial volatility modeling
+with option-implied information and important macro-factors, Journal of the Operational Research
+Society, DOI: 10.1080/01605682.2021.1966327
+
+To link to this article: https://doi.org/10.1080/01605682.2021.1966327
+
+
+
+
+       © 2021 The Author(s). Published by Informa
+       UK Limited, trading as Taylor & Francis
+       Group
+
+       Published online: 23 Aug 2021.
+
+
+
+       Submit your article to this journal
+
+
+
+       Article views: 399
+
+
+
+       View related articles
+
+
+
+       View Crossmark data
+
+
+
+
+                      Full Terms & Conditions of access and use can be found at
+             https://www.tandfonline.com/action/journalInformation?journalCode=tjor20
+JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY
+https://doi.org/10.1080/01605682.2021.1966327
+
+
+ORIGINAL ARTICLE
+
+Financial volatility modeling with option-implied information and
+important macro-factors
+Stavroula Yfantia              and Menelaos Karanasosb
+a
+    Loughborough University, Loughborough, UK; bBrunel University, Uxbridge, UK
+
+
+      ABSTRACT                                                                                                                      ARTICLE HISTORY
+      The research debate on the informational content embedded in option prices mostly appro-                                      Received 14 April 2020
+      ves the incremental predictive power of implied volatility estimates for financial volatility                                 Accepted 3 August 2021
+      forecasting beyond that contained in GARCH and realized variance models. Contributing to
+                                                                                                                                    KEYWORDS
+      this ongoing debate, we introduce the novel AIM-HEAVY model, a tetravariate system with
+                                                                                                                                    Economic policy
+      asymmetries, option-implied volatility, and economic uncertainty variables beyond daily and                                   uncertainty; high-frequency
+      intra-daily dispersion measures included in the benchmark HEAVY specification. We associate                                   data; implied volatility;
+      financial with macroeconomic uncertainties to explore the macro-financial linkages in the                                     macro-financial linkages;
+      high-frequency domain. In this vein, we further focus on economic factors that exacerbate                                     realized variance;
+      stock market volatility and represent major threats to financial stability. Hence, our findings                               risk management
+      are directly connected to the current world-wide Coronavirus outbreak. Financial volatilities
+      are already close to their crisis-peaks amid the generalized fear about controversial economic
+      policies to support societies and the financial system, especially in the case of the heavily
+      criticized UK authorities’ delayed and limited response.
+
+
+
+1. Introduction                                                                      GARCH-type specifications and the long memory
+                                                                                     conditional mean models for the realized measures.
+Financial volatility is widely recognized as one of
+                                                                                     Starting from Bollerslev (1986) with the introduc-
+the most significant inputs for any asset valuation
+task. On the one hand, market practitioners rely on                                  tion of GARCH models for daily returns conditional
+robust volatility modeling to generate efficient up-                                 variance, the GARCH family expanded to cover
+to-the-minute forecasts of future volatility, required                               numerous stylized facts of the financial time series’
+for day-to-day decisions on asset allocation, market                                 volatility pattern, such as leverage (e.g. see Glosten
+risk hedging, derivatives pricing, capital budgeting,                                et al., 1993) and long memory (e.g. see Baillie et al.,
+or any risk assessment consideration in the opera-                                   1996), among others, and even utilize truncated dis-
+tions management context (see, for example, Benati,                                  tributions for stock price limits (e.g. Adcock et al.,
+2015; Cesarone & Colucci, 2018; Datta et al., 2007;                                  2019). Following the first studies that formalized the
+Tan, 2002). On the other hand, policymakers con-                                     daily realized measures on intra-daily returns (e.g.
+sider financial market volatility as a barometer of                                  the realized variance established by Andersen et al.,
+the whole financial system and economy’s vulner-                                     2001, and the realized kernel by Barndorff-Nielsen
+ability. Motivated by the tremendous need for reli-                                  et al., 2008), Andersen et al. (2001) and Corsi
+able estimates of subsequent volatility, academics                                   (2009) proposed long memory models for the condi-
+have delved deeply into formalizing several volatility                               tional mean of the realized variance, that is the
+metrics and developing forecasting models, address-                                  ARFIMA and HAR specifications, respectively.
+ing a number of empirical features of the returns                                       In order to improve the forecasting accuracy of the
+time series second moment.                                                           various volatility models, econometricians have devel-
+   Given that return volatility is unobservable, one                                 oped specifications combining daily with intra-daily
+requires first a proxy of this latent process. Daily                                 measures. Engle (2002) estimated the daily GARCH-
+squared returns and realized variance (computed on                                   X specification adding the realized measure as an
+intra-daily observations) are the most popular meas-                                 exogenous variable in the GARCH(1,1) equation to
+ures of ex-post asset returns dispersion. An enor-                                   capture the incremental information of the higher-
+mous amount of empirical literature has been                                         frequency domain. Accordingly, Shephard and
+investigating the forecasting ability of the condi-                                  Sheppard (2010) introduced the HEAVY (High-
+tional variance models for returns through the                                       frEquency-bAsed VolatilitY) framework and Hansen
+
+CONTACT Stavroula Yfanti         stavyfan@gmail.com          Loughborough University, Loughborough LE11 3TU, UK.
+ß 2021 The Author(s). Published by Informa UK Limited, trading as Taylor & Francis Group
+This is an Open Access article distributed under the terms of the Creative Commons Attribution-NonCommercial-NoDerivatives License (http://creativecommons.org/
+licenses/by-nc-nd/4.0/), which permits non-commercial re-use, distribution, and reproduction in any medium, provided the original work is properly cited, and is not
+altered, transformed, or built upon in any way.
+2     S. YFANTI AND M. KARANASOS
+
+
+et al. (2012) followed with the Realized GARCH (see          realized and implied variances. In other words, we
+also Barunik et al., 2016). Both HEAVY and Realized          extend the bivariate Asymmetric model to the trivari-
+GARCH jointly estimate daily returns’ conditional            ate Asymmetric-Implied HEAVY specification which
+variance and realized measure’s conditional mean.            outperforms the former.
+The HEAVY system of equations is proved to adopt                 Thirdly, inspired by the importance of the macro-
+to information arrival more rapidly than the classic         financial linkages, we explore the possible macro-
+daily GARCH process. A key advantage is the sys-             effects on the financial volatility patterns by adding a
+tem’s robustness to certain forms of structural breaks,      fourth variable to the system, namely the daily
+especially during crisis periods, since the mean rever-      Economic Policy Uncertainty index for the US and the
+sion and short-run momentum effects result in higher         UK (Baker et al., 2016). Our macro-risk factor added,
+quality performance in volatility level shifts and more      apart from capturing the macro-impact, is also a senti-
+reliable forecasts (Shephard & Sheppard, 2010).              ment proxy of the overall economic risks perception
+   Apart from volatility modeling based on historical        ubiquitous in the society and each economic agent sep-
+information, that is daily returns conditional variance      arately. Such perceptions alongside volatility predic-
+and realized variance on intra-daily observations,           tions are widely proved to be significant for any
+there is another vein of research that employs the           management decision process. The macro-augmented
+standard deviation extracted from option prices.             tetravariate system further improves the out-of-sample
+Implied volatility is an ex-ante volatility proxy, that is   performance of our models providing evidence that
+more forward-looking since it captures the market’s          macro-uncertainty contains a significant amount of
+forecast for volatility over the life of the option. This    information for predicting financial market volatility.
+market-determined measure is widely believed to con-         Finally, we focus on the macro-financial linkages in
+tain incremental information from options market             the high-frequency domain by including additional
+participants and, therefore, superior predictive power       macro-factors in the realized volatility equation of the
+for future volatility compared to historical informa-        tetravariate system and by investigating the destabiliz-
+tion. Blair et al. (2001), Martens and Zein (2004),          ing uncertainty effect on the various macro-financial
+Frijns et al. (2010), and Busch et al. (2011) are among      parameters. The central finding obtained from the
+the huge variety of studies providing clear evidence in      realized variance macro-analysis shows that higher
+favor of the significant informational content in            credit risk pricing, financial stress risk, commodity val-
+option-inferred standard deviation that yields remark-       ues, unemployment, and inflation uncertainty exacer-
+ably lower forecasting errors in financial volatility pre-   bate ex-post volatility. At the same time, our sensitivity
+dictions than historical time series models (either daily    analysis indicates that higher uncertainty magnifies
+GARCH or realized variance autoregressive models).           the asymmetric and macro-effects on the realized
+   In this paper, motivated by the merits of the             measure, confirming the conclusion of Karanasos and
+HEAVY framework and the established body of work             Yfanti (2020) for the UK uncertainty destabilizing
+assessing the implied volatility superiority in volatility   ramifications on European stock market volatility.
+forecasting, we examine the inclusion of the ex-ante             The present study aims at contributing to the
+volatility proxy in the bivariate system of ex-post          existing empirical literature in three ways. First, we
+squared returns and realized variance equations on           build on the successful HEAVY methodology for
+seven US and European stock index data. We first             volatility forecasting to improve the volatility model-
+augment the bivariate benchmark specification with           ing framework by combining the conditional vari-
+asymmetries through the structure of the GJR-                ance of daily returns with the leverage effect, the
+GARCH (Glosten et al., 1993) which considerably              ex-post volatility realized measure on inter-period
+improves Bollerslev’s model. One of our main find-           information, and the ex-ante implied volatility from
+ings in the asymmetric specification is that the condi-      option markets’ superior predictive content. The
+tional variance of returns and the conditional mean          wide variety of the extant empirical studies mostly
+of the realized variance are significantly affected by       compares implied volatility with realized variance
+the leverage effects from both variables, that is,           for conditional variance forecasting or implied vola-
+squared negative returns and negative signed values          tility with daily squared returns to predict future
+of realized variance. Secondly, we test the informa-         realized variance, considering or ignoring asymme-
+tional role of implied volatility in modeling the            tries. To the best of our knowledge, we are the first
+returns conditional variance and the realized meas-          to provide a complete system of equations with all
+ure. We find that options market-determined varian-          three dispersion measures and demonstrate that this
+ces are mostly better predictors of both ex-post             is the preferred specification over any bivariate com-
+volatility measures and conclude that the best volatil-      bination in terms of both in- and out-of-sample per-
+ity modeling framework is a trivariate system with           formance. Existing studies conclude on the
+asymmetries and all three variables: squared returns,        superiority of one sole measure to forecast the other
+                                                                 JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY    3
+
+
+one. Second, beyond forecasting the daily returns        and the financial system, especially in the case of
+conditional variance and the realized measure which      the heavily criticized UK government’s delayed and
+is the main research topic in existing literature, we    deficient response. Given an unprecedented and
+investigate the dynamics of implied volatility per se    challenging threat, namely the rapidly contagious
+which is a research challenge mostly overlooked by       virus across the whole universe, economic agents
+financial econometricians. Reliable implied volatility   feel uncertainty about future government policy
+forecasts are of paramount importance for market         choices, their implementation, and their potential
+practitioners in options trading and any other           impact as well. Even if they see officials assuring
+finance task that requires the volatility input, as      that Covid-19 harmful effects are manageable, skep-
+well. The forecastability of market-determined vola-     ticism, criticism, and loss of confidence are still
+tility is only explored by a few papers applying         there and fairly captured by the Economic Policy
+autoregressive processes with or without long mem-       Uncertainty index levels.
+ory features (Dunis et al., 2013; Fernandes et al.,          The remainder of the paper is structured as fol-
+2014; Konstantinidi et al., 2008). In this study, we     lows. In Section 2, we present the econometric
+forecast implied volatility in the trivariate system     framework with the proposed HEAVY extensions.
+where the best model includes first-order autore-        Section 3 describes the data and Section 4 analyzes
+gressive terms associated with returns leverage          the in-sample estimation results. The next section
+effects, in many cases.                                  focuses on the macro-factors incorporated in the
+    Our final contribution is the macro-extension of     realized variance equation and studies the policy
+the trivariate system following Karanasos and Yfanti     uncertainty effects across the macro and volatility
+(2020) who have considered the macro-financial           parameters of the realized measure equation. Section
+linkages in the high-frequency domain. Given that        6 discusses the out-of-sample performance of the
+volatility in financial markets represents financial     proposed models. Finally, Section 7 concludes
+uncertainty, we attempt to associate it with the other   the analysis.
+type of uncertainty coming from the macroeco-
+nomic perspective. We include the daily Economic
+                                                         2. The econometric framework
+Policy Uncertainty index as the fourth endogenous
+variable in the tetravariate system and not as an        Building on the HEAVY framework by Shephard
+exogenous regressor of the realized variance equa-       and Sheppard (2010) who combine two volatility
+tion proposed by Karanasos and Yfanti (2020), who        estimators in a bivariate system, we further account
+work on a narrower context, namely the bivariate         for the downside risk in the volatility process
+returns-realized measure system, and apply the           through our first Asymmetric HEAVY extension of
+macro-financial linkages aspect only on the latter       the returns-realized variance system. Following Pong
+volatility estimator. Interestingly, the macro-uncer-    et al. (2004) who found that historical volatility fore-
+tainty is found to have a discernible impact on two      casting accuracy is attributed to the intra-daily
+of the three financial uncertainty metrics, namely       information rather than long memory considera-
+the squared returns and the realized variance, with-     tions of the modeling framework, we do not enrich
+out receiving any significant financial uncertainty      the HEAVY system with long memory features.
+effect from US and European stock markets.               Similarly, we prefer to ignore power effects (through
+Economic uncertainty, besides other macro-factors,       the APARCH model of Ding et al., 1993) in order
+introduces new frictions in financial markets that       to stick to the second moment modeling and fore-
+should be incorporated in financial time series mod-     casting without the complexity of mixed power
+eling to compute more accurate macro-informed            transformations of the four conditional variances
+volatility forecasts. Overall, we introduce the          included that would impede straightforward eco-
+Asymmetric-Implied-Macro (AIM) HEAVY model               nomic interpretations. Moreover, we augment the
+and achieve a richer understanding of the volatility     bivariate system with a third variable, the implied
+dynamics highly beneficial for both market practi-       volatility measure, to capture the incremental infor-
+tioners and policymakers in any business finance         mation content from stock index options market
+operation and regulatory response.                       beyond that contained in daily and intra-daily
+    Our study is further relevant to a highly topical    returns. Likewise, we further combine the three
+issue nowadays, the world-wide Coronavirus out-          financial uncertainty proxies with a macro-uncer-
+break. Market turbulence is already observed             tainty index to estimate the tetravariate specification
+through markedly increased volatilities close to the     of returns, realized and implied variance, and eco-
+peak reached during the 2008 global crisis. Markets      nomic policy uncertainty. The additional input from
+are seriously afflicted by the generalized fear about    options-inferred variation and economic sentiment
+controversial economic policies to support societies     in the bivariate system will further improve the
+4     S. YFANTI AND M. KARANASOS
+
+
+model’s forecastability beyond the improvement that            ð1bi LÞr2it ¼ xi þ ðair þ cir st1 ÞLðrt2 Þ
+would be achieved by long memory features (see,
+                                                                               þ ðaiR þ ciR st1 ÞLðRMt Þ, for i
+for example, Karanasos et al., 2020). Lastly, we focus
+on the realized variance equation where we add                              ¼ r, R,                                (4)
+additional macro-regressors for credit risk, financial
+                                                             where L denotes the lag operator and
+stress, commodity prices, unemployment, and infla-
+                                                             st ¼ 0:5½1signðrt Þ, that is, st ¼ 1 if rt < 0 and 0
+tion, and perform a sensitivity analysis of the policy
+                                                             otherwise; cii, cij (i 6¼ j) are the asymmetry parame-
+uncertainty effects on the macro and volatility
+                                                             ters (own and cross leverage, respectively); positive
+parameters that drive the dynamics of the real-
+                                                             asymmetry parameters indicate larger contribution
+ized measure.
+                                                             of negative returns shocks in the volatility trajectory.
+                                                             We name aiR and ciR as the Heavy parameters (own
+2.1. Benchmark and asymmetric formulation                    when i ¼ R and cross when i 6¼ R, four in total) that
+                                                             measure the realized measure’s effect on the two
+The benchmark HEAVY specification (Shephard &
+                                                             conditional variances. Similarly, the air and cir are
+Sheppard, 2010) employs the close-to-close returns
+                                                             the four Arch parameters (own when i ¼ r and cross
+(rt) and the realized measure of dispersion based on
+                                                             for i 6¼ r). They capture the squared returns’ impact
+intra-daily quotes, RMt. We calculate the signed
+                                                             on the two conditional variances. Lastly, we impose
+square rootedp(SSR)
+                 ﬃﬃﬃﬃﬃﬃﬃﬃ realized measure as follows:
+  ~ t ¼signðrt Þ RMt , where signðrt Þ ¼ 1, if rt P0         the non-negativity constraint with all parameters
+RM
+and signðrt Þ ¼ 1, if rt < 0. We assume that the            bound to non-negative values (see, for example,
+returns and the SSR realized measure are character-          Conrad & Karanasos, 2010).
+ized by the following equations:                                Our asymmetric extension (A-HEAVY) in the
+                                                             general form of eq. (4) incorporates the leverage
+                               ~ t ¼ eRt rRt ,
+               rt ¼ ert rrt , RM                      (1)    effect in the benchmark model2. The Gaussian
+where the stochastic term eit is independent and             quasi-maximum likelihood estimators (QMLE) and
+identically distributed (i.i.d), i ¼ r, R; rit is positive   multistep-ahead predictors of the GJR-GARCH
+with probability one for all t and it is a measurable        framework (see, for example, Glosten et al., 1993)
+               ðXFÞ                                          are applied in this study. We initially estimate the
+function of F t1 , that is the filtration generated by
+all available information through time t  1. The            general form of the two equations with all Heavy
+   ðHFÞ
+F t1 (X ¼ H) notation refers to the high-frequency          and Arch terms. When a parameter is found insig-
+past data, i.e. for the case of the realized measure,        nificant, it is excluded resulting in the statistically
+        ðLoFÞ
+and F t1 (X ¼ Lo) to the low-frequency past data,           most preferred reduced form of eq. (4).
+i.e. for the case of the close-to-close daily returns.
+For notational convenience, we will drop hereafter           2.2. The AIM-HEAVY specification
+the superscript XF. The HEAVY model assumes
+zero mean and unit variance for eit. Hence, the two          Inspired by the voluminous implied volatility litera-
+variables have zero conditional means and condi-             ture which has already provided strong evidence on
+tional variances given by:                                   the superior volatility information contained in
+                                                             option prices, we further augment the asymmetric
+          Eðrt2 jF t1 Þ ¼ r2rt , EðRM~ t jF t1 Þ
+                                         2
+                                                             specification with a third dependent variable, the
+                                    
+                         ¼ EðRMt F t1 Þ ¼ r2Rt :    (2)    implied variance extracted from stock index
+                                                             options3. Following the early studies of Latane and
+with EðÞ, the expectation operator notation. We             Rendleman (1976) and Chiras and Manaster (1978)
+call the variance equations HEAVY-i, i ¼ r, R for            on the superior predictive power of option-implied
+the returns and the realized measure.                        standard deviations for future volatility forecasting,
+   To recapitulate, the benchmark system consists of         Day and Lewis (1992) and Lamoureux and
+two conditional variance GARCH-type equations,               Lastrapes (1993) questioned their overperformance
+the GARCH(1,0)-X for returns and the                         compared to historical time series models, elucidat-
+GARCH(1,1) for the SSR realized measure1:                    ing that implied volatilities are biased and inefficient
+    HEAVYr: ð1br LÞr2rt ¼ xr þ arR LðRMt Þ,                predictors with poor contribution in volatility fore-
+    HEAVYR: ð1bR LÞr2Rt ¼ xR þ aRR LðRMt Þ:                casting accuracy partly due to misspecification
+                                                             errors. In marked contrast, the vast majority of the
+                                                      (3)
+                                                             subsequent studies (see, for example, Blair et al.,
+   The asymmetric extension of the bivariate                 2001; Busch et al., 2011; Christensen & Prabhala,
+HEAVY(1, 1) is characterized by the following equa-          1998; Frijns et al., 2010; Kambouroudis et al., 2016;
+tions (for notational simplicity, we will drop here-         Martens & Zein, 2004; Oikonomou et al., 2019)
+after the order of the model in case of (1, 1)):             alongside the improvement in implied volatility
+                                                                               JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY         5
+
+
+extraction techniques from option prices (Carr &                       ~ t jF t1 Þ ¼ EðIVt jF t1 Þ ¼ r2It , EðEPU
+                                                                    EðIV
+                                                                           2
+                                                                                                                 ~ t jF t1 Þ
+                                                                                                                         2
+
+Wu, 2006; Fleming, 1998; Jiang & Tian, 2005) con-
+firm that the variability implicit in options, inter-                                 ¼ EðEPUt jF t1 Þ ¼ r2Ut
+preted as an ex-ante volatility market forecast, is a                                                                          (5)
+substantially better predictor with incremental infor-                 The four variance equations (eq. (2) (5)) are
+mation value for future volatility beyond that cap-                 called AIM-HEAVY-i, i ¼ r, R, I, U for the returns,
+tured by squared returns or realized variance.                      the realized measure, the implied variance, and the
+    The volatility modeling research does not con-                  economic policy uncertainty, respectively. The AIM
+sider significant macro-determinants of the volatility
+                                                                    specification for the tetravariate system consists of
+process in the high-frequency domain. The empir-
+                                                                    the following equations:
+ical evidence on the economic drivers of equity
+volatility mostly employs lower- than daily-fre-                      ð1bi LÞr2it ¼ xi þ ðair þ cir st1 ÞLðrt2 Þ
+quency macro-variables (monthly or quarterly). We                                    þ ðaiR þ ciR st1 ÞLðRMt Þþ
+trace the first studies that explained monthly stock                                ðaiI þ ciI st1 ÞLðIVt Þ þ ðaiU þ /iU 1t1 Þ
+volatility with the business cycle dynamics back in
+                                                                                    LðEPUt Þ, for i ¼ r, R, I, U,
+Schwert (1989) and Hamilton and Lin (1996). Engle
+and Rangel (2008) and Engle et al. (2013) further                                                                              (6)
+use Spline- and MIDAS-GARCH to link daily vola-                     where 1t ¼ 0:5½1signðdEPUt Þ, that is, 1t ¼ 1 if
+tility with lower-frequency macro-proxies through                   dEPUt > 0 and 0 otherwise; /iU is the EPU asym-
+the mixed-frequencies approach. Corradi et al.                      metry parameter; positive asymmetry parameter
+(2013) explore the economic impact on monthly                       indicate larger contribution of positive EPU growth
+returns, volatilities, and volatility risk-premia.                  shocks in the volatility trajectory. In this extension,
+Finally, Conrad and Loch (2015) test quarterly                      we estimate eight Heavy and Arch parameters, while
+macro-regressors of daily conditional variance and                  we further focus on the Implied (aiI and ciI) and
+Meligkotsidou et al. (2019) include monthly macro-                  Macro (aiU and /iU ) parameters. These parameters
+financial factors in monthly realized volatility                    capture the effects of the implied volatility and
+quantile forecasting. The common outcome of the                     macro-uncertainty on the four conditional
+volatility determinants research is the counter-                    variances.
+cyclical behavior of financial volatility on economic                  Moreover, focusing on further macro-drivers of
+activity indices.                                                   the realized measure, we conclude our analysis with
+    Along these lines, we first test the inclusion of an            the addition of exogenous macro-regressors in the
+alternative measure of volatility to the A-HEAVY                    AIM-HEAVY-R specification:
+framework, that is we employ the implied variance,
+                                                                    ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þ
+hereafter     IV.pﬃﬃﬃﬃﬃﬃWe    form     the    SSR     IV
+  ~ t ¼ signðrt Þ IVt ). Our next extension incorpo-
+(IV                                                                                   þ ðaRr þ cRr st1 ÞLðrt2 Þþ
+rates the macro-effects in the trivariate Asymmetric-                                ðaRI þ cRI st1 ÞLðIVt Þ þ ðaRU þ /RU 1t1 Þ
+Implied (AI) specification. We include a fourth                                      LðEPUt Þ þ fR CRt1 þ gR FSRt1 þ #R CMt1
+variable to estimate the Asymmetric-Implied-Macro                                     þ dR URt1 þ kR INFt1 :
+HEAVY tetravariate system. The daily Economic                                                                                  (7)
+Policy Uncertainty index, hereafter EPU, is our new
+                                                  ~                     On the one hand, global credit risk is captured
+             pﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ in its SSR form (EPU t ¼
+variable included
+                                                                    by the fR coefficient of the CRt variable, which is
+signðdEPUt Þ EPUt ), where the sign comes from the
+EPU index growth rate (dEPUt ¼ ln ðEPUt Þ                          the Moody’s BAA over AAA corporate bonds
+ ln ðEPUt1 Þ). The bivariate equation (1) is extended              spreads (often referred to as default spread). We
+first to a trivariate volatility system with IV and                 further estimate the global financial stress effect (gR)
+second a tetravariate macro-augmented model with                    proxied by the conditional variance of the OFR
+EPU:                                                                (Office of Financial Research) Financial Stress Index
+                                                                    (FSRt). The risk of financial stress in the global
+                ~ t ¼ eRt rRt , IV
+rt ¼ ert rrt , RM                ~ t ¼ eIt rIt , EPU
+                                                  ~ t ¼ eUt rUt ,   economy due to liquidity and credit constraints con-
+                                                                    stitutes a major contractive force driving the finan-
+                                                                    cial cycle, which boosts stock markets volatility at
+where the stochastic term eit is again independent                  higher trajectories. On the other hand, the effect
+and identically distributed (i.i.d), i ¼ r, R, I, U; and            (#R ) of the commodity market proxy (CMt) applied
+rit is positive with probability one for all t. In the              comes from the S&P GSCI index, an index weight-
+tetravariate model, the four series have zero condi-                ing the major commodities. The commodity variable
+tional means, and the two conditional variances                     used is a global benchmark that heavily affects the
+added are given by:                                                 cost of production for firms in the economy.
+6         S. YFANTI AND M. KARANASOS
+
+
+Table 1. Dispersion measures for squared returns, realized and implied variance.
+Sample period                                                                  rt2                      RVt                   IVt
+Index           Start date          End date                Obs.      Avol            sd        Avol           sd     Avol           sd
+DJ              03/01/2000         27/09/2019               4950      0.178          0.040      0.165         0.026   0.200         0.017
+SP              03/01/2000         30/09/2019               4955      0.188          0.045      0.164         0.024   0.213         0.020
+EU              02/01/2001         30/09/2019               4779      0.224          0.054      0.199         0.032   0.255         0.026
+FTSE            02/01/2001         27/06/2019               4661      0.181          0.039      0.171         0.028   0.209         0.020
+DAX             02/01/2001         30/09/2019               4755      0.229          0.059      0.200         0.029   0.251         0.026
+CAC             02/01/2001         30/09/2019               4783      0.221          0.052      0.181         0.023   0.239         0.022
+AEX             02/01/2001         30/09/2019               4783      0.219          0.056      0.169         0.020   0.243         0.027
+Notes: Annualized volatility and standard deviation are denoted as Avol and sd, respectively.
+
+
+Tighter credit and liquidity conditions and higher                            daily realized variation measure developing an
+commodity prices are found to exacerbate realized                             asymmetric tetravariate system by adding the
+volatility in equity markets (Karanasos & Yfanti,                             implied volatility measure and the EPU index
+2020). The first three global macro-financial factors                         beyond the leverage effect incorporated.
+(CRt, CMt,FSRt) are measured at daily frequency
+while the latter two, Unemployment rate (URt) and
+                                                                              3.1. Volatility measures
+Inflation Uncertainty (INFt ), are monthly variables
+of the local macroeconomic environment, widely-                               We download data for seven US and European
+used in the extant volatility determinants literature.                        stock indices from the Oxford-Man Institute’s real-
+Higher unemployment rate and inflation risk are                               ized library version 0.3 (OMI library of Heber et al.,
+found to destabilize equity markets (Conrad &                                 2009): Dow Jones Industrial Average (DJ) and
+Loch, 2015; Engle & Rangel, 2008).                                            Standard & Poor’s 500 (SP) from the US, Euro
+   Finally, we complement the realized measure                                Stoxx 50 (EU) from Europe, FTSE 100 (FTSE) from
+macro-extension with the sensitivity analysis of the                          the UK, DAX from Germany, CAC 40 (CAC) from
+realized measure model to EPU shocks. We estimate                             France, and AEX from the Netherlands. Our sample
+the effect of EPU on the Heavy, Arch, Implied, and                            spans from 02/01/2001 to 30/09/2019 for the
+Macro parameters through the EPU interaction                                  European indices while the sample of the US indices
+terms added in eq. (7) as follows:                                            starts on 03/01/2000. The OMI library reports
+                                    epu
+ ð1bR LÞr2Rt ¼ xR þ ½aRR þ aRR EPUt1
+                                                                              among others daily stock market closing prices and
+                    epu                                      epu              various realized variation measures computed on
+       þ ðcRR þ cRR EPUt1 Þst1 LðRMt Þ þ ½aRr þ aRr EPUt1 þ
+              epu                                     epu
+                                                                              intra-daily quotes from the Reuters DataScope Tick
+    ðcRr þ cRr EPUt1 Þst1 Lðrt2 Þ þ ½aRI þ aRI EPUt1                      History database. We calculate the daily returns on
+                    epu
+       þ ðcRI þ cRI EPUt1 Þst1 LðIVt Þþ                                    the daily closing prices, PtC , as follows: rt ¼
+                                               epu
+    ðaRU þ /RU 1t1 ÞLðEPUt Þ þ ðfR þ fR EPUt1 Þ                             ln ðPtC Þ ln ðPt1
+                                                                                              C
+                                                                                                  Þ: We also use the realized variance
+                                                                                                                        P
+                          epu
+    CRt1 þ ðgR þ gR EPUt1 ÞFSRt1 þ                                         from 5-minute returns, that is RVt ¼ xj2, t (xj2, t is
+              epu
+    ð#R þ #R EPUt1 ÞCMt1 þ ðdR þ dR EPUt1 Þ
+                                                epu                           the squared 5-minute return of the j-th trade of the
+                   epu                                                        t-th day).
+    URt1 þ ðkR þ kR EPUt1 ÞINFt1 :
+                                                                                  We further download the daily implied volatility
+                                                                    (8)       index data for the seven US and European stock
+   The EPU interaction parameters are denoted with                            index options markets under scope from Thomson
+the epu superscript. The interaction terms are calcu-                         Reuters Datastream (VXD for DJ, VIX for SP,
+lated by multiplying the EPU index with the                                   VSTOXX for EU, VFTSE for FTSE, VDAX-new for
+respective variable under consideration as indicated                          DAX, VCAC for CAC, and VAEX for AEX). They
+                          epu                                                 all apply the VIX model-free approach to extract the
+in eq. (8). For example, aRr is the parameter of the
+lagged squared returns multiplied with the lagged                             volatility expectation over the life of the option
+EPU, capturing the EPU impact on the Arch coeffi-                             (indices used here represent the expected one-
+cient (aRr).                                                                  month volatility) from the observed option prices.
+                                                                              We have witnessed a wide consensus that the
+                                                                              model-free approach utilizing a wide variety of puts
+3. Data description                                                           and calls is preferred with misspecification errors
+We estimate the HEAVY framework for seven                                     significantly eliminated. Empirical research has dem-
+equity markets. Shephard and Sheppard (2010) have                             onstrated that the particular VIX algorithm overper-
+demonstrated that the benchmark specification                                 forms the reverse engineering of the Black-Scholes
+enhances the model’s performance significantly by                             model (Carr & Wu, 2006; Jiang & Tian, 2005).
+considering mean reversion and momentum effects.                              Since the implied indices are in annualized and
+We enrich their model of daily returns and intra-                             volatility terms as quoted in the market, we apply
+                                                                       JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY    7
+
+
+the transformation proposed by Blair et al. (2001) in          performance which is, in turn, strongly affected by
+order to turn the annualized volatility measure to a           the business cycle dynamics. Besides the cashflow
+daily variance index as follows: daily implied vari-           volume, the economic stance also determines the
+              h                          i
+               Annual Implied Volatilityt 2                    valuation of the cashflows through the discount
+ance ¼ IVt ¼            pﬃﬃﬃﬃﬃ              : Following this
+                          252                                  rates used to define their present value ( for a more
+calculation, the IVt can be directly incorporated in           detailed discussion on the economic theory support-
+the HEAVY framework we propose for the second                  ing the stock volatility-macro conditions counter-
+moments, namely the daily stock index                          cyclical nexus see Paye, 2012; Christiansen et al.,
+return variances.                                              2012; Mittnik et al., 2015 ). Therefore, the volatility
+   Table 1 provides dispersion metrics for each                modeling literature relies on macroeconomic condi-
+index squared returns, realized and implied varian-            tion metrics to demonstrate the macro-financial
+ces time series. We present the annualized volatility          effects on stock market volatility driven either by
+and the standard deviation of the series. The                  the cashflow or the discount rates channel. Schwert
+annualized volatilities are higher than the standard
+                                                               (1989) chooses monetary and real activity variables
+deviations. The open-to-close variation represented
+                                                               to predict monthly stock volatility, including
+by the realized variance is characterized by lower
+                                                               monthly inflation, monetary base, and industrial
+dispersion than the close-to-close yield in the
+                                                               production growth rates as the key economic indica-
+squared returns series, as expected given that real-
+                                                               tors. Hamilton and Lin (1996) further point out
+ized variance ignores the overnight noise. The
+                                                               how recessions exacerbate stock returns dispersion.
+implied variance from the options market has the
+                                                               The quarterly Gross Domestic Product (GDP) and
+lowest standard deviation and the highest annual-
+                                                               the monthly Industrial Production growth rates are
+ized volatility compared to the other two variance
+                                                               the main real activity variables with a negative
+time series.
+                                                               impact on equities volatility while monthly or quar-
+                                                               terly inflation destabilizes stock markets. Engle and
+3.2. Macroeconomic variables                                   Rangel (2008) extend the macro-analysis by adding
+We further shed light on the high-frequency macro-             the second moment of the economic factors along-
+financial linkages by augmenting the HEAVY speci-              side their levels. They find that, apart from the
+fication with non-negative daily macro-proxies                 negative GDP growth and positive inflation effect
+alongside significant monthly volatility determi-              on volatility, the output and inflation uncertainties
+nants. We aim at contributing to the existing empir-           (proxied by their variance) also play a key role in
+ical evidence on the macro-factors driving financial           exacerbating equities fluctuations. Moreover, they
+volatility by using daily macro-variables (instead of          additionally estimate a significant inflating effect
+the widely-used monthly or quarterly proxies). The             from interest rates variability to capture the discount
+higher the frequency of economic news incorporated             rates channel independently from the inflation fac-
+in forecasting the volatility pattern, the more accur-         tor. Conrad and Loch (2015) estimate the effect of
+ately the predicted values will be. Daily volatility           each quarterly explanatory economic indicator used
+forecasts, updated with daily shocks from the con-             separately on S&P 500 conditional variance. Besides
+tinuously evolving macro environment, offer the                the negative effect of activity indices, they demon-
+necessary tools for market participants closely                strate the positive unemployment impact on volatil-
+watching day-to-day volatility dynamics, trading and           ity and the negative consumer sentiment/confidence
+investing in the markets, or supervising and regulat-          influence. Finally, Meligkotsidou et al. (2019) choose
+ing the financial system. On the contrary, forecasts           monthly inflation to capture the macroeconomic
+based on macro-shocks with a one- or three-month               stance and default spreads alongside several bond
+lag cannot reflect the up-to-date influence which              yield rates for the financial cycle effect on volatility
+economic fundamentals exert on financial markets.              forecasting.
+The use of the high-frequency macro-domain in                     Motivated by the literature gap on daily eco-
+volatility modeling becomes even more crucial in               nomic drivers of the volatility process, we first
+crisis periods where the macro-conditions change               enrich the model of daily, intra-daily, and implied
+very rapidly.                                                  volatility with daily proxies of the macroeconomic
+   The extant volatility determinants research pro-            environment similar to the ones used in the extant
+vides ample evidence on lower- than daily-frequency            monthly or quarterly volatility determinant studies.
+macro-financial variables driving the stock market             Since inflation, unemployment, industrial produc-
+volatility pattern. Equities volatility is tightly related     tion, agents’ confidence, and most monetary, activ-
+to the uncertainty over the future expected cash-              ity, and sentiment indices are not available in a
+flows of the firms issuing the stocks traded. These            daily frequency, we turn to daily variables portray-
+cashflows constitute the direct result of the firms’           ing the real economy. The EPU index is directly
+8     S. YFANTI AND M. KARANASOS
+
+
+associated with the business cycle given its sound        performance benchmark, where most liquid com-
+contractive effects on investment and employment          modities are included, with oil representing a major
+(Baker et al., 2016). EPU replaces here the activity      component of the composite index. Finally, next to
+proxies considered in prior empirical research and        the daily global macro-financial regressors, we also
+is expected to exert an opposite sign effect on vola-     include two jointly significant monthly local macro-
+tility compared to the sign observed when economic        factors. We choose the Harmonised Unemployment
+activity variables are included. Uncertainty depresses    Rate (HUR) and the inflation uncertainty measured
+the level of activity and elevated uncertainty charac-    by the AR(1)-GARCH(1,1) conditional variance of
+terizes prolonged recessions hindering subsequent         the Consumer Price Index (CPI) annual growth
+recoveries. EPU is also used in place of confidence       (OECD database) of the US to be included in DJ
+variables (Conrad & Loch, 2015). Moreover, we take        and SP realized variance and of the European
+into account the credit channel’s and the overall         Union for EU, FTSE, DAX, CAC, and AEX indices.
+financial stress daily influence to substitute the        Unemployment and inflation uncertainty are both
+monetary and business conditions’ effect on equity        widely-used in existing literature as activity and
+volatility, in line with Schwert (1989), who proposed     monetary conditions indicators with a significant
+leverage, interest rate, and corporate bond volatility.   positive impact on the volatility trajectory.
+Finally, based on the significant link between the           GSCI and HUR are log-transformed4 and
+macroeconomy and commodity prices established             together with the BAA_AAA spread level, the finan-
+by Barsky and Kilian (2004) who connected rising          cial stress index volatility, and the inflation uncer-
+oil prices, in particular, with recessions, we choose     tainty, they are all five included in the realized
+to include daily price indices of the commodity           variance model, where they are shown to be jointly
+markets and expect an upward trend of stock vola-         significant. Due to the GARCH positivity con-
+tility in response to higher commodity prices with        straints, we impose the positive sign restrictions on
+distorting economic impact.                               the estimated coefficients of the non-negative regres-
+    In this vein, we first examine the role of uncer-     sors. Therefore, our macro-financial linkages ana-
+tainty in volatility modeling using the news-based        lysis is conducted on factors that exacerbate
+EPU index, the sole uncertainty metric provided in        volatility. Figures 1–4 show the co-movement of DJ
+daily frequency by Baker et al. (2016) for the US         volatility with the macro-proxies. Rising economic
+and the UK (www.policyuncertainty.com) and con-           policy uncertainty, default spreads, financial stress
+sidered as the most comprehensive one, including          risk, commodity prices, unemployment, and infla-
+both economic and policy-related constituents of          tion uncertainty, all lead to higher volatility levels, a
+uncertainty (see also Karanasos & Yfanti, 2020, for a     characteristic feature of weaker economic stance.
+detailed uncertainty literature review and a critical        Before selecting the five macro-financial regres-
+discussion of the EPU merits). The credit market is       sors for the realized variance equation, we tested a
+proxied by the Moody’s default spread, defined as         plethora of real activity, monetary, and financial
+the difference of BAA over AAA bond yields                candidates in daily and monthly frequency as dis-
+(BAA_AAA). Moody’s provides daily global averages         cussed in the relevant literature. We chose the com-
+of AAA and BAA corporate bond yields (available           bination of jointly significant variables that
+at FRED database). Higher default spread denotes          minimize the information criteria and maximize the
+higher credit risk pricing bringing higher turbulence     log-Likelihood score. Given the GARCH positivity
+in the credit channel, namely the corporations’           constraints, we had to first exclude the variables
+credit conditions (increased cost of financing). The      with negative values and the variables with a nega-
+global financial and liquidity conditions are consid-     tive impact on volatility. For example, the monthly
+ered through the conditional variance of the OFR          IP growth rate and the daily term spread, the most
+Financial Stress Index (FSI), downloaded from             representative activity indices, were significant when
+the OFR database. The FSI variance is given by the        included alone and not with other macro-indices,
+AR(1)-GARCH(1,1) specification estimated on the           they were estimated with negative signed coefficients
+FSI growth rate and represents the risk of financial      and their time series come up with negative and
+stress. Moreover, the commodity price conditions          non-negative values. Thus, we replaced them with a
+are included here through the S&P Goldman Sachs           similar activity proxy, the unemployment rate, to
+Commodity Index (GSCI). GSCI captures the firms’          reliably capture the business cycle phase. Among the
+production cost (retrieved from Thomson Reuters           daily variables tested with a significant positive
+Datastream). Increasing commodity values mostly           effect but not jointly significant with other proxies
+bring production and investment deterioration             or not complying with the positivity conditions are
+due to increased cost effects on corporations. GSCI       the 3-month-Libor rates, the 3-month-Treasury bill
+is a widely-watched global commodity markets              yields, the OFR FSI level, the crude oil futures
+                                                                         JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY   9
+
+
+
+
+Figure 1. DJ implied variance, DJ squared returns, and US EPU.
+
+
+
+
+Figure 2. DJ realized variance, US EPU, and Moody’s default spread.
+
+
+implied volatility (OVX), and the Geopolitical Risk              five macro-financial factors and the EPU impact, all
+index by Caldara and Iacoviello (2018). We also                  exacerbating equities volatility. The six in total
+excluded confidence or sentiment variables with a                inflating macro-effects on the daily volatility pattern
+negative impact on volatility (e.g. the monthly                  capture all major aspects of the business and finan-
+Business and Consumer Confidence indices from                    cial cycle daily and monthly dynamics, keeping the
+the OECD database and the daily News Sentiment                   simple AIM-HEAVY structure based on the GJR-
+Index from the FRB San Francisco dataset,                        GARCH-X and without allowing for any discount in
+Buckman et al., 2020) but replaced them with the                 the model’s reliability due to the positivity con-
+EPU positive effect. Overall, we resulted in a set of            straints imposed.
+10      S. YFANTI AND M. KARANASOS
+
+
+
+
+Figure 3. DJ realized variance, US EPU, and S&P GSCI index.
+
+
+
+
+Figure 4. Global FSI, US unemployment rate, and US inflation uncertainty.
+
+
+
+4. In-sample estimation results
+                                                                Kristensen, 2014; Nakatani and Ter€asvirta, 2009;
+Following Engle (2002) who introduced the                       Pedersen, 2017, for the multivariate GARCH proc-
+GARCH-X process adding exogenous regressors in                  esses). For the asymmetric HEAVY extensions, we
+the conditional variance, various studies analyzed              use the Gaussian QMLE and multistep-ahead pre-
+the asymptotic properties of this model considering             dictors of the GJR-GARCH specification (Glosten
+a fractionally integrated covariate (see, for example,          et al., 1993). In line with Pedersen and Rahbek
+Francq & Thieu, 2019, for the univariate case, and              (2019), we first test for conditional heteroscedastic-
+Ling & McAleer, 2003; Han, 2015; Han &                          ity (the arch effect) and since the homoscedasticity
+                                                                                                 JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY         11
+
+
+Table 2. The bivariate benchmark HEAVY system (eq. (3)).
+                    DJ                      SP                       EU             FTSE                    DAX              CAC               AEX
+Panel A. HEAVYr : ð1br LÞr2rt ¼ xr þ arR LðRMt Þ
+br          0:65ð16:08Þ       0:62ð12:35Þ                0:64ð14:28Þ   0:64ð14:09Þ          0:63ð13:01Þ   0:43ð7:46Þ    0:53ð9:59Þ
+arR         0:39ð7:66Þ        0:49ð6:98Þ                 0:45ð7:62Þ    0:38ð7:21Þ           0:47ð7:23Þ    0:83ð8:99Þ    0:76ð8:29Þ
+SBT           3:07½0:00           2:58½0:01                    3:47½0:00       2:65½0:01              4:08½0:00      1:93½0:05       2:35½0:02
+AIC            2.5613               2.6337                        3.0891           2.6391                  3.1362          3.0575           2:9082
+lnL          6335:04             6520:63                      7376:85         6146:20                7451:64        7307:48         6950:61
+Panel B. HEAVYR : ð1bR LÞr2Rt ¼ xR þ aRR LðRMt Þ
+bR          0:57ð14:06Þ      0:52ð13:77Þ                 0:58ð16:38Þ   0:62ð16:28Þ          0:59ð19:53Þ   0:56ð16:26Þ   0:54ð16:19Þ
+aRR         0:44ð9:26Þ       0:48ð11:26Þ                 0:40ð11:50Þ   0:37ð9:12Þ           0:40ð13:28Þ   0:42ð12:12Þ   0:44ð12:85Þ
+SBT           3:68½0:00          4:74½0:00                     2:61½0:01       2:64½0:01              2:83½0:01       1:98½0:05       2:94½0:00
+AIC            2.3978              2.3511                         2.8544           2.5475                  2.8201           2.6802           2:4764
+lnL          5930:31            5820:68                       6816:20         5932:64                6700:30         6405:42         5918:14
+Notes: The numbers in parentheses are t-statistics. The numbers in square brackets are p-values.
+  
+   , , denote significance at the 0.01, 0.05, 0.10 level, respectively. SBT stands for the Sign Bias test of Engle and Ng (1993).
+AIC is the Akaike Information Criterion value and lnL the log-likelihood value for each specification.
+
+
+
+Table 3. The bivariate A-HEAVY system (eq. (4)).
+                    DJ                      SP                       EU             FTSE                    DAX              CAC               AEX
+Panel A. A-HEAVYr
+ ð1br LÞr2rt ¼ xr þ ðarr þ crr st1 ÞLðrt2 Þ þ ðarR þ crR st1 ÞLðRMt Þ
+br            0:76ð32:67Þ          0:73ð26:50Þ           0:77ð19:42Þ   0:80ð30:30Þ          0:74ð17:77Þ   0:57ð5:85Þ    0:71ð13:56Þ
+crr           0:08ð3:59Þ           0:04ð1:66Þ              0:08ð3:38Þ    0:11ð5:73Þ           0:06ð2:79Þ    0:07ð2:14Þ     0:10ð3:97Þ
+arR           0:11ð3:44Þ           0:16ð3:86Þ            0:13ð1:97Þ     0:05ð1:90Þ             0:17ð2:60Þ    0:43ð2:32Þ     0:24ð2:55Þ
+crR           0:22ð5:09Þ           0:32ð5:96Þ            0:20ð3:56Þ    0:16ð4:38Þ           0:20ð3:60Þ    0:27ð3:49Þ    0:25ð4:24Þ
+SBT           0:32½0:75              0:35½0:73               0:75½0:45       0:98½0:33              1:04½0:30       0:31½0:76       0:85½0:40
+AIC              2.5407                  2.6150                   3.0748           2.6109                  3.1261           3.0497           2.8946
+lnL           6280:59                6470:95                 7339:14         6077:03                7424:27         7285:21         6914:64
+Panel B. A-HEAVYR
+ ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þ þ ðaRr þ cRr st1 ÞLðrt2 Þ
+bR            0:67ð27:63Þ       0:64ð23:65Þ        0:69ð20:59Þ         0:73ð27:48Þ          0:70ð26:36Þ   0:68ð20:09Þ   0:64ð18:06Þ
+aRR           0:20ð8:63Þ        0:24ð9:17Þ         0:20ð4:51Þ          0:19ð5:98Þ           0:21ð7:93Þ    0:22ð6:84Þ    0:25ð6:25Þ
+cRR           0:12ð5:64Þ        0:12ð5:77Þ         0:05ð1:69Þ                                    0:07ð4:11Þ    0:06ð3:47Þ    0:05ð2:36Þ
+cRr           0:09ð5:25Þ        0:08ð6:31Þ         0:09ð9:40Þ          0:12ð9:19Þ           0:06ð8:66Þ    0:06ð8:45Þ    0:07ð8:59Þ
+SBT           1:21½0:23           1:07½0:28            1:33½0:18             1:52½0:13              0:60½0:55       0:41½0:68       0:46½0:64
+AIC              2.3825               2.3386                 2.8446                2.5337                  2.8127           2.6727           2.4671
+lnL           5889:36             5786:46              6789:22               5898:23                6679:42         6384:16         5892:59
+Notes: See notes in Table 2.
+
+
+hypothesis is rejected, we perform one-sided signifi-                             Finally, the Sign Bias test (SBT) of Engle and Ng
+cance    tests    on    the    regressors  of    the                              (1993) shows that the returns asymmetric effect is
+GARCH equations.                                                                  ignored by the benchmark estimations (p-values
+                                                                                  < 0.05).
+                                                                                     Next, we enrich the bivariate benchmark specifi-
+4.1. Benchmark and asymmetric formulation
+                                                                                  cation with asymmetries. Our first extension, the
+We initially present the results of the benchmark                                 Asymmetric HEAVY model (eq. (4)), involves again
+model (Shephard & Sheppard, 2010), that is, the                                   the two volatility measures proposed by Shephard
+bivariate returns-realized measure system without                                 and Sheppard (2010), the conditional variance of
+asymmetries (Table 2). The preferred returns equa-                                returns and the realized variance. Table 2 presents
+tion is a GARCH(1, 0)-X process without the lagged                                the in-sample results across the seven indices. The
+squared returns. The own Arch effect, arr, becomes                                SBT values show that asymmetries are not omitted
+insignificant when we include the lagged realized                                 anymore, while the information criteria and log-
+measure cross effect, arR. For the SSR realized vari-                             likelihood scores clearly prefer the asymmetric for-
+ance, we choose a GARCH(1, 1) without the returns                                 mulation. Our main finding here, in the presence of
+impact. The chosen benchmark HEAVY specifica-                                     leverage, is the bidirectional spillover effect between
+tions, after testing all three alternative GARCH                                  the two volatility series, whereas in the benchmark
+models of order (1, 1), (1, 1)-X and (1, 0)-X, are                                model the realized measure does not receive any
+identical to Shephard and Sheppard (2010) with                                    effect from daily squared returns. We estimate sig-
+similar coefficients values and the same finding that                             nificant leverage parameters with double asymme-
+the intra-daily realized measure does all the work at                             tries incorporated in both equations. The returns
+moving around both conditional variances. The                                     conditional variance is affected by own asymmetries
+benchmark’s finding, as we demonstrate hereafter,                                 (crr), the realized variance (arR), and cross asymme-
+does not apply for the extended asymmetric system.                                tries (crR). The realized measure trajectory is
+12         S. YFANTI AND M. KARANASOS
+
+
+Table 4. The bivariate asymmetric returns-implied variance system.
+                    DJ                       SP                       EU             FTSE             DAX              CAC              AEX
+Panel A. Returns
+ ð1br LÞr2rt ¼ xr þ ðarr þ crr st1 ÞLðrt2 Þ þ ðarI þ crI st1 ÞLðIVt Þ
+br            0:74ð20:23Þ          0:72ð15:03Þ            0:74ð17:75Þ   0:76ð21:36Þ   0:74ð16:96Þ   0:73ð16:40Þ   0:77ð29:26Þ
+crr           0:15ð7:44Þ           0:13ð5:85Þ             0:15ð6:82Þ    0:17ð8:07Þ    0:14ð7:05Þ    0:16ð7:35Þ    0:16ð8:32Þ
+arI           0:08ð2:56Þ           0:08ð2:18Þ              0:08ð2:24Þ     0:06ð2:49Þ    0:10ð2:66Þ    0:09ð2:15Þ     0:05ð2:47Þ
+crI           0:12ð4:70Þ           0:15ð5:44Þ             0:12ð4:63Þ    0:08ð3:78Þ    0:11ð3:85Þ    0:14ð4:69Þ    0:11ð5:40Þ
+AIC              2.5386                  2.6182                    3.0672           2.6032           3.1302           3.0527           2.8958
+lnL           6275:37                6478:89                  7321:00         6059:07         7433:87         7292:42         6917:44
+Panel B. Implied Variance
+ ð1bI LÞr2It ¼ xI þ ðaII þ cII st1 ÞLðIVt Þ þ ðaIr þ cIr st1 ÞLðrt2 Þ
+bI            0:15ð5:28Þ            0:29ð5:08Þ             0:39ð3:01Þ   0:38ð8:87Þ    0:24ð3:24Þ    0:35ð5:15Þ    0:47ð14:51Þ
+aII           0:84ð29:66Þ           0:69ð11:55Þ            0:60ð6:81Þ   0:60ð13:72Þ   0:74ð9:57Þ    0:62ð8:95Þ    0:50ð15:16Þ
+cIr           0:01ð2:55Þ            0:03ð2:99Þ             0:03ð3:85Þ   0:04ð7:42Þ    0:02ð3:48Þ    0:04ð6:30Þ    0:05ð11:05Þ
+AIC              3.0120                   3.1191                    3.4958          3.0477           3.4640           3.3757           3.3164
+lnL           7447:59                 7720:53                  8345:74        7095:53         8228:13         8065:66         7923:75
+Notes: See notes in Table 2.
+
+
+Table 5. The bivariate asymmetric realized measure-implied variance system.
+                     DJ                       SP                       EU             FTSE             DAX             CAC              AEX
+Panel A. Realized Variance
+ ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þ þ ðaRI þ cRI st1 ÞLðIVt Þ
+bR            0:47ð9:25Þ        0:36ð7:33Þ            0:38ð5:16Þ        0:37ð4:90Þ     0:46ð7:39Þ   0:42ð8:18Þ    0:41ð7:60Þ
+aRR           0:21ð7:89Þ        0:26ð9:19Þ            0:20ð5:27Þ        0:15ð4:50Þ     0:23ð7:71Þ   0:26ð8:51Þ    0:27ð8:27Þ
+cRR           0:26ð8:49Þ        0:23ð9:16Þ            0:18ð5:83Þ        0:19ð5:28Þ     0:16ð8:39Þ   0:17ð8:88Þ    0:18ð8:89Þ
+aRI           0:14ð5:34Þ        0:17ð6:75Þ            0:19ð4:99Þ        0:25ð5:33Þ     0:14ð4:48Þ   0:13ð6:00Þ    0:10ð5:75Þ
+AIC              2.3795                2.3316                 2.8392                2.5276           2.8108          2.6709            2.4664
+lnL           5883:09             5770:45                 6777:73             5884:24          6676:26        6381:03         5892:07
+Panel B. Implied Variance
+ ð1bI LÞr2It ¼ xI þ ðaII þ cII st1 ÞLðIVt Þ þ ðaIR þ cIR st1 ÞLðRMt Þ
+bI             0:14ð5:47Þ           0:28ð5:03Þ             0:38ð3:81Þ   0:35ð8:19Þ     0:22ð3:10Þ   0:32ð5:19Þ    0:44ð13:78Þ
+aII            0:84ð31:83Þ          0:69ð11:97Þ            0:61ð6:26Þ   0:63ð14:38Þ    0:75ð9:99Þ   0:64ð9:90Þ    0:53ð15:85Þ
+cIR            0:02ð2:56Þ           0:05ð3:52Þ                             0:04ð4:23Þ     0:03ð2:85Þ   0:07ð5:98Þ    0:08ð8:39Þ
+AIC               3.0120                  3.1191                   3.4955           3.0479           3.4641          3.3758            3.3167
+lnL            7447:58                7720:55                  8347:76        7096:17          8228:32        8065:95         7924:66
+Notes: See notes in Table 2.
+
+
+determined by the own Heavy terms (lagged realized                                 Interestingly, the own leverage terms (crr) are
+variance, aRR, and own asymmetry, cRR) with the                                    higher in the returns-IV system across all indices.
+exception of FTSE where own asymmetry is insig-                                    In the realized variance specifications of Tables 3
+nificant and excluded. Moreover, we estimate sig-                                  and 5, we observe that realized variance is better
+nificant cross Arch asymmetry impact, cRr, but                                     modeled with the direct IV contribution but with-
+without the Arch term (aRr).                                                       out IV cross asymmetry compared to the A-
+                                                                                   HEAVY-R equation with the effect from lagged
+                                                                                   negative squared returns. When we include IV in
+4.2. The implied variance extension
+                                                                                   the realized measure equation, we estimate signifi-
+After illustrating the significant contribution of                                 cantly lower Garch effects (bR) and higher own
+asymmetries in the benchmark model, we proceed                                     Heavy asymmetries (cRR). Hence, we can assert
+with the second HEAVY extension. In light of the                                   that in realized measure modeling when IV infor-
+ample evidence in favor of implied variance as an                                  mation is incorporated, the effects from its own
+additional useful source of information for volatil-                               lagged conditional mean is limited. Simultaneously,
+ity forecasting, we initially include IVs in two                                   the own leverage contribution is stronger in all
+asymmetric bivariate systems: the first is a combin-                               cases, even in FTSE where cRR is excluded in the
+ation of IV with returns and the second involves                                   Asymmetric bivariate model without IVs. Assessing
+IV with realized variance (Tables 4 and 5).                                        the IV equation results of the two bivariate systems
+Comparing the returns equations in Tables 3 and                                    (Tables 4 and 5), we demonstrate that the best
+4, the conditional variance of returns shows a bet-                                model for IV per se in most indices is the
+ter fit when the realized variance is included for                                 GARCH(1,1)-X with the cross asymmetry of
+four out of the seven indices (SP, DAX, CAC,                                       returns (cIr) as regressor and without own leverage
+AEX), while in the remaining three cases (DJ, EU,                                  term significant (cII). Only for EU, we statistically
+FTSE) the implied variance is the preferred regres-                                prefer the GARCH(1,1) specification without any
+sor in the returns GJR-GARCH(1,0)-X specification                                  covariate (both Heavy and Arch effects are insig-
+with both asymmetric effects from returns and IVs.                                 nificant and therefore excluded).
+                                                                                                  JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY          13
+
+
+Table 6. The trivariate AI-HEAVY system.
+                     DJ                       SP                     EU              FTSE                    DAX              CAC               AEX
+Panel A. AI-HEAVYr
+  ð1br LÞr2rt ¼ xr þ ðarr þ crr st1 ÞLðrt2 Þþ
+ ðarR þ crR st1 ÞLðRMt Þ þ ðarI þ crI st1 ÞLðIVt Þ
+br             0:69ð15:93Þ           0:70ð20:92Þ         0:69ð14:17Þ    0:72ð18:51Þ          0:68ð11:49Þ   0:45ð3:93Þ     0:61ð7:51Þ
+crr            0:09ð3:44Þ            0:05ð1:84Þ            0:08ð2:63Þ     0:13ð5:29Þ           0:06ð2:29Þ     0:06ð2:22Þ      0:10ð3:28Þ
+arR            0:07ð1:78Þ              0:22ð4:86Þ                                                    0:09ð1:67Þ      0:45ð3:62Þ     0:17ð1:78Þ
+crR            0:16ð2:26Þ                                    0:28ð5:48Þ     0:16ð4:48Þ           0:25ð4:87Þ                      0:30ð4:95Þ
+arI            0:08ð2:35Þ                                    0:12ð3:11Þ     0:09ð3:69Þ           0:10ð2:40Þ     0:12ð1:75Þ       0:11ð2:91Þ
+crI            0:06ð1:76Þ              0:16ð6:63Þ                                                                     0:14ð3:68Þ
+AIC                2.5292                  2.6060                3.0606            2.6000                  3.1204            3.0396           2.8863
+lnL            6250:34                 6448:83               7305:23          6051:77                7409:73         7260:22          6893:75
+Panel B. AI-HEAVYR
+ ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þþ
+  ðaRr þ cRr st1 ÞLðrt2 Þ þ ðaRI þ cRI st1 ÞLðIVt Þ
+bR             0:55ð15:18Þ            0:46ð11:65Þ        0:51ð8:34Þ     0:55ð7:19Þ           0:56ð11:23Þ   0:52ð11:05Þ    0:49ð9:88Þ
+aRR            0:16ð7:70Þ             0:20ð8:08Þ         0:14ð4:42Þ     0:10ð3:14Þ           0:19ð7:20Þ    0:20ð7:04Þ     0:22ð7:16Þ
+cRR            0:15ð5:44Þ             0:13ð5:46Þ         0:08ð2:87Þ     0:06ð2:04Þ            0:08ð4:62Þ    0:08ð4:28Þ     0:07ð3:36Þ
+cRr            0:11ð5:84Þ             0:09ð5:99Þ         0:10ð8:19Þ     0:12ð7:74Þ           0:07ð7:84Þ    0:07ð7:93Þ     0:08ð8:58Þ
+aRI            0:11ð5:06Þ             0:13ð6:94Þ         0:14ð4:56Þ     0:16ð3:68Þ           0:10ð4:66Þ    0:10ð5:84Þ     0:08ð5:52Þ
+AIC               2.3743                    2.3277                2.8352            2.5226                  2.8080           2.6674            2.4616
+lnL            5868:10                  5758:51              6765:77          5870:40                6667:25         6370:45          5878:44
+Panel C. AI-HEAVYI
+  ð1bI LÞr2It ¼ xI þ ðaII þ cII st1 ÞLðIVt Þþ
+ ðaIR þ cIR st1 ÞLðRMt Þ þ ðaIr þ cIr st1 ÞLðrt2 Þ
+bI             0:11ð4:64Þ            0:26ð4:76Þ          0:38ð3:81Þ     0:38ð8:87Þ           0:20ð3:05Þ    0:35ð5:15Þ     0:47ð14:51Þ
+aII            0:88ð36:57Þ           0:73ð13:77Þ         0:61ð6:26Þ     0:60ð13:72Þ          0:79ð11:82Þ   0:62ð8:95Þ     0:50ð15:16Þ
+cIr                                                                              0:04ð7:42Þ                            0:04ð6:30Þ     0:05ð11:05Þ
+AIC                3.0118                  3.1190                3.4955             3.0477                 3.4638            3.3757            3.3164
+lnL            7449:60                 7722:89               8347:76          7095:53                8230:38         8065:66          7923:75
+Notes: See notes in Table 2.
+
+
+
+
+Table 7. The tetravariate AIM-HEAVY system (eq. (6)).
+                     DJ                        SP                    EU               FTSE                    DAX              CAC               AEX
+Panel A. AIM-HEAVYr
+ ð1br LÞr2rt ¼ xr þ ðarr þ crr st1 ÞLðrt2 Þ þ ðarR þ crR st1 ÞLðRMt Þþ
+           ðarI þ crI st1 ÞLðIVt Þ þ ðarU þ /rU 1t1 ÞLðEPUt Þ
+br             0:70ð16:89Þ           0:69ð20:37Þ          0:69ð14:17Þ   0:72ð19:49Þ          0:69ð12:57Þ    0:48ð3:96Þ     0:63ð7:60Þ
+crr            0:09ð3:51Þ            0:05ð1:96Þ            0:08ð2:63Þ    0:13ð5:28Þ           0:06ð2:43Þ      0:06ð2:20Þ      0:10ð3:37Þ
+arR            0:07ð1:74Þ              0:22ð4:83Þ                                                    0:09ð1:73Þ       0:43ð3:42Þ     0:16ð1:66Þ
+crR            0:17ð2:39Þ                                     0:28ð5:48Þ    0:17ð4:62Þ           0:25ð4:80Þ                       0:30ð5:00Þ
+arI            0:08ð2:38Þ                                     0:12ð3:11Þ    0:09ð3:71Þ           0:09ð2:33Þ      0:10ð1:70Þ       0:10ð2:78Þ
+crI            0:05ð1:66Þ              0:15ð6:25Þ                                                                      0:14ð3:81Þ
+/rU            0:02ð1:79Þ              0:02ð2:09Þ                             0:02ð1:66Þ             0:02ð1:77Þ       0:02ð1:73Þ       0:02ð1:81Þ
+AIC               2.5285                   2.6052                  3.0606           2.5998                  3.1203            3.0395           2.8863
+lnL            6247:42                 6445:68                7305:23         6050:32                7409:01          7259:55          6893:14
+Panel B. AIM-HEAVYR
+ ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þ þ ðaRr þ cRr st1 ÞLðrt2 Þþ
+           ðaRI þ cRI st1 ÞLðIVt Þ þ ðaRU þ /RU 1t1 ÞLðEPUt Þ
+bR            0:55ð15:12Þ           0:46ð11:85Þ       0:50ð8:40Þ        0:54ð6:86Þ           0:55ð11:40Þ    0:52ð10:58Þ    0:49ð9:88Þ
+aRR           0:16ð7:83Þ            0:19ð7:75Þ        0:15ð4:54Þ        0:10ð3:15Þ           0:19ð7:40Þ     0:20ð6:93Þ     0:22ð7:21Þ
+cRR           0:14ð5:57Þ            0:13ð5:49Þ        0:08ð2:94Þ        0:06ð2:10Þ            0:08ð4:70Þ     0:08ð4:25Þ     0:07ð3:34Þ
+cRr           0:11ð5:10Þ            0:09ð5:97Þ        0:10ð8:12Þ        0:12ð7:68Þ           0:07ð7:80Þ     0:07ð7:99Þ     0:08ð8:59Þ
+aRI           0:11ð5:82Þ            0:13ð7:18Þ        0:14ð4:69Þ        0:16ð3:69Þ           0:10ð4:71Þ     0:10ð5:70Þ     0:08ð5:53Þ
+aRU                                    0:01ð2:05Þ                              0:02ð2:28Þ                              0:02ð2:09Þ      0:01ð1:78Þ
+/RU           0:01ð1:65Þ                                   0:01ð1:73Þ                                  0:01ð1:79Þ
+AIC              2.3742                   2.3275                2.8350             2.5225                   2.8079           2.6672           2.4616
+lnL           5867:61                 5758:24             6765:42             5869:38                6666:99          6370:07          5878:37
+Notes: See notes in Table 2.
+
+
+   Next, we estimate the trivariate system with all                                asymmetries (crr) always significant and cross asym-
+three financial volatilities, namely the Asymmetric-                               metries either from IVs or RMs. Only the DJ speci-
+Implied HEAVY (Table 6). Both conditional varian-                                  fication includes all three Arch, Heavy, and Implied
+ces of returns and SSR realized variance receive the                               asymmetries. The realized variance estimations
+options market information content. The returns                                    (Panel B) involve the negative squared returns and
+results (Panel A) show that both intra-daily (RM)                                  the IV apart from the own RM leverage. Overall,
+and options-implied sources are informative for the                                the trivariate specification for returns and RM out-
+conditional variance of daily returns, with own                                    performs in-sample all bivariate models (Tables 2–5)
+14         S. YFANTI AND M. KARANASOS
+
+
+Table 7. The tetravariate AIM-HEAVY system. (continued).
+                     DJ                       SP                      EU              FTSE             DAX              CAC              AEX
+Panel C. AIM-HEAVYI
+ ð1bI LÞr2It ¼ xI þ ðaII þ cII st1 ÞLðIVt Þ þ ðaIR þ cIR st1 ÞLðRMt Þþ
+            ðaIr þ cIr st1 ÞLðrt2 Þ þ ðaIU þ /IU 1t1 ÞLðEPUt Þ
+bI             0:11ð4:64Þ             0:26ð4:76Þ           0:38ð3:81Þ    0:38ð8:87Þ    0:20ð3:05Þ    0:35ð5:15Þ    0:47ð14:51Þ
+aII            0:88ð36:57Þ            0:73ð13:77Þ          0:61ð6:26Þ    0:60ð13:72Þ   0:79ð11:82Þ   0:62ð8:95Þ    0:50ð15:16Þ
+cIr                                                                               0:04ð7:42Þ                     0:04ð6:30Þ    0:05ð11:05Þ
+AIC            3.0118                    3.1190                  3.4955           3.0477           3.4638           3.3757           3.3164
+lnL            7449:60                  7722:89                8347:76         7095:53         8230:38         8065:66         7923:75
+               US_EPU                   US_EPU                   UK_EPU           UK_EPU           UK_EPU           UK_EPU           UK_EPU
+               DJ                       SP                       EU               FTSE             DAX              CAC              AEX
+Panel D. AIM-HEAVYU
+ð1bU LÞr2Ut ¼ xU þ ðaUU þ /UU 1t1 ÞLðEPUt Þ
+bU           0:83ð49:63Þ      0:83ð49:57Þ                  0:88ð39:03Þ   0:88ð42:53Þ   0:88ð39:05Þ   0:88ð39:75Þ   0:88ð39:64Þ
+aUU          0:15ð10:55Þ      0:15ð10:53Þ                  0:11ð5:46Þ    0:10ð5:59Þ    0:11ð5:47Þ    0:11ð5:42Þ    0:11ð5:41Þ
+/UU          0:01ð4:73Þ       0:01ð4:54Þ                   0:01ð3:48Þ    0:01ð3:44Þ    0:01ð3:24Þ    0:01ð4:15Þ    0:01ð3:81Þ
+AIC          3.4824              3.4824                          3.6995           3.7010           3.6996           3.6996           3:6997
+lnL          8611:46            8620:12                        8832:24         8617:46         8788:00         8839:96         8840:01
+Notes: See notes in Table 2.
+
+
+
+Table 8. The AIM-HEAVY-R equation with additional macro-proxies (eq. (7)).
+                     DJ                       SP                       EU             FTSE             DAX              CAC              AEX
+ ð1bR LÞr2Rt ¼ xR þ ðaRR þ cRR st1 ÞLðRMt Þ þ ðaRr þ cRr st1 ÞLðrt2 Þþ
+          ðaRI þ cRI st1 ÞLðIVt Þ þ ðaRU þ /RU 1t1 ÞLðEPUt Þþ
+       fR CRt1 þ gR FSRt1 þ #R CMt1 þ dR URt1 þ kR INFt1
+bR            0:52ð13:31Þ           0:44ð10:65Þ         0:50ð7:94Þ       0:53ð6:58Þ    0:55ð11:00Þ   0:52ð10:66Þ   0:50ð9:69Þ
+aRR           0:12ð5:52Þ            0:16ð6:15Þ          0:14ð4:27Þ       0:09ð3:01Þ    0:18ð7:28Þ    0:18ð6:82Þ    0:21ð6:48Þ
+cRR           0:15ð6:30Þ            0:14ð6:29Þ          0:08ð2:85Þ       0:07ð2:17Þ     0:08ð4:80Þ    0:08ð4:46Þ    0:07ð3:42Þ
+cRr           0:11ð5:24Þ            0:10ð5:98Þ          0:10ð8:24Þ       0:12ð7:54Þ    0:07ð7:76Þ    0:07ð8:27Þ    0:08ð8:87Þ
+aRI           0:14ð6:41Þ            0:15ð6:88Þ          0:14ð4:31Þ       0:17ð3:39Þ    0:11ð4:42Þ    0:10ð5:09Þ    0:07ð4:94Þ
+aRU                                    0:01ð1:72Þ                                0:03ð2:68Þ                     0:02ð2:27Þ     0:01ð2:00Þ
+/RU           0:01ð1:99Þ                                    0:01ð1:98Þ                         0:01ð1:73Þ
+fR            0:03ð2:87Þ            0:02ð2:20Þ           0:04ð1:78Þ         0:02ð1:99Þ     0:01ð2:56Þ    0:05ð2:49Þ    0:04ð3:38Þ
+gR            0:002ð4:34Þ           0:002ð5:07Þ         0:004ð2:18Þ       0:003ð2:18Þ    0:002ð2:79Þ   0:002ð3:25Þ   0:004ð1:93Þ
+#R            0:05ð5:31Þ            0:02ð4:80Þ                              0:02ð2:09Þ     0:02ð1:96Þ     0:05ð3:46Þ    0:03ð1:75Þ
+dR            0:12ð5:43Þ            0:07ð2:84Þ          0:04ð3:56Þ       0:04ð1:98Þ     0:07ð3:21Þ    0:07ð2:37Þ     0:04ð2:29Þ
+kR            0:002ð3:43Þ           0:003ð2:39Þ                              0:01ð1:68Þ      0:004ð2:92Þ   0:002ð1:78Þ     0:002ð2:06Þ
+AIC           2.3682                   2.3259                 2.8344              2.5220           2.8076           2.6669           2.4613
+lnL           5850:31                 5750:81               6761:82            5861:12         6655:50         6362:25         5866:79
+Notes: See notes in Table 2.
+
+
+confirming the significant information role of                                      monthly OLS results. Higher uncertainty weakens
+options-inferred variance in accordance with the                                    equities performance and coincides with elevated
+extant literature. On the basis of this evidence, we                                volatility. Moreover, a positive relation between
+conjecture that daily and intra-daily volatility mod-                               monthly implied volatilities and macro-uncertainty,
+eling should undoubtedly utilize the ex-ante market                                 proxied by the disagreement on macro-fundamen-
+forecast for future volatility besides asymmetries.                                 tals’ projections among economists, has been
+Regarding the IV per se (Panel C), after trying all                                 recently asserted by Li et al. (2020).
+trivariate combinations, we statistically prefer a uni-                                In the present study, we include the EPU index
+variate GARCH(1,1) specification for the US indices                                 as the fourth dependent variable in a tetravariate
+and two European markets, EU and DAX, whereas                                       system for volatility modeling. Alongside the three
+SSR IVs of FTSE, CAC, and AEX are best estimated                                    financial uncertainty measures, we investigate the
+with the cross Arch leverage effect.                                                macroeconomic information effects from US and
+                                                                                    UK to the US and the European stock markets,
+                                                                                    respectively. The tetravariate Asymmetric-Implied-
+4.3. The AIM-HEAVY specification
+                                                                                    Macro HEAVY model (Table 7) estimates four con-
+Research on the uncertainty-volatility link in the                                  ditional variances: returns, SSR realized and implied
+high-frequency domain is in its infancy.                                            variance, and SSR EPU. For the first two measures
+Antonakakis et al. (2013) have estimated the time-                                  (Panels A & B), we obtain similar results to the trivari-
+varying correlations of S&P 500 returns, VIX, and                                   ate model (Table 6, Panels A & B) with the addition
+EPU in a monthly context, resulting in a positive                                   of the EPU exacerbating impact on financial volatility.
+VIX-EPU and a negative returns-EPU average cor-                                     The EPU impact is either direct (arU) or asymmetric
+relation, confirming Pastor and Veronesi (2013)                                     (/rU ), with asymmetry in macro-uncertainty defined
+                                                                                     JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY         15
+
+
+Table 9. The EPU effect on heavy, arch, implied, and macro parameters of the AIM-HEAVY-R equation (eq. (8)).
+                  DJ                   SP                   EU              FTSE                DAX              CAC               AEX
+ epu
+aRR          0:07ð6:11Þ        0:08ð6:93Þ        0:05ð4:45Þ    0:04ð3:11Þ       0:07ð6:46Þ    0:08ð5:21Þ    0:09ð6:14Þ
+ epu
+cRR          0:06ð5:45Þ        0:07ð4:89Þ        0:03ð3:76Þ    0:03ð2:05Þ        0:03ð4:19Þ    0:04ð4:50Þ    0:03ð3:40Þ
+ epu
+cRr          0:04ð4:81Þ        0:04ð5:21Þ        0:04ð8:81Þ    0:06ð7:71Þ       0:03ð7:33Þ    0:03ð9:00Þ    0:03ð8:77Þ
+ epu
+aRI          0:04ð6:01Þ        0:06ð7:54Þ        0:04ð4:24Þ    0:09ð4:31Þ       0:03ð5:88Þ    0:05ð6:23Þ    0:03ð5:54Þ
+ epu
+fR           0:01ð2:11Þ         0:01ð1:97Þ         0:003ð2:78Þ   0:01ð1:96Þ        0:004ð1:77Þ     0:02ð2:21Þ     0:02ð3:56Þ
+ epu
+gR           0:001ð3:78Þ       0:001ð4:75Þ       0:002ð2:05Þ    0:002ð1:89Þ        0:001ð2:63Þ   0:001ð2:96Þ   0:002ð2:38Þ
+  epu
+#R           0:01ð1:80Þ          0:004ð1:66Þ                          0:01ð2:01Þ        0:01ð1:99Þ     0:02ð2:36Þ     0:01ð1:79Þ
+ epu
+dR           0:03ð3:42Þ        0:03ð2:67Þ        0:02ð1:79Þ      0:02ð1:99Þ        0:03ð2:09Þ     0:03ð1:98Þ     0:01ð2:89Þ
+ epu
+kR           0:001ð2:97Þ       0:001ð2:47Þ                        0:004ð2:56Þ      0:003ð2:52Þ   0:001ð2:39Þ    0:001ð1:98Þ
+Notes: See notes in Table 2. Superscripts indicate the EPU effect.
+
+
+as the positive EPU shock and not the negative shock                      is used for the credit channel, the conditional vari-
+as in the returns case. The inflating impact from                         ance of the FSI series corresponds to the financial
+increased US and UK EPU is in line with Pastor and                        stress risk, and GSCI gauges the commodities effect.
+Veronesi (2013), who first associated volatilities with                   On the other hand, unemployment rates and infla-
+EPU, concluding on a positive link. The positive link                     tion risk are key real activity and monetary condi-
+corroborates Conrad and Loch (2015), among others,                        tions proxies, respectively. Both monthly covariates
+on the consumer confidence negative effect.                               are incorporated in the daily variance equation
+Confidence is the antipode of uncertainty.                                through the cubic spline interpolation method that
+Consequently, we estimate here an opposite sign, as                       transforms the monthly to a daily series. Our results
+expected. We further observe, according to AIC and                        are also robust to alternative methods of interpol-
+lnL scores, a better in-sample fit of returns and RM                      ation since both linear and constant methods tested
+macro-models compared to trivariate equations with-                       give similar results in terms of levels and signifi-
+out EPU regressors. The improvement coming from                           cance of the coefficients estimated for each monthly
+the macro-information content is small but significant.                   macro-factor.
+On the other hand, the IV specification is identical to                       All global daily and local monthly macro-finan-
+the trivariate system (Tables 6 and 7, Panel C) given                     cial variables included in the AIM-HEAVY-R equa-
+that EPU exerts no significant influence on option-                       tion (eq. (7)) are estimated with coefficients jointly
+inferred variability, and therefore we still prefer the                   highly significant with the expected positive sign in
+univariate model or the specification with the lagged                     all cases, except for the EU index which receives no
+negative squared returns. Hence, we can deduce that                       effect from commodities and inflation uncertainty
+the options-market volatility expectation may subsume
+                                                                          (Table 8). The remaining parameters of the realized
+the macroeconomic information included in the EPU
+                                                                          variance equation are similar to the tetravariate
+metric. Intriguingly, the policy uncertainty (Table 7,
+                                                                          results (Table 7, Panel B). Our findings confirm the
+Panel D) is best estimated with the positive asymmetry
+                                                                          countercyclical behavior of equity markets volatility
+effect and receives no financial volatility impact from
+                                                                          which increases in response to economic downturns.
+either of the three measures5.
+                                                                          Elevated economic uncertainty, corporate default
+                                                                          risk, financial stress risk, commodity prices,
+5. Macro-financial linkages in the high-                                  unemployment, and inflation uncertainty are mostly
+frequency domain                                                          associated with business cycle bottoms, driving stock
+Our macro-augmented tetravariate system provides                          volatilities higher. The magnitude and importance
+clear evidence supporting the enhancement of the                          of each macro-impact across the seven stock indices
+HEAVY framework with asymmetries, implied vari-                           is quite similar when comparing the respective coef-
+ance, and macro-uncertainty. In this Section, we                          ficients’ level and significance. Our modeling frame-
+delve into the macro-financial linkages in the high-                      work is robust to the sample period applied. After
+frequency domain by focusing on further macro-                            estimating the whole AIM-HEAVY model for differ-
+proxies with significant impact on the realized                           ent subperiods, we obtain similar results across the
+measure dynamics. Besides the EPU regressor, we                           four equations of the tetravariate system compared
+explore additional global and local macro-financial                       to the whole sample results. Likewise, the macro-
+effects. The global effects are incorporated with daily                   effects, observed in the two-decade sample, remain
+proxies of credit risk (CRt ), financial stress risk                      jointly significant with the expected exacerbating
+(FSRt), and commodity prices (CMt) while the local                        influence on volatility across the different subsam-
+effects are captured by monthly unemployment                              ples tested (subperiod estimation results not
+(URt) and inflation uncertainty (INFt ) regressors.                       reported due to space consideration, available
+On the one hand, the default corporate bond spread                        upon request).
+16       S. YFANTI AND M. KARANASOS
+
+
+Table 10. Dow Jones out-of-sample forecasts: MSE and QLIKE ratios of extended to benchmark models’ losses.
+                                                                         MSE                                             QLIKE
+Specifications# m-steps !                              1           5            10         22             1       5               10      22
+Panel A: Returns
+Benchmark Bivariate                                  1.000       1.000         1.000      1.000          1.000   1.000           1.000   1.000
+Asymmetric Bivarite (returns-RM)                     0.790       0.803         0.812      0.833          0.783   0.799           0.792   0.824
+Asymmetric Bivarite (returns-IV)                     0.769       0.777         0.770      0.756          0.759   0.750           0.763   0.800
+Asymmetric Trivariate                                0.711       0.736         0.732      0:701          0.719   0.704           0.736   0:788
+Asymmetric Tetravariate                              0:705       0:729         0:725      0.710          0:716   0:701           0:730   0.793
+Panel B: Realized Measure
+Benchmark Bivariate                                  1.000       1.000         1.000      1.000          1.000   1.000           1.000   1.000
+Asymmetric Bivarite (returns-RM)                     0.836       0.874         0.852      0.902          0.808   0.830           0.822   0.864
+Asymmetric Bivarite (RM-IV)                          0.781       0.799         0.811      0.841          0.750   0.774           0.767   0.823
+Asymmetric Trivariate                                0.727       0.738         0.730      0.751          0.696   0.721           0.709   0.770
+Asymmetric Tetravariate                              0.721       0.735         0.733      0.755          0.690   0.715           0.713   0.776
+Asymmetric Tetravariate with additional macros       0:711       0:732         0:718      0:738          0:661   0:702           0:685   0:714
+Panel B: Implied Variance~
+Univariate                                           1:000       1:000         1:000      1:000          1:000   1:000           1:000   1:000
+Bivariate (IV-RM)                                    1.005       1.008         1.003      1.012          1.021   1.020           1.017   1.012
+Bivariate (IV-returns)                               1.001       1.001         1.001      1.002          1.001   1.001           1.003   1.002
+Notes: Bold numbers denote minimum values across the different formulations for each forecast horizon.
+~
+ For the IV equation the univariate model is considered as benchmark for the MSE and QLIKE ratios.
+
+
+    Increased financing costs captured by the credit                          After highlighting the direct EPU influence on
+risk pricing with the corporate bond default spreads                       volatility and the additional five daily and monthly
+(fR) and financial stress risk (gR) raise realized vari-                   macro-effects, as well, we further investigate the
+ance in equity markets, as expected since the turbu-                       EPU impact on the Heavy, Arch, Implied, and
+lence in the credit markets and higher risk of                             Macro parameters of the realized variance equation
+financial stress conditions always give significant                        (eq. (8)). We present the uncertainty effect on each
+volatility spillover effects to stock markets (see also                    parameter of the model as estimated through alter-
+Asgharian et al., 2013). Our default spreads results                       native restricted forms of the equation including
+are also in line with Engle and Rangel (2008), who                         each EPU effect separately, that is we include one
+find a positive impact of sovereign bond yields dis-                       interaction term at a time. Table 9 summarizes the
+persion on equities volatility. The commodity esti-                        indirect uncertainty effects from the interaction
+mates, not surprisingly, show that lower stock                             terms estimations. All coefficients are significant
+market volatilities are associated with decreased                          with positive signs, denoting the magnifying EPU
+commodity prices that imply reduced supplies’ cost                         impact on each variable. Elevated uncertainty exerts
+for corporations, boosting productivity, investment,                       a remarkable increasing influence on the Heavy,
+and activity growth, in general. Since higher oil cost                     Arch, Implied, and Macro effects. Intriguingly, we
+is mostly observed during macroeconomic reces-                             demonstrate that higher uncertainty means a stron-
+sions (Barsky & Kilian, 2004), the commodity-real-                         ger credit and commodity market conditions impact
+ized variance positive link, captured by #R ,                              on the realized variance (see also the recent evi-
+confirms existing evidence on the negative nexus of                        dence on the uncertainty association with credit and
+economic expansion and market volatility (see, for                         commodities in Alessandri & Mumtaz, 2019;
+example, the gross domestic product growth effects                         Antonakakis et al., 2017, respectively ). Finally, the
+in Engle & Rangel, 2008). Moreover, the significant                        unemployment and inflation effects are also exag-
+magnifying effect from local unemployment and                              gerated by the uncertainty channel as expected from
+inflation are also in line with recent macro-financial                     the ample empirical evidence on the uncertainty
+research. Among others, Conrad and Loch (2015)                             countercyclical link to key leading macro-indicators
+and Engle and Rangel (2008) estimate positive coef-                        (see, for example, the contractive EPU role on
+ficients for unemployment growth and inflation                             shaping the business cycle fluctuations in Colombo,
+uncertainty, respectively, when used as explanatory                        2013; Jones & Olson, 2013; Shoag & Veuger, 2016;
+variables of equity volatility dynamics. Overall, we                       Caggiano et al., 2017 ).
+verify the sound macro-impact from the real econ-
+omy, monetary dynamics, corporate credit, and
+                                                                           6. Out-of-sample forecasting performance
+commodity markets beyond that captured by EPU.
+According to lower AIC and higher lnL values                               Beyond the in-sample estimation of the various
+reported compared to the tetravariate case without                         HEAVY extensions, where the tetravariate system
+the incremental global and local information content                       provides the best fit for financial volatility, we con-
+from the macroeconomic environment, the in-sam-                            sider the out-of-sample performance of the pro-
+ple estimation improvement is more sound in US                             posed specifications. From a utilitarian point of
+indices than the European markets.                                         view, the success of our models can only be claimed
+                                                                 JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY   17
+
+
+through the strong evidence of their superior pre-        the best forecasting performance from the tetravari-
+dictive power. Therefore, we calculate multistep-         ate system with all five macros included alongside
+ahead out-of-sample forecasts in order to compare         the EPU effect. Finally, for the IV equation (Table
+the forecasting accuracy of our proposed specifica-       10, Panel C), the benchmark case is the preferred
+tions with the benchmark model of Shephard and            univariate GARCH(1,1) model without any effect
+Sheppard (2010). 1-, 5-, 10-, and 22-step-ahead fore-     from returns or the realized measure (Table 7, Panel
+casts of the conditional variances for the bench-         C) while the alternative bivariates come from the IV
+mark, the asymmetric bivariate, the trivariate, and       combination with the other two volatility metrics
+the tetravariate models are computed with a rolling       (Tables 4 and 5, Panel B). The most accurate
+window in-sample estimation of 2500 observations          implied variance forecasts (with the lowest loss
+(the starting in-sample estimation period for DJ          ratio) are calculated from the univariate model
+spans from 3/1/2000 until 24/12/2009). The equa-          across all time horizons with minor predictive bene-
+tions are estimated daily on the 2500-day rolling         fits over the two bivariate cases.
+sample. For each specification, the out-of-sample             Overall, the extended specifications developed
+forecasts for DJ are as follows: 2450 one-day, 2446       here perform better than the benchmark HEAVY
+five-day, 2441 ten-day, and 2439 twenty-two-day           models in the short- and long-term horizons, with
+forecasted variances. The Mean Square Error (MSE)         the forecasts significantly closer to the actual values
+and the QLIKE Loss Function (Patton, 2011) are the        for the enriched HEAVY formulations. Our
+chosen metrics to evaluate our point forecasts given      enhanced in-sample estimations with asymmetries,
+the actual values. We further calculate the ratio of      implied variance, and economic uncertainty (and
+the forecast losses for each extended formulation         the additional macro-effects for the realized vari-
+and each forecast horizon to the benchmark’s losses       ance) have transferred their predictive superiority to
+(using the average MSE and QLIKE of each fore-            the out-of-sample computations. Investors and risk
+casted values’ time series). A loss ratio lower than      managers should utilize our macro-informed frame-
+one denotes the predictive superiority of the             work’s short-term predictions. At the same time,
+HEAVY extensions, and, more generally, the lowest         policymakers can benefit from our superior longer-
+ratio indicates the best model in terms of its fore-      term forecasts to build reliable scenarios on future
+casting performance.                                      financial volatility given the important options’
+   Table 10 presents the DJ results that provide          informational contribution and the macro-effects.
+strong evidence in favor of our augmented models’
+forecastability over the benchmark’s out-of-sample
+                                                          7. Conclusions
+performance across all time horizons (similar con-
+clusions for the other six indices available upon         We have enriched the HEAVY framework for vola-
+request). Regarding the returns equations (Table 10,      tility modeling by considering leverage, options-
+Panel A), we compare the forecast losses of the           inferred information, and macro-features. We
+benchmark HEAVY-r equation (Table 2, Panel A)             estimate a tetravariate system for the conditional
+with the asymmetric specifications from the pro-          variance of daily returns, realized variance on intra-
+posed bivariate (Tables 3 and 4, Panel A), trivariate     daily observations, implied variance from options
+(Table 6, Panel A, implied variance extension), and       prices, and economic policy uncertainty and demon-
+tetravariate (Table 7, Panel A, macro-augmented           strate the forecasting dominance of our extensions
+extension with EPU) systems. We divide each speci-        over the benchmark HEAVY model through the
+fication’s losses with the benchmark’s losses (MSE        out-of-sample forecasting across multiple short- and
+and QLIKE ratios for the benchmark are equal to           long-term horizons for seven stock indices. We
+the unity). The most accurate predictions are com-        observe the incremental predictive power of the
+puted by the model with the lowest loss ratio. Thus,      informational content contained in asymmetries,
+the tetravariate AIM case is the best performing          option prices, and macro-characteristics relevant to
+specification for returns in the one- up to ten-day       financial markets such as uncertainty, credit, com-
+out-of-sample forecasts, while, for the one-month         modity, real activity, and monetary conditions. The
+forecasts, the trivariate specification without the       leverage from negative returns, the ex-ante volatility
+EPU effect dominates all other models with the low-       component of options, and the daily and monthly
+est losses. Similarly to the returns forecasting evalu-   macro-drivers, all three highly informative contribu-
+ation, in the realized measure (Table 10, Panel B),       tions show a superior explanatory power in-sample
+we compare the benchmark HEAVY- R equation                that carries over to the out-of-sample predictions.
+(Table 2, Panel B) with the enriched asymmetric               This paper makes several contributions to the
+specifications (Table 3, Panel B, Table 5, Panel A,       research on volatility modeling and on the much-
+Tables 6 and 7, Panel B, and Table 8) and observe         debated macro-financial nexus. Apart from
+18     S. YFANTI AND M. KARANASOS
+
+
+confirming the voluminous research findings in            their own initiatives for timely and appropri-
+favor of the implied volatility merits for volatility     ate measures.
+forecasting and the overall options market informa-          As part of future research, volatility modeling of
+tional efficiency, we complement the related litera-      further asset classes should use the AIM-HEAVY
+ture by predicting volatility with a system that          system by testing alternative macro-proxies. Of par-
+prefers all three volatility proxies from daily, intra-   ticular interest would be also the addition of more
+daily, and option-inferred observations modeled           volatility measures beyond the implied variance,
+simultaneously. Existing studies mostly compare the       such as the volatility of volatility effect utilizing the
+different metrics to conclude on the superiority of       implied variance extracted from VXX options, the
+only one proxy to be incorporated in the other’s          options written on VIX futures (Bao et al., 2012;
+predictions. We also demarcate our analysis from          Kaeck & Seeger, 2020).
+existing empirical evidence by focusing on the high-
+frequency macro-financial linkages inside the
+Asymmetric HEAVY framework of returns, realized,
+and implied variance forecasting, where we shed           Disclosure statement
+light on new evidence highlighting the important          No potential conflict of interest was reported by
+role of daily policy uncertainty and further macro-       the authors.
+factors. Distinct features of economic worsening
+such as higher macro-uncertainty, default spreads,
+financial stress and inflation risk, commodity prices,
+                                                          Notes
+and unemployment raise equity volatilities, while         1. The GARCH (1,1) conditional variance for the SSR
+EPU further intensifies the Heavy, Arch, Implied,            realized measure is similar to a MEM (1,1)
+                                                             conditional mean specification for the realized
+and Macro effects on the realized measure.
+                                                             measure. MEM stands for the Multiplicative Error
+   Overall, we develop a complete volatility model-          Model of Engle (2002) for the conditional mean of a
+ing framework building on the HEAVY structure                non-negative time series process. In other words, the
+with important implications for market and policy            GARCH model for the conditional variance of the
+practitioners. We integrate the incremental informa-         SSR realized measure (assuming zero mean), is
+tional content of observed option prices, intra-daily        similar to the MEM model for the conditional mean
+                                                             of the realized measure.
+trades, and the daily and monthly macroeconomic
+                                                          2. An alternative way to account for the downside risk
+stance to improve the forecast quality of the volatil-       is to include semivariances instead of negative
+ity latent process and provide useful predictions of         squared returns (see, for example, Sevi, 2014).
+future financial volatility to practitioners. Accurate    3. We also tested the inclusion of range-based volatility
+volatility forecasts are essential for various business      indices (Garman & Klass, 1980; Parkinson, 1980,
+functions, such as portfolio selection, investment           volatility measures) and the variance risk premium.
+                                                             The implied variance is the statistically preferred
+performance evaluation, macro-informed trading,
+                                                             volatility index compared to the other two
+and almost any risk management and valuation task            alternatives for our HEAVY framework’s in- and out-
+in business analytics. The insights we glean from the        of-sample performance. The range-based measures
+extended HEAVY results project also important pol-           and the variance risk premium although significant,
+icy implications. Financial regulators and economic          their predictive power is lower than the option-
+policymakers should consider our reliable predic-            implied volatility’s forecasting superiority for both
+                                                             returns and realized variance predictions (results
+tions of the financial markets’ volatility trajectory        available upon request).
+across every aspect of policy responses for the finan-    4. The log-transformed series are positive since all
+cial system proactive risk assessment and the finan-         observations are higher than one. Given that GSCI
+cial stability oversight policies. Additionally, our         and HUR are non-negative (they can have values
+findings are crucial for both regulatory authorities         lower than one), we, alternatively, use the GSCI
+                                                             series’ divided by 10000 and the HUR series in its
+and practitioners in the current times of elevated
+                                                             original value of the unemployment rate. The
+EPU levels due to the Coronavirus outbreak, with             estimated coefficients are similar to the log-
+rallying policy and macro-financial risks and agents         transformed results in terms of significance and level
+climbing a wall of unprecedented worry. We have              (results available upon request).
+seen governments trying to address the virus conta-       5. For both IV and EPU equations, the sum of own
+gion effects with controversial and in many cases            Arch and Garch coefficients (and half the own
+                                                             Asymmetry where applicable) is close to unity,
+delayed and modest policy responses. Such practices
+                                                             indicative of an IGARCH-type behaviour. However,
+further spread the loss of confidence across all             the sum is always estimated lower than the unity,
+agents’ thoughts, leaving entrepreneurs, managers,           preventing from modelling volatility as an
+and investors in a precarious position to introduce          explosive process.
+                                                                         JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY        19
+
+
+ORCID                                                            Benati, S. (2015). Using medians in portfolio optimiza-
+                                                                   tion. Journal of the Operational Research Society, 66(5),
+Stavroula Yfanti  http://orcid.org/0000-0001-8071-916X             720–731. https://doi.org/10.1057/jors.2014.57
+Menelaos Karanasos    http://orcid.org/0000-0001-                Blair, B. J., Poon, S.-H., & Taylor, S. J. (2001). Forecasting
+5442-3509                                                          S&P100 volatility: The incremental information content
+                                                                   of implied volatilities and high-frequency index returns.
+                                                                   Journal of Econometrics, 105(1), 5–26. https://doi.org/
+References                                                         10.1016/S0304-4076(01)00068-9
+Adcock, C. J., Ye, C., Yin, S., & Zhang, D. (2019). Price        Bollerslev, T. (1986). Generalized autoregressive condi-
+  discovery and volatility spillover with price limits in          tional heteroskedasticity. Journal of Econometrics, 31(3),
+  Chinese A-shares market: A truncated GARCH                       307–327. https://doi.org/10.1016/0304-4076(86)90063-1
+  approach. Journal of the Operational Research Society,         Buckman, S. R., Shapiro, A. H., Sudhof, M., & Wilson,
+  70(10), 1709–1719. https://doi.org/10.1080/01605682.             D. J. (2020). News sentiment in the time of COVID-19.
+  2018.1542973                                                     FRBSF Economic Letter, 2020-08, 1–5.
+Alessandri, P., & Mumtaz, H. (2019). Financial regimes           Busch, T., Christensen, B. J., & Nielsen, M. O. (2011).
+  and uncertainty shocks. Journal of Monetary                      The role of implied volatility in forecasting future real-
+                                                                   ized volatility and jumps in foreign exchange, stock,
+  Economics, 101, 31–46. https://doi.org/10.1016/j.jmo-
+                                                                   and bond markets. Journal of Econometrics, 160(1),
+  neco.2018.05.001
+                                                                   48–57. https://doi.org/10.1016/j.jeconom.2010.03.014
+Andersen, T. G., Bollerslev, T., Diebold, F. X., & Labys, P.
+                                                                 Caggiano, G., Castelnuovo, E., & Figueres, J. M. (2017).
+  (2001). The distribution of realized exchange rate vola-
+                                                                   Economic policy uncertainty and unemployment in the
+  tility. Journal of the American Statistical Association,
+                                                                   United States: A nonlinear approach. Economics Letters,
+  96(453),           42–55.           https://doi.org/10.1198/     151, 31–34. https://doi.org/10.1016/j.econlet.2016.12.002
+  016214501750332965                                             Caldara, D., Iacoviello, M. (2018). Measuring geopolitical
+Antonakakis, N., Chatziantoniou, I., & Filis, G. (2013).           risk. FRB International Finance Discussion Paper No.
+  Dynamic co-movements of stock market returns,                    1222. https://doi.org/10.17016/IFDP.2018.1222
+  implied volatility and policy uncertainty. Economics           Carr, P., & Wu, L. (2006). A tale of two indices. The
+  Letters, 120(1), 87–92. https://doi.org/10.1016/j.econlet.       Journal of Derivatives, 13(3), 13–29. https://doi.org/10.
+  2013.04.004                                                      3905/jod.2006.616865
+Antonakakis, N., Chatziantoniou, I., & Filis, G. (2017).         Cesarone, F., & Colucci, S. (2018). Minimum risk versus
+  Oil shocks and stock markets: Dynamic connectedness              capital and risk diversification strategies for portfolio
+  under the prism of recent geopolitical and economic              construction. Journal of the Operational Research
+  unrest. International Review of Financial Analysis, 50,          Society, 69(2), 183–200. https://doi.org/10.1057/s41274-
+  1–26. https://doi.org/10.1016/j.irfa.2017.01.004                 017-0216-5
+Asgharian, H., Hou, A. J., & Javed, F. (2013). The import-       Chiras, D. P., & Manaster, S. (1978). The information
+  ance of the macroeconomic variables in forecasting               content of option prices and a test of market efficiency.
+  stock return variance: A GARCH-MIDAS approach.                   Journal of Financial Economics, 6(2–3), 213–234.
+  Journal of Forecasting, 32(7), 600–612. https://doi.org/         https://doi.org/10.1016/0304-405X(78)90030-2
+  10.1002/for.2256                                               Christensen, B. J., & Prabhala, N. R. (1998). The relation
+Baillie, R. T., Bollerslev, T., & Mikkelsen, H. O. (1996).         between implied and realized volatility. Journal of
+  Fractionally integrated generalized autoregressive con-          Financial Economics, 50(2), 125–150. https://doi.org/10.
+  ditional heteroskedasticity. Journal of Econometrics,            1016/S0304-405X(98)00034-8
+  74(1),         3–30.         https://doi.org/10.1016/S0304-    Christiansen, C., Schmeling, M., & Schrimpf, A. (2012). A
+  4076(95)01749-6                                                  comprehensive look at financial volatility prediction by
+Baker, S. R., Bloom, N., & Davis, S. J. (2016). Measuring          economic variables. Journal of Applied Econometrics,
+  economic policy uncertainty. The Quarterly Journal of            27(6), 956–977. https://doi.org/10.1002/jae.2298
+                                                                 Colombo, V. (2013). Economic policy uncertainty in the
+  Economics, 131(4), 1593–1636. https://doi.org/10.1093/
+                                                                   US: Does it matter for the Euro area? Economics
+  qje/qjw024
+                                                                   Letters, 121(1), 39–42. https://doi.org/10.1016/j.econlet.
+Bao, Q., Li, S., & Gong, D. (2012). Pricing VXX option
+                                                                   2013.06.024
+  with default risk and positive volatility skew. European
+                                                                 Conrad, C., & Karanasos, M. (2010). Negative volatility
+  Journal of Operational Research, 223(1), 246–255.
+                                                                   spillovers in the unrestricted ECCC-GARCH model.
+  https://doi.org/10.1016/j.ejor.2012.06.006                       Econometric Theory, 26(3), 838–862. https://doi.org/10.
+Barndorff-Nielsen, O. E., Hansen, P. R., Lunde, A., &
+                                                                   1017/S0266466609990120
+  Shephard, N. (2008). Designing realized kernels to             Conrad, C., & Loch, K. (2015). Anticipating long-term
+  measure the ex-post variation of equity prices in the            stock market volatility. Journal of Applied Econometrics,
+  presence of noise. Econometrica, 76, 1481–1536.                  30(7), 1090–1114. https://doi.org/10.1002/jae.2404
+Barsky, R. B., & Kilian, L. (2004). Oil and the macroecon-       Corradi, V., Distaso, W., & Mele, A. (2013).
+  omy since the 1970s. Journal of Economic Perspectives,           Macroeconomic determinants of stock volatility and
+  18(4),          115–134.            https://doi.org/10.1257/     volatility premiums. Journal of Monetary Economics,
+  0895330042632708                                                 60(2), 203–220. https://doi.org/10.1016/j.jmoneco.2012.
+Barunik, J., Krehlik, T., & Vacha, L. (2016). Modeling and         10.019
+  forecasting exchange rate volatility in time-frequency         Corsi, F. (2009). A simple approximate long-memory
+  domain. European Journal of Operational Research,                model of realized volatility. Journal of Financial
+  251(1), 329–340. https://doi.org/10.1016/j.ejor.2015.12.         Econometrics, 7(2), 174–196. https://doi.org/10.1093/jjfi-
+  010                                                              nec/nbp001
+20      S. YFANTI AND M. KARANASOS
+
+
+Datta, S., Granger, C. W. J., Barari, M., & Gibbs, T.              Economic Statistics , 32(3), 416–429. https://doi.org/10.
+   (2007). Management of supply chain: An alternative              1080/07350015.2014.897954
+   modelling technique for forecasting. Journal of the          Hansen, P. R., Huang, Z., & Shek, H. (2012). Realized
+   Operational Research Society, 58(11), 1459–1469.                GARCH: A joint model for returns and realized meas-
+   https://doi.org/10.1057/palgrave.jors.2602419                   ures of volatility. Journal of Applied Econometrics,
+Day, T. E., & Lewis, C. M. (1992). Stock market volatility         27(6), 877–906. https://doi.org/10.1002/jae.1234
+   and the information content of stock index options.          Heber, G., Lunde, A., Shephard, N., & Sheppard, K.
+   Journal of Econometrics, 52(1–2), 267–287. https://doi.         (2009). Oxford-Man Institute’s realized library, version
+   org/10.1016/0304-4076(92)90073-Z                                0.3. Oxford-Man Institute, University of Oxford.
+Ding, Z., Granger, C. W. J., & Engle, R. F. (1993). A long      Jiang, G. J., & Tian, Y. S. (2005). The model-free implied
+   memory property of stock market returns and a new               volatility and its information content. Review of
+   model. Journal of Empirical Finance, 1(1), 83–106.              Financial Studies, 18(4), 1305–1342. https://doi.org/10.
+   https://doi.org/10.1016/0927-5398(93)90006-D                    1093/rfs/hhi027
+Dunis, C., Kellard, N. M., & Snaith, S. (2013). Forecasting     Jones, P. M., & Olson, E. (2013). The time-varying correl-
+   EUR–USD implied volatility: The case of intraday data.          ation between uncertainty, output, and inflation:
+   Journal of Banking & Finance , 37(12), 4943–4957.               Evidence from a DCC-GARCH model. Economics
+   https://doi.org/10.1016/j.jbankfin.2013.08.028                  Letters, 118(1), 33–37. https://doi.org/10.1016/j.econlet.
+Engle, R. F. (2002). New frontiers for ARCH models.                2012.09.012
+   Journal of Applied Econometrics, 17(5), 425–446.             Kaeck, A., & Seeger, N. J. (2020). VIX derivatives, hedg-
+   https://doi.org/10.1002/jae.683                                 ing and vol-of-vol risk. European Journal of
+Engle, R. F., Ghysels, E., & Sohn, B. (2013). Stock market         Operational Research, 283(2), 767–782. https://doi.org/
+   volatility and macroeconomic fundamentals. Review of            10.1016/j.ejor.2019.11.034
+   Economics and Statistics, 95(3), 776–797. https://doi.       Kambouroudis, D. S., McMillan, D. G., & Tsakou, K.
+   org/10.1162/REST_a_00300                                        (2016). Forecasting stock return volatility: A compari-
+Engle, R. F., & Ng, V. K. (1993). Measuring and testing            son of garch, implied volatility, and realized volatility
+   the impact of news on volatility. The Journal of                models. Journal of Futures Markets, 36(12), 1127–1163.
+   Finance, 48(5), 1749–1778. https://doi.org/10.1111/j.           https://doi.org/10.1002/fut.21783
+   1540-6261.1993.tb05127.x                                     Karanasos, M., & Yfanti, S. (2020). On the macro-drivers
+Engle, R. F., & Rangel, J. G. (2008). The spline-GARCH             of realized volatility: The destabilizing impact of UK
+   model for low-frequency volatility and its global               policy uncertainty across Europe. European Journal of
+   macroeconomic causes. Review of Financial Studies,              Finance, 26, 1146–1183.
+   21(3), 1187–1222. https://doi.org/10.1093/rfs/hhn004         Karanasos, M., Yfanti, S., & Christopoulos, A. (2020). The
+Fernandes, M., Medeiros, M. C., & Scharth, M. (2014).              long memory HEAVY process: Modeling and forecast-
+   Modeling and predicting the CBOE market volatility              ing financial volatility. Annals of Operations Research,
+   index. Journal of Banking & Finance, 40, 1–10. https://         1–20. https://doi.org/10.1007/s10479-019-03493-8
+   doi.org/10.1016/j.jbankfin.2013.11.004                       Konstantinidi, E., Skiadopoulos, G., & Tzagkaraki, E.
+Fleming, J. (1998). The quality of market volatility fore-         (2008). Can the evolution of implied volatility be fore-
+   casts implied by S&P 100 index option prices. Journal           casted? Evidence from European and US implied vola-
+   of Empirical Finance, 5(4), 317–345. https://doi.org/10.        tility indices. Journal of Banking & Finance, 32(11),
+   1016/S0927-5398(98)00002-4                                      2401–2411. https://doi.org/10.1016/j.jbankfin.2008.02.
+Francq, C., & Thieu, L. Q. (2019). QML inference for               003
+   volatility models with covariates. Econometric Theory,       Lamoureux, C. G., & Lastrapes, W. D. (1993). Forecasting
+   35(1),           37–72.           https://doi.org/10.1017/      stock-return variance: Toward an understanding of sto-
+   S0266466617000512                                               chastic implied volatilities. Review of Financial Studies,
+Frijns, B., Tallau, C., & Tourani-Rad, A. (2010). The              6(2), 293–326. https://doi.org/10.1093/rfs/6.2.293
+   information content of implied volatility: Evidence          Latane, H. A., & Rendleman, R. J. J. (1976). Standard
+   from Australia. Journal of Futures Markets, 30(2),              deviations of stock price ratios implied in option pri-
+   134–155. https://doi.org/10.1002/fut.20405                      ces. The Journal of Finance, 31(2), 369–381. https://doi.
+Garman, M., & Klass, M. (1980). On the estimation of               org/10.2307/2326608
+   security price volatilities from historical data. The        Li, H., Li, H., Lu, L., Theocharides, G., & Xiong, X.
+   Journal of Business, 53(1), 67–78. https://doi.org/10.          (2020). Macro disagreement and international options
+   1086/296072                                                     markets. Journal of International Financial Markets,
+Glosten, L. R., Jagannathan, R., & Runkle, D. E. (1993).           Institutions and Money, 65, 101187. https://doi.org/10.
+   On the relation between the expected value and the              1016/j.intfin.2020.101187
+   volatility of the nominal excess return on stocks. The       Ling, S., & McAleer, M. (2003). Asymptotic theory for a
+   Journal of Finance, 48(5), 1779–1801. https://doi.org/10.       vector ARMA-GARCH model. Econometric Theory,
+   1111/j.1540-6261.1993.tb05128.x                                 19(02),          280–310.          https://doi.org/10.1017/
+Hamilton, J., & Lin, G. (1996). Stock market volatility            S0266466603192092
+   and the business cycle. Journal of Applied Econometrics,     Martens, M., & Zein, J. (2004). Predicting financial vola-
+   11(5), 573–593. https://doi.org/10.1002/(SICI)1099-             tility: High-frequency time-series forecasts vis-a-vis
+   1255(199609)11:5<573::AID-JAE413>3.0.CO;2-T                     implied volatility. Journal of Futures Markets, 24(11),
+Han, H. (2015). Asymptotic properties of GARCH-X                   1005–1028. https://doi.org/10.1002/fut.20126
+   processes. Journal of Financial Econometrics, 13(1),         Meligkotsidou, L., Panopoulou, E., Vrontos, I. D., &
+   188–221. https://doi.org/10.1093/jjfinec/nbt023                 Vrontos, S. D. (2019). Quantile forecast combinations
+Han, H., & Kristensen, D. (2014). Asymptotic theory for            in realised volatility prediction. Journal of the
+   the QMLE in GARCH-X models with stationary and                  Operational Research Society, 70(10), 1720–1733.
+   nonstationary covariates. Journal of Business &                 https://doi.org/10.1080/01605682.2018.1489354
+                                                                        JOURNAL OF THE OPERATIONAL RESEARCH SOCIETY        21
+
+
+Mittnik, S., Robinzonov, N., & Spindler, M. (2015). Stock           GARCH models. Journal of Econometrics, 196(1),
+  market volatility: Identifying major drivers and the              23–36. https://doi.org/10.1016/j.jeconom.2016.09.004
+  nature of their impact. Journal of Banking & Finance,          Pedersen, R. S., & Rahbek, A. (2019). Testing GARCH-X
+  58, 1–14. https://doi.org/10.1016/j.jbankfin.2015.04.003          type models. Econometric Theory, 35(05), 1012–1047.
+Nakatani, T., & Ter€asvirta, T. (2009). Testing for volatility      https://doi.org/10.1017/S026646661800035X
+  interactions in the constant conditional correlation           Pong, S., Shackleton, M. B., Taylor, S. J., & Xu, X. (2004).
+  GARCH model. Econometrics Journal, 12(1), 147–163.                Forecasting currency volatility: A comparison of
+  https://doi.org/10.1111/j.1368-423X.2008.00261.x                  implied volatilities and AR(FI)MA models. Journal of
+Oikonomou, I., Stancu, A., Symeonidis, L., & Simen,                 Banking & Finance, 28(10), 2541–2563. https://doi.org/
+  C. W. (2019). The information content of short-term               10.1016/j.jbankfin.2003.10.015
+  options. Journal of Financial Markets, 46, 100504.             Schwert, G. W. (1989). Why does stock market volatility
+  https://doi.org/10.1016/j.finmar.2019.07.003                      change over time? The Journal of Finance, 44(5),
+Parkinson, M. (1980). The extreme value method for esti-            1115–1153.       https://doi.org/10.1111/j.1540-6261.1989.
+                                                                    tb02647.x
+  mating the variance of the rate of return. The Journal
+                                                                 Sevi, B. (2014). Forecasting the volatility of crude oil
+  of Business, 53(1), 61–65. https://doi.org/10.1086/
+                                                                    futures using intraday data. European Journal of
+  296071                                                            Operational Research, 235(3), 643–659. https://doi.org/
+Pastor, L., & Veronesi, P. (2013). Political uncertainty and        10.1016/j.ejor.2014.01.019
+  risk premia. Journal of Financial Economics, 110(3),           Shephard, N., & Sheppard, K. (2010). Realising the future:
+  520–545. https://doi.org/10.1016/j.jfineco.2013.08.007            Forecasting with high-frequency-based volatility
+Patton, A. J. (2011). Volatility forecast comparison using          (HEAVY) models. Journal of Applied Econometrics,
+  imperfect volatility proxies. Journal of Econometrics,            25(2), 197–231. https://doi.org/10.1002/jae.1158
+  160(1), 246–256. https://doi.org/10.1016/j.jeconom.            Shoag, D., & Veuger, S. (2016). Uncertainty and the geog-
+  2010.03.034                                                       raphy of the great recession. Journal of Monetary
+Paye, B. S. (2012). Deja vol’: Predictive regressions for         Economics, 84, 84–93. https://doi.org/10.1016/j.jmo-
+  aggregate stock market volatility using macroeconomic             neco.2016.11.002
+  variables. Journal of Financial Economics, 106(3),             Tan, B. (2002). Managing manufacturing risks by using
+  527–546. https://doi.org/10.1016/j.jfineco.2012.06.005            capacity options. Journal of the Operational Research
+Pedersen, R. S. (2017). Inference and testing on the                Society, 53(2), 232–242. https://doi.org/10.1057/pal-
+  boundary in extended constant conditional correlation             grave.jors.2601283
+

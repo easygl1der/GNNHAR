@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Model & \(\rho_M\) & \(\rho_Q\) & \(1-\rho_Q\) \\
+\midrule
+\(\mathrm{HAR}\) & 1.0000 & 1.0000 & 0.00\% \\
+\(\mathrm{GHAR}\) & 0.9985 & 0.9993 & 0.07\% \\
+\(\mathrm{GNNHAR1L}\) & 1.0085 & 1.0331 & -3.31\% \\
+\(\mathrm{GNNHAR2L}\) & 1.1022 & 1.1374 & -13.74\% \\
+\(\mathrm{GNNHAR3L}\) & 1.2913 & 1.3972 & -39.72\% \\
+\bottomrule
+\end{tabular}
+\caption{SP500 scale-run strict-core loss ratios relative to HAR.  This is a short-budget scale artifact, not the latest A100 protocol.}
+\label{tab:sp500-core-loss}
+\end{table}

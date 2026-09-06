@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llllrrrrl}
+\toprule
+Base & Candidate & IV & EC & \(L_B/L_A\) & \(1-L_B/L_A\) & DM & \(p\) & Result \\
+\midrule
+linear GHAR 1-hop & linear GHAR 1+2-hop & No & \(M\) & 1.0055 & -0.55\% & -4.0647 & $<10^{-4}$ & deteriorates \\
+linear GHAR 1-hop & linear GHAR 1+2+3-hop & No & \(M\) & 1.0082 & -0.82\% & -4.0762 & $<10^{-4}$ & deteriorates \\
+\(\mathrm{GNNHAR1L}_{Q}\) & \(\mathrm{GNNHAR5L}_{Q}\) & No & \(Q\) & 0.9965 & 0.35\% & 2.2236 & 0.0262 & improves \\
+\(\mathrm{GNNHAR4L}_{Q}\) & \(\mathrm{GNNHAR5L}_{Q}\) & No & \(Q\) & 0.9983 & 0.17\% & 2.0347 & 0.0419 & improves \\
+\bottomrule
+\end{tabular}
+}
+\caption{SP100 A100 robustness DM tests for linear multi-hop GHAR and four-/five-layer GNN extensions.}
+\label{tab:sp100-a100-robustness-dm}
+\end{table}
